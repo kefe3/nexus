@@ -95,6 +95,9 @@ if (Test-Path "$targetDir\.git") {
 
 # 5. Başlatma
 Write-Host "`n⚡ 4/4 Konteynerler derleniyor ve başlatılıyor..." -ForegroundColor Cyan
+if (Test-Path "$targetDir\docker-compose.windows.yml") {
+    Copy-Item -Force "$targetDir\docker-compose.windows.yml" "$targetDir\docker-compose.yml"
+}
 docker compose up -d --build
 
 Write-Host "`n════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
