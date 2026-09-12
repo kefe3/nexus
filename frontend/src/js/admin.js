@@ -80,6 +80,7 @@ function switchSection(secId) {
 
     if (secId === 'overview') fetchOverview();
     if (secId === 'specs') fetchSpecs();
+    if (secId === 'system') checkUpdates();
     if (secId === 'vram') fetchRunningModels();
     if (secId === 'models') fetchInstalledModels();
     if (secId === 'benchmark') populateBenchmarkModels();
@@ -773,3 +774,115 @@ async function fetchSpecs(showToastAlert = false) {
         console.error('Error fetching specs:', e);
     }
 }
+
+
+// GitHub Sürüm & Güncelleme Kontrolcüsü
+async function checkUpdates(showToast = false) {
+    const btnCheck = document.getElementById('btn-check-updates');
+    if (btnCheck && showToast) {
+        btnCheck.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Denetleniyor...';
+        btnCheck.disabled = true;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/updates/check`);
+        const data = await res.json();
+        
+        if (data.status === 'ok') {
+            const loc = data.local || {};
+            const rem = data.remote || {};
+            
+            document.getElementById('val-local-sha').textContent = loc.sha || 'latest';
+            document.getElementById('val-local-date').textContent = loc.date || 'Aktif';
+            document.getElementById('val-local-msg').textContent = loc.message || 'Nexus AI Release';
+
+            document.getElementById('val-remote-sha').textContent = rem.sha || loc.sha || 'main';
+            document.getElementById('val-remote-date').textContent = rem.date ? new Date(rem.date).toLocaleString('tr-TR') : 'Güncel';
+            document.getElementById('val-remote-msg').textContent = rem.message || 'Nexus Kararlı Sürüm';
+
+            const topBanner = document.getElementById('update-top-banner');
+            const statusBadge = document.getElementById('update-status-badge');
+            const statusSub = document.getElementById('update-status-sub');
+            const btnApply = document.getElementById('btn-apply-update');
+
+            if (data.update_available) {
+                if (topBanner) {
+                    topBanner.style.display = 'flex';
+                    document.getElementById('update-top-text').textContent = `🚀 Yeni Güncelleme: ${rem.sha}`;
+                }
+                if (statusBadge) {
+                    statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-amber);"></i> <span style="color: var(--accent-amber);">Yeni Güncelleme Mevcut!</span>';
+                }
+                if (statusSub) {
+                    statusSub.textContent = `GitHub'da yeni commit (${rem.sha}) yayınlandı.`;
+                }
+                if (btnApply) {
+                    btnApply.style.background = 'linear-gradient(135deg, #ff9a44, #fc6076)';
+                    btnApply.style.color = '#fff';
+                    btnApply.innerHTML = '<i class="fa-solid fa-cloud-arrow-down fa-bounce"></i> <span>Şimdi Güncelle</span>';
+                }
+                if (showToast) {
+                    alert(`🚀 Yeni bir güncelleme mevcut! (${rem.sha}: ${rem.message})`);
+                }
+            } else {
+                if (topBanner) topBanner.style.display = 'none';
+                if (statusBadge) {
+                    statusBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Sisteminiz En Güncel Sürümde';
+                    statusBadge.style.color = 'var(--accent-green)';
+                }
+                if (statusSub) {
+                    statusSub.textContent = 'Resmi GitHub deposu (kefe3/nexus) ile senkronize.';
+                }
+                if (btnApply) {
+                    btnApply.style.background = 'rgba(255,255,255,0.08)';
+                    btnApply.style.color = '#94a3b8';
+                    btnApply.innerHTML = '<i class="fa-solid fa-check"></i> <span>Sistem Güncel</span>';
+                }
+                if (showToast) {
+                    alert('✅ Tebrikler! Nexus AI Studio en son kararlı sürümde çalışıyor.');
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Error checking updates:', e);
+    } finally {
+        if (btnCheck && showToast) {
+            btnCheck.innerHTML = '<i class="fa-solid fa-rotate"></i> <span>Güncellemeleri Denetle</span>';
+            btnCheck.disabled = false;
+        }
+    }
+}
+
+async function applyUpdate() {
+    if (!confirm('Nexus AI Studio en son resmi GitHub sürümüne güncellensin mi?')) {
+        return;
+    }
+
+    const btnApply = document.getElementById('btn-apply-update');
+    if (btnApply) {
+        btnApply.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Güncelleniyor...';
+        btnApply.disabled = true;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/updates/apply`, { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            alert('🎉 Sistem başarıyla güncellendi! Servisler yeniden başlatılıyor...');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            alert(`Güncelleme Hatası: ${data.message}`);
+        }
+    } catch (e) {
+        alert(`Hata: ${e.message}`);
+    } finally {
+        if (btnApply) btnApply.disabled = false;
+    }
+}
+
+// Auto-check updates on startup
+document.addEventListener('DOMContentLoaded', () => {
+    checkUpdates();
+});

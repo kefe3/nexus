@@ -578,6 +578,11 @@
         </div>
 
         <div class="cp-header-actions">
+            <div id="update-top-banner" style="display: none; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(255, 179, 0, 0.2), rgba(255, 65, 108, 0.2)); border: 1px solid rgba(255, 179, 0, 0.4); padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 800; color: var(--accent-amber); cursor: pointer;" onclick="switchSection('system')">
+                <i class="fa-solid fa-cloud-arrow-down fa-bounce"></i>
+                <span id="update-top-text">🚀 Yeni Güncelleme Mevcut!</span>
+            </div>
+
             <div class="status-pill" id="server-status-pill">
                 <span class="pulse-dot"></span>
                 <span id="server-ping-text">Server Online (2ms)</span>
@@ -934,6 +939,62 @@
                     <div>
                         <h2 class="cp-section-title">Konteyner Mimarisi & Servisler</h2>
                         <p class="cp-section-desc">Konteyner mimarisi, port yönlendirmeleri ve servis durumları.</p>
+                    </div>
+                </div>
+
+                
+                <!-- GitHub Auto-Update Checker Card -->
+                <div class="glass-panel" style="margin-bottom: 1.5rem; border: 1px solid rgba(0, 242, 254, 0.3); background: linear-gradient(135deg, rgba(14, 20, 32, 0.9), rgba(6, 12, 24, 0.95));">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div style="width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(138, 43, 226, 0.2)); border: 1px solid rgba(0, 242, 254, 0.3); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--accent-cyan);">
+                                <i class="fa-brands fa-github"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 3px;">🔄 GitHub Sürüm & Güncelleme Kontrolcüsü</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Resmi depodaki (<code>kefe3/nexus</code>) en son özellikleri denetler ve tek tıkla sistemi günceller.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="btn-action" style="padding: 8px 14px; font-size: 0.82rem;" onclick="checkUpdates(true)" id="btn-check-updates">
+                                <i class="fa-solid fa-rotate"></i> <span>Güncellemeleri Denetle</span>
+                            </button>
+                            <button class="btn-action" style="padding: 8px 16px; font-size: 0.82rem; background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan)); color: #04060c; font-weight: 800; border: none;" onclick="applyUpdate()" id="btn-apply-update">
+                                <i class="fa-solid fa-cloud-arrow-down"></i> <span>Sistemi Güncelle</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Update Status Details Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                        <!-- Local Version -->
+                        <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: 12px; border: 1px solid var(--card-border);">
+                            <div style="font-size: 0.72rem; color: #64748b; font-weight: 800; text-transform: uppercase;">YÜKLÜ SÜRÜM / COMMIT</div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin: 6px 0;">
+                                <span class="badge-size" style="background: rgba(255,255,255,0.1); color: #fff; font-size: 0.85rem;" id="val-local-sha">-</span>
+                                <span style="font-size: 0.82rem; color: #cbd5e1; font-weight: 600;" id="val-local-date">-</span>
+                            </div>
+                            <div style="font-size: 0.78rem; color: #94a3b8; line-height: 1.4;" id="val-local-msg">-</div>
+                        </div>
+
+                        <!-- Remote Version -->
+                        <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: 12px; border: 1px solid var(--card-border);">
+                            <div style="font-size: 0.72rem; color: #64748b; font-weight: 800; text-transform: uppercase;">GITHUB'DAKİ EN SON SÜRÜM</div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin: 6px 0;">
+                                <span class="badge-size" style="background: rgba(0,242,254,0.15); color: var(--accent-cyan); font-size: 0.85rem;" id="val-remote-sha">-</span>
+                                <span style="font-size: 0.82rem; color: #cbd5e1; font-weight: 600;" id="val-remote-date">-</span>
+                            </div>
+                            <div style="font-size: 0.78rem; color: #94a3b8; line-height: 1.4;" id="val-remote-msg">-</div>
+                        </div>
+
+                        <!-- Status Badge & Action -->
+                        <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: 12px; border: 1px solid var(--card-border); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                            <div id="update-status-badge" style="font-size: 0.95rem; font-weight: 800; color: var(--accent-green); margin-bottom: 6px;">
+                                <i class="fa-solid fa-circle-check"></i> Sisteminiz En Güncel Sürümde
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);" id="update-status-sub">Resmi GitHub deposu ile senkronize.</div>
+                        </div>
                     </div>
                 </div>
 

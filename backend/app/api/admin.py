@@ -505,3 +505,67 @@ async def get_request_logs():
 @router.get("/specs")
 async def get_system_specs():
     return {"status": "ok", "specs": get_detailed_hardware_specs()}
+
+
+def get_local_commit_info():
+    sha = ""
+    msg = ""
+    date = ""
+    try:
+        sha = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
+        msg = subprocess.check_output(["git", "log", "-1", "--pretty=%s"], stderr=subprocess.DEVNULL).decode().strip()
+        date = subprocess.check_output(["git", "log", "-1", "--pretty=%cd", "--date=relative"], stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        pass
+    return {"sha": sha or "main", "message": msg or "Nexus AI Station", "date": date or "Güncel"}
+
+@router.get("/updates/check")
+async def check_github_updates():
+    local = get_local_commit_info()
+    remote = {}
+    has_update = False
+    error = None
+    
+    try:
+        async with httpx.AsyncClient(timeout=6.0) as client:
+            res = await client.get(
+                "https://api.github.com/repos/kefe3/nexus/commits/main",
+                headers={"User-Agent": "Nexus-AI-Platform"}
+            )
+            if res.status_code == 200:
+                data = res.json()
+                remote_sha = data.get("sha", "")[:7]
+                remote_msg = data.get("commit", {}).get("message", "").split("\n")[0]
+                remote_author = data.get("commit", {}).get("author", {}).get("name", "Origin Edge")
+                remote_date = data.get("commit", {}).get("author", {}).get("date", "")
+                
+                remote = {
+                    "sha": remote_sha,
+                    "message": remote_msg,
+                    "author": remote_author,
+                    "date": remote_date
+                }
+                
+                if local["sha"] and remote_sha and local["sha"] != remote_sha and local["sha"] != "main":
+                    has_update = True
+            else:
+                error = f"GitHub API HTTP {res.status_code}"
+    except Exception as e:
+        error = str(e)
+        
+    return {
+        "status": "ok" if not error else "error",
+        "update_available": has_update,
+        "local": local,
+        "remote": remote,
+        "repo_url": "https://github.com/kefe3/nexus",
+        "error": error
+    }
+
+@router.post("/updates/apply")
+async def apply_update():
+    try:
+        out = subprocess.check_output(["git", "pull", "origin", "main"], stderr=subprocess.STDOUT).decode()
+        return {"status": "ok", "message": "Nexus başarıyla en son sürüme güncellendi!", "output": out}
+    except Exception as e:
+        return {"status": "error", "message": f"Güncelleme Hatası: {str(e)}"}

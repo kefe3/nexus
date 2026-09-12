@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# ⚡ Nexus AI Studio — Tam Kapsamlı Otomatik Kurulum Betiği (All-In-One Universal Installer)
-# Docker, Ollama, Cloudflared, Git, Curl, Modeller — Ne eksikse tek komutla kurar!
-# Linux (Ubuntu, Debian, Fedora, Arch, CentOS, Alpine), macOS ve WSL2 Tam Uyumlu
+# ⚡ Nexus AI Studio — Evrensel Akıllı Kurulum Betiği (Universal Installer)
+# Arch, CachyOS, Manjaro, Ubuntu, Debian, Fedora, CentOS, Alpine, macOS & WSL2
 # ==============================================================================
 
 set -e
@@ -18,12 +17,12 @@ NC='\033[0m'
 
 clear || true
 echo -e "${CYAN}${BOLD}"
-echo "  ███╗   ██╗███████╗██╗   ██╗██╗   ██╗███████╗"
-echo "  ████╗  ██║██╔════╝╚██╗ ██╔╝██║   ██║██╔════╝"
-echo "  ██╔██╗ ██║█████╗   ╚████╔╝ ██║   ██║███████╗"
-echo "  ██║╚██╗██║██╔══╝    ╚██╔╝  ██║   ██║╚════██║"
-echo "  ██║ ╚████║███████╗   ██║   ╚██████╔╝███████║"
-echo "  ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚═════╝ ╚══════╝"
+echo "  ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗"
+echo "  ████╗  ██║██╔════╝╚██╗██╔╝██║   ██║██╔════╝"
+echo "  ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗"
+echo "  ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║"
+echo "  ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║"
+echo "  ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝"
 echo -e "      ${PURPLE}⚡ Self-Hosted AI Studio & Cluster Control Platform${NC}\n"
 
 # 1. Yetki Kontrolü
@@ -37,27 +36,36 @@ if [ "$EUID" -ne 0 ]; then
     fi
 fi
 
-# 2. İşletim Sistemi ve Paket Yöneticisi
+# 2. İşletim Sistemi ve Dağıtım Tespiti
 OS="$(uname -s)"
 ARCH="$(uname -m)"
-echo -e "${YELLOW}🔍 Sistem Analiz Ediliyor: ${BOLD}${OS} (${ARCH})${NC}..."
+DISTRO="Linux"
+if [ -f /etc/os-release ]; then
+    DISTRO=$(grep -E '^PRETTY_NAME=' /etc/os-release | cut -d= -f2 | tr -d '"' || echo "Linux")
+fi
+
+echo -e "${YELLOW}🔍 Sistem Analiz Ediliyor: ${BOLD}${DISTRO} (${OS} ${ARCH})${NC}..."
 
 install_pkg() {
     PKG=$1
-    if command -v apt-get >/dev/null 2>&1; then
+    if command -v pacman >/dev/null 2>&1; then
+        $SUDO pacman -Sy --noconfirm "$PKG"
+    elif command -v apt-get >/dev/null 2>&1; then
         $SUDO apt-get update -qq && $SUDO apt-get install -y -qq "$PKG"
     elif command -v dnf >/dev/null 2>&1; then
         $SUDO dnf install -y -q "$PKG"
     elif command -v yum >/dev/null 2>&1; then
         $SUDO yum install -y -q "$PKG"
-    elif command -v pacman >/dev/null 2>&1; then
-        $SUDO pacman -Sy --noconfirm "$PKG"
+    elif command -v zypper >/dev/null 2>&1; then
+        $SUDO zypper in -y "$PKG"
+    elif command -v apk >/dev/null 2>&1; then
+        $SUDO apk add "$PKG"
     elif command -v brew >/dev/null 2>&1; then
         brew install "$PKG"
     fi
 }
 
-# 3. Temel Araçlar (curl, git, wget, jq, pciutils)
+# 3. Temel Araçlar (curl, git, wget, jq)
 echo -e "\n${CYAN}📦 1/5 Temel sistem araçları denetleniyor...${NC}"
 for tool in curl git wget jq; do
     if ! command -v $tool >/dev/null 2>&1; then
@@ -67,14 +75,29 @@ for tool in curl git wget jq; do
 done
 echo -e "${GREEN}  ✓ Temel araçlar hazır!${NC}"
 
-# 4. Docker & Docker Compose Kurulumu (Eksikse Anında Kurar)
+# 4. Docker & Docker Compose Kurulumu (CachyOS, Arch, Ubuntu, Fedora, macOS)
 echo -e "\n${CYAN}🐳 2/5 Docker & Konteyner Altyapısı denetleniyor...${NC}"
 if ! command -v docker >/dev/null 2>&1; then
-    echo -e "${YELLOW}  -> Docker bulunamadı. Resmi get.docker.com motoru kuruluyor...${NC}"
-    if [ "$OS" = "Linux" ]; then
-        curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
-        $SUDO sh /tmp/get-docker.sh
-        rm -f /tmp/get-docker.sh
+    echo -e "${YELLOW}  -> Docker bulunamadı. Dağıtıma özel (${DISTRO}) kurulum başlatılıyor...${NC}"
+    
+    if command -v pacman >/dev/null 2>&1; then
+        # Arch / CachyOS / Manjaro / EndeavourOS
+        echo -e "${YELLOW}  -> Arch/CachyOS pacman ile Docker ve Compose kuruluyor...${NC}"
+        $SUDO pacman -Sy --noconfirm docker docker-compose
+        $SUDO systemctl enable --now docker
+        if [ -n "$USER" ] && [ "$USER" != "root" ]; then
+            $SUDO usermod -aG docker "$USER" 2>/dev/null || true
+        fi
+        echo -e "${GREEN}  ✓ Arch/CachyOS Docker motoru başarıyla kuruldu!${NC}"
+    elif [ "$OS" = "Linux" ]; then
+        # Ubuntu, Debian, Fedora vb.
+        if curl -fsSL https://get.docker.com -o /tmp/get-docker.sh; then
+            $SUDO sh /tmp/get-docker.sh || {
+                echo -e "${YELLOW}  -> Paket yöneticisi ile doğrudan deneniyor...${NC}"
+                install_pkg docker.io || install_pkg docker || true
+            }
+            rm -f /tmp/get-docker.sh
+        fi
         
         if command -v systemctl >/dev/null 2>&1; then
             $SUDO systemctl enable --now docker
@@ -85,7 +108,6 @@ if ! command -v docker >/dev/null 2>&1; then
         if [ -n "$USER" ] && [ "$USER" != "root" ]; then
             $SUDO usermod -aG docker "$USER" 2>/dev/null || true
         fi
-        echo -e "${GREEN}  ✓ Docker başarıyla kuruldu ve başlatıldı!${NC}"
     elif [ "$OS" = "Darwin" ]; then
         echo -e "${YELLOW}  -> macOS Docker Desktop kuruluyor...${NC}"
         brew install --cask docker || true
@@ -94,14 +116,14 @@ else
     echo -e "${GREEN}  ✓ Docker zaten kurulu ($(docker --version))${NC}"
 fi
 
-# Docker compose kontrolü
+# Docker Compose tespiti
 DOCKER_COMPOSE="docker compose"
 if ! docker compose version >/dev/null 2>&1; then
     if command -v docker-compose >/dev/null 2>&1; then
         DOCKER_COMPOSE="docker-compose"
     else
-        echo -e "${YELLOW}  -> Docker Compose eklentisi kuruluyor...${NC}"
-        install_pkg docker-compose-plugin || install_pkg docker-compose || true
+        echo -e "${YELLOW}  -> Docker Compose kuruluyor...${NC}"
+        install_pkg docker-compose || install_pkg docker-compose-plugin || true
         if command -v docker-compose >/dev/null 2>&1; then
             DOCKER_COMPOSE="docker-compose"
         fi
@@ -109,7 +131,7 @@ if ! docker compose version >/dev/null 2>&1; then
 fi
 echo -e "${GREEN}  ✓ Docker Compose hazır!${NC}"
 
-# 5. Ollama Yerel Yapay Zeka Motoru Kurulumu (Eksikse Otomatik Kurar)
+# 5. Ollama Yerel Yapay Zeka Motoru
 echo -e "\n${CYAN}🧠 3/5 Ollama Yerel GPU/CPU Motoru denetleniyor...${NC}"
 if ! command -v ollama >/dev/null 2>&1; then
     echo -e "${YELLOW}  -> Ollama yerel yapay zeka motoru eksik. Resmi kurulum başlatılıyor...${NC}"
@@ -124,21 +146,21 @@ else
     echo -e "${GREEN}  ✓ Ollama zaten kurulu ve hazır!${NC}"
 fi
 
-# Ollama servisinin açık olduğundan emin ol
+# Servisi açık tut
 if command -v systemctl >/dev/null 2>&1; then
     $SUDO systemctl start ollama 2>/dev/null || true
 fi
 
-# Eğer hiç model yoksa hızlı bir başlangıç modeli indir
+# Başlangıç modeli kontrolü
 if command -v ollama >/dev/null 2>&1; then
     MODEL_COUNT=$(ollama list 2>/dev/null | grep -v 'NAME' | grep -v '^$' | wc -l || echo "0")
     if [ "$MODEL_COUNT" -eq 0 ]; then
-        echo -e "${YELLOW}  -> Henüz yerel model yok. Hızlı başlangıç modeli (qwen2.5-coder:1.5b) indiriliyor...${NC}"
-        ollama pull qwen2.5-coder:1.5b 2>/dev/null || ollama pull deepseek-r1:1.5b 2>/dev/null || true
+        echo -e "${YELLOW}  -> Hızlı başlangıç modeli (qwen2.5-coder:1.5b) indiriliyor...${NC}"
+        ollama pull qwen2.5-coder:1.5b 2>/dev/null || true
     fi
 fi
 
-# 6. Cloudflared Tünel İkili Dosyası (Eksikse Doğrudan İndirilir)
+# 6. Cloudflared Tünel Motoru
 echo -e "\n${CYAN}🌐 4/5 Cloudflared Dış Erişim Tüneli denetleniyor...${NC}"
 if [ ! -f "/usr/local/bin/cloudflared" ] && ! command -v cloudflared >/dev/null 2>&1; then
     echo -e "${YELLOW}  -> Cloudflared tünel ikilisi indiriliyor...${NC}"

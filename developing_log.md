@@ -294,6 +294,21 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
   3. **Hepsi Bir Arada Otomatik Kurulumcu (`install.sh`):**
      * Docker, Docker Compose, Ollama (GPU/CPU), Cloudflared, Git, Curl ve başlangıç modellerini tek komutla sıfırdan kuran evrensel kurulum betiği tamamlandı.
 
+---
+
+#### 🕒 17:51:15 — [Commit: `b520ef8`] • 🔄 GitHub Canlı Sürüm Denetleyicisi, 1-Click Otomatik Güncelleyici, CachyOS/Arch Pacman Docker Desteği & ASCII Düzeltmesi
+* **Modül:** `GitHub Auto-Updater, Arch/CachyOS Pacman Engine & ASCII Branding`
+* **Yapılan İşlemler:**
+  1. **NEXUS ASCII Sanat Düzeltmesi:**
+     * `install.sh` içindeki ASCII logosunda "NEYUS" olarak görünen harf hatası düzeltilerek kusursuz **`N E X U S`** tipografisine dönüştürüldü.
+  2. **CachyOS / Arch Linux `pacman` Docker Desteği:**
+     * `get.docker.com` betiğinin CachyOS ve Arch tabanlı dağıtımlarda hata vermesi (`Unsupported distribution 'cachyos'`) engellendi.
+     * `install.sh`, sistemde `pacman` veya CachyOS/Arch tespit ettiğinde doğrudan `$SUDO pacman -Sy --noconfirm docker docker-compose` komutunu çalıştırarak Docker motorunu ve soketini kurar.
+  3. **Kontrol Paneli GitHub Güncelleme Kontrolcüsü (`/api/admin/updates/check` & `/apply`):**
+     * Backend, GitHub API üzerinden `kefe3/nexus` deposundaki en son commit SHA'sını, mesajını ve tarihini yerel versiyonla karşılaştırır.
+     * Kontrol Paneli başlığında ve **"Konteyner & Sistem"** sekmesinde canlı uyarı rozeti (`🚀 Yeni Güncelleme: <sha>`) gösterilir.
+     * Kullanıcı dilediğinde **"Tek Tıkla Sistemi Güncelle"** butonuna basarak arayüzden çıkmadan `git pull origin main` ile sistemi en son kararlı sürüme yükseltebilir.
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.
