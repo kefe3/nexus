@@ -4,6 +4,7 @@ import psutil
 import time
 import os
 import platform
+import subprocess
 import httpx
 import asyncio
 from typing import Optional, List, Dict, Any
