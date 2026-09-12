@@ -60,7 +60,11 @@ async def chat_stream(
         if not api_key:
             raise HTTPException(status_code=400, detail="Gemini API key is required. Please set it in Settings.")
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{req.model}:streamGenerateContent?alt=sse&key={api_key}"
+        target_model = req.model
+        if "gemini-2.0" in target_model or not target_model:
+            target_model = "gemini-3.6-flash" if "flash" in target_model.lower() else "gemini-3.6-pro"
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:streamGenerateContent?alt=sse&key={api_key}"
         
         contents = []
         system_instruction = None

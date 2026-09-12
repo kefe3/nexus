@@ -23,12 +23,34 @@ async def list_models(
                     models = [{"id": m["name"], "name": m["name"], "provider": "ollama"} for m in data.get("models", [])]
             
             elif provider == "gemini":
-                models = [
-                    {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash (Lightning Fast)", "provider": "gemini"},
-                    {"id": "gemini-2.0-pro-exp-02-05", "name": "Gemini 2.0 Pro (Top Intelligence)", "provider": "gemini"},
-                    {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro (2M Token Context)", "provider": "gemini"},
-                    {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash", "provider": "gemini"}
-                ]
+                # Try fetching live available models from Google AI Studio if API key provided
+                if x_api_key:
+                    try:
+                        g_res = await client.get(f"https://generativelanguage.googleapis.com/v1beta/models?key={x_api_key}")
+                        if g_res.status_code == 200:
+                            raw_models = g_res.json().get("models", [])
+                            for m in raw_models:
+                                m_name = m.get("name", "").replace("models/", "")
+                                methods = m.get("supportedGenerationMethods", [])
+                                if "generateContent" in methods and "gemini" in m_name.lower():
+                                    display_name = m.get("displayName", m_name)
+                                    models.append({
+                                        "id": m_name,
+                                        "name": f"{display_name} ({m_name})",
+                                        "provider": "gemini"
+                                    })
+                    except Exception:
+                        pass
+
+                if not models:
+                    models = [
+                        {"id": "gemini-3.6-flash", "name": "Gemini 3.6 Flash (Next-Gen Fast & Smart)", "provider": "gemini"},
+                        {"id": "gemini-3.6-pro", "name": "Gemini 3.6 Pro (Top Intelligence)", "provider": "gemini"},
+                        {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash (Ultra Fast)", "provider": "gemini"},
+                        {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro (Advanced Reasoning)", "provider": "gemini"},
+                        {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro (2M Token Context)", "provider": "gemini"},
+                        {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash (Lightweight)", "provider": "gemini"}
+                    ]
 
             elif provider == "openai":
                 models = [
