@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# ⚡ Nexus AI Studio — Evrensel Akıllı Kurulum Betiği (Universal Installer v2.2)
+# ⚡ Nexus AI Studio — Evrensel Akıllı Kurulum Betiği (Universal Installer v2.3)
 # CachyOS, Arch Linux, Manjaro, EndeavourOS, Ubuntu, Debian, Fedora, CentOS, Alpine, macOS & WSL2
 # ==============================================================================
 
@@ -25,11 +25,15 @@ echo "  ██║ ╚████║███████╗██╔╝ ██�
 echo "  ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝"
 echo -e "      ${PURPLE}⚡ Self-Hosted AI Studio & Cluster Control Platform${NC}\n"
 
-# 1. Root / Sudo Yetki Kontrolü
+# 1. Root / Sudo Yetki Kontrolü & TTY Bağlantısı
 SUDO=""
 if [ "$EUID" -ne 0 ]; then
     if command -v sudo >/dev/null 2>&1; then
         SUDO="sudo"
+        # Terminal TTY varsa sudo yetkisini al
+        if [ -c /dev/tty ]; then
+            sudo -v </dev/tty 2>/dev/null || sudo -v 2>/dev/null || true
+        fi
     else
         echo -e "${RED}❌ Hata: Kurulum yapabilmek için root veya sudo yetkisi gereklidir.${NC}"
         exit 1
@@ -117,7 +121,7 @@ else
     echo -e "${GREEN}  ✓ Docker zaten kurulu ($(docker --version))${NC}"
 fi
 
-# Docker soket izinlerini aç (Permission Denied hatasını kesin önler)
+# Docker soket izinlerini aç (Kullanıcı grubu oturumunu beklemeden anında çalıştırır)
 if [ -S /var/run/docker.sock ]; then
     $SUDO chmod 666 /var/run/docker.sock 2>/dev/null || true
 fi
@@ -195,13 +199,16 @@ fi
 mkdir -p "$INSTALL_DIR/data/deployments"
 chmod -R 777 "$INSTALL_DIR/data" 2>/dev/null || true
 
-# Docker soket iznini son kez kontrol et
+# Docker soket iznini ayarla
 if [ -S /var/run/docker.sock ]; then
     $SUDO chmod 666 /var/run/docker.sock 2>/dev/null || true
 fi
 
-# Konteynerleri başlat (Yetki hatası alırsa otomatik sudo ile dener)
-if ! $DOCKER_COMPOSE up -d --build 2>/dev/null; then
+# Konteynerleri başlat (Soket izni açıkken çalıştırır)
+if docker info >/dev/null 2>&1; then
+    $DOCKER_COMPOSE up -d --build
+else
+    $SUDO chmod 666 /var/run/docker.sock 2>/dev/null || true
     $SUDO $DOCKER_COMPOSE up -d --build
 fi
 
