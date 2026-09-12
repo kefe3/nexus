@@ -99,7 +99,14 @@ async def resolve_ollama_base_url(client: Optional[httpx.AsyncClient] = None, cu
 def get_detailed_hardware_specs():
     # 1. CPU Inspection
     cpu_model = platform.processor() or "Bilinmeyen İşlemci"
-    if os.path.exists("/proc/cpuinfo"):
+    if platform.system() == "Windows":
+        try:
+            w_out = subprocess.check_output(["powershell", "-NoProfile", "-Command", "(Get-CimInstance Win32_Processor).Name"], stderr=subprocess.DEVNULL, timeout=2).decode().strip()
+            if w_out:
+                cpu_model = w_out
+        except Exception:
+            pass
+    elif os.path.exists("/proc/cpuinfo"):
         try:
             with open("/proc/cpuinfo") as f:
                 for line in f:
@@ -146,16 +153,28 @@ def get_detailed_hardware_specs():
 
     # 3. Motherboard & BIOS DMI Inspection
     board_info = {}
-    for k in ["sys_vendor", "product_name", "product_version", "board_vendor", "board_name", "bios_vendor", "bios_version", "bios_date"]:
-        p = f"/sys/class/dmi/id/{k}"
-        if os.path.exists(p):
-            try:
-                with open(p) as f:
-                    val = f.read().strip()
-                    if val and val != "None":
-                        board_info[k] = val
-            except Exception:
-                pass
+    if platform.system() == "Windows":
+        try:
+            ps_cmd = "(Get-CimInstance Win32_BaseBoard).Manufacturer + '|' + (Get-CimInstance Win32_BaseBoard).Product + '|' + (Get-CimInstance Win32_BIOS).SMBIOSBIOSVersion"
+            mb_out = subprocess.check_output(["powershell", "-NoProfile", "-Command", ps_cmd], stderr=subprocess.DEVNULL, timeout=2).decode().strip()
+            if mb_out and "|" in mb_out:
+                parts = mb_out.split("|")
+                board_info["board_vendor"] = parts[0].strip() if len(parts) > 0 else ""
+                board_info["board_name"] = parts[1].strip() if len(parts) > 1 else ""
+                board_info["bios_version"] = parts[2].strip() if len(parts) > 2 else ""
+        except Exception:
+            pass
+    else:
+        for k in ["sys_vendor", "product_name", "product_version", "board_vendor", "board_name", "bios_vendor", "bios_version", "bios_date"]:
+            p = f"/sys/class/dmi/id/{k}"
+            if os.path.exists(p):
+                try:
+                    with open(p) as f:
+                        val = f.read().strip()
+                        if val and val != "None":
+                            board_info[k] = val
+                except Exception:
+                    pass
 
     # 4. GPU & VRAM Inspection (nvidia-smi + /proc/driver/nvidia fallback)
     gpu_list = []
@@ -204,7 +223,9 @@ def get_detailed_hardware_specs():
 
     # 5. OS & Kernel Pretty Name
     pretty_os = f"{platform.system()} {platform.release()}"
-    if os.path.exists("/etc/os-release"):
+    if platform.system() == "Windows":
+        pretty_os = f"Windows {platform.release()} ({platform.version()})"
+    elif os.path.exists("/etc/os-release"):
         try:
             with open("/etc/os-release") as f:
                 for line in f:
@@ -215,13 +236,14 @@ def get_detailed_hardware_specs():
             pass
 
     # 6. Disk details
-    du = psutil.disk_usage("/")
+    target_disk = os.environ.get("SystemDrive", "C:") + "\\" if platform.system() == "Windows" else "/"
+    du = psutil.disk_usage(target_disk)
     disk_info = {
         "total_gb": round(du.total / (1024**3), 2),
         "used_gb": round(du.used / (1024**3), 2),
         "free_gb": round(du.free / (1024**3), 2),
         "percent": du.percent,
-        "mount": "/"
+        "mount": target_disk
     }
 
     return {

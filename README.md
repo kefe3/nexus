@@ -124,16 +124,17 @@ Terminalinizi açın ve aşağıdaki komutu yapıştırın:
 curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
 ```
 
-### 🪟 Windows (1-Click Kurulum & Başlatma)
-**Seçenek 1: PowerShell ile Tek Satır Kurulum**
+### 🪟 Windows (1-Click Native & Docker Options)
+**Option 1: PowerShell 1-Line Universal Setup (Native or Docker)**
 ```powershell
 irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex
 ```
 
-**Seçenek 2: Çift Tıklayarak Çalıştırma (.BAT Başlatıcılar)**
-1. Depoyu indirin: `git clone https://github.com/kefe3/nexus.git`
-2. **`install.bat`** veya **`start.bat`** dosyasına çift tıklayın!
-3. Sistem otomatik olarak Docker Desktop ile ayağa kalkıp tarayıcınızda açılacaktır.
+**Option 2: 1-Click Native Windows Batch Launchers (No Docker Required!)**
+1. Download or clone: `git clone https://github.com/kefe3/nexus.git`
+2. Double click **`Nexus-Windows-Installer.bat`** (or `install.bat`) to install Python venv & desktop shortcut.
+3. Double click **`Nexus-Windows-Start.bat`** (or `start.bat`) to launch anytime!
+4. To stop: Double click **`Nexus-Windows-Stop.bat`** (or `stop.bat`).
 
 ### 🗑️ Sistemi Kaldırma (Tek Komutla Temiz Kaldırma)
 ```bash

@@ -1,6 +1,9 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from app.core.config import settings
 from app.api.chat import router as chat_router
 from app.api.models import router as models_router
@@ -42,6 +45,25 @@ async def health_check():
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION
     }
+
+# Mount frontend static files if available (Single-process Native Windows & Standalone execution)
+possible_frontend_dirs = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "src")),
+    os.path.abspath(os.path.join(os.getcwd(), "frontend", "src")),
+    "/app/frontend",
+]
+frontend_dir = next((d for d in possible_frontend_dirs if os.path.isdir(d)), None)
+
+if frontend_dir:
+    @app.get("/admin")
+    @app.get("/admin.html")
+    async def serve_admin():
+        admin_path = os.path.join(frontend_dir, "admin.html")
+        if os.path.exists(admin_path):
+            return FileResponse(admin_path)
+        return {"error": "admin.html not found"}
+
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn

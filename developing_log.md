@@ -427,6 +427,20 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
   3. **Arayüz Başlık Entegrasyonu (`frontend/src/js/admin.js`):**
      * Kontrol Paneli'ndeki `fetchRunningModels`, `unloadModel`, `fetchInstalledModels`, `pullModel`, `deleteModel` ve `populateBenchmarkModels` isteklerine dinamik `getOllamaHeaders()` eklendi.
 
+#### 🕒 20:51:40 — [Commit: `8c3f10a`] • 🪟 Tam Bağımsız Windows Native Sürümü (No-Docker Dedicated Windows Architecture)
+* **Modül:** `Windows Native Architecture, Single-Process Static Mounting & Direct Launchers`
+* **Yapılan İşlemler:**
+  1. **Tek Süreçli (Single-Process) FastAPI Statik Sunucusu (`backend/app/main.py`):**
+     * Docker veya harici bir Nginx web sunucusuna ihtiyaç duymadan, FastAPI arka ucunun hem `/api/...` rotalarını hem de `frontend/src` altındaki HTML/JS/CSS statik dosyalarını ve `/admin.html` sayfasını tek bir Python süreciyle port 3050 üzerinden doğrudan sunması sağlandı.
+  2. **Windows Donanım Telemetrisi (`backend/app/api/admin.py`):**
+     * PowerShell CIM/WMI entegrasyonu (`Win32_Processor`, `Win32_BaseBoard`, `Win32_BIOS`, `nvidia-smi.exe`, `SystemDrive:\`) eklenerek Windows üzerinde işlemci, anakart, BIOS, disk ve GPU telemetrisi %100 yerel olarak okundu.
+  3. **Özel Windows Başlatıcıları & Kurulum Seti:**
+     * `Nexus-Windows-Installer.bat`: Winget üzerinden Python 3.11 ve Ollama denetimi/kurulumu yapan, bağımsız `venv` kuran ve masaüstüne `Nexus AI Studio` kısayolu oluşturan sihirbaz.
+     * `Nexus-Windows-Start.bat`: Ollama'yı ve yerel sunucuyu başlatıp doğrudan varsayılan tarayıcıda `http://localhost:3050` adresini açan tek tık başlatıcı.
+     * `Nexus-Windows-Stop.bat`: İlgili portları ve süreçleri temiz bir şekilde kapatan araç.
+     * `Nexus-Windows-Update.bat`: Git ve bağımlılıkları güncelleyen araç.
+     * `install.ps1` v3.0: Hem Native (No-Docker) hem de Docker profillerini destekleyen evrensel PowerShell kurulumcusu.
+
 ---
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
