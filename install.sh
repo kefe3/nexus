@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# ⚡ Nexus AI Studio — Evrensel Akıllı Kurulum Betiği (Universal Installer)
-# Arch, CachyOS, Manjaro, Ubuntu, Debian, Fedora, CentOS, Alpine, macOS & WSL2
+# ⚡ Nexus AI Studio — Evrensel Akıllı Kurulum Betiği (Universal Installer v2.1)
+# CachyOS, Arch Linux, Manjaro, EndeavourOS, Ubuntu, Debian, Fedora, CentOS, Alpine, macOS & WSL2
 # ==============================================================================
 
 set -e
@@ -25,13 +25,13 @@ echo "  ██║ ╚████║███████╗██╔╝ ██�
 echo "  ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝"
 echo -e "      ${PURPLE}⚡ Self-Hosted AI Studio & Cluster Control Platform${NC}\n"
 
-# 1. Yetki Kontrolü
+# 1. Root / Sudo Yetki Kontrolü
 SUDO=""
 if [ "$EUID" -ne 0 ]; then
     if command -v sudo >/dev/null 2>&1; then
         SUDO="sudo"
     else
-        echo -e "${RED}❌ Hata: Paket kurulumlarını yapabilmek için root veya sudo yetkisi gereklidir.${NC}"
+        echo -e "${RED}❌ Hata: Kurulum yapabilmek için root veya sudo yetkisi gereklidir.${NC}"
         exit 1
     fi
 fi
@@ -46,9 +46,10 @@ fi
 
 echo -e "${YELLOW}🔍 Sistem Analiz Ediliyor: ${BOLD}${DISTRO} (${OS} ${ARCH})${NC}..."
 
+# 3. Temel Araçların Kurulum Fonksiyonu
 install_pkg() {
     PKG=$1
-    if command -v pacman >/dev/null 2>&1; then
+    if [ -f /etc/cachyos-release ] || [ -f /etc/arch-release ] || command -v pacman >/dev/null 2>&1; then
         $SUDO pacman -Sy --noconfirm "$PKG"
     elif command -v apt-get >/dev/null 2>&1; then
         $SUDO apt-get update -qq && $SUDO apt-get install -y -qq "$PKG"
@@ -75,25 +76,25 @@ for tool in curl git wget jq; do
 done
 echo -e "${GREEN}  ✓ Temel araçlar hazır!${NC}"
 
-# 4. Docker & Docker Compose Kurulumu (CachyOS, Arch, Ubuntu, Fedora, macOS)
+# 4. Docker & Docker Compose Kurulumu (CachyOS, Arch, Manjaro, Ubuntu, Fedora, macOS)
 echo -e "\n${CYAN}🐳 2/5 Docker & Konteyner Altyapısı denetleniyor...${NC}"
 if ! command -v docker >/dev/null 2>&1; then
     echo -e "${YELLOW}  -> Docker bulunamadı. Dağıtıma özel (${DISTRO}) kurulum başlatılıyor...${NC}"
     
-    if command -v pacman >/dev/null 2>&1; then
-        # Arch / CachyOS / Manjaro / EndeavourOS
-        echo -e "${YELLOW}  -> Arch/CachyOS pacman ile Docker ve Compose kuruluyor...${NC}"
+    if [ -f /etc/cachyos-release ] || [ -f /etc/arch-release ] || command -v pacman >/dev/null 2>&1; then
+        # CachyOS, Arch, Manjaro, EndeavourOS
+        echo -e "${YELLOW}  -> CachyOS/Arch pacman ile Docker ve Docker Compose kuruluyor...${NC}"
         $SUDO pacman -Sy --noconfirm docker docker-compose
         $SUDO systemctl enable --now docker
         if [ -n "$USER" ] && [ "$USER" != "root" ]; then
             $SUDO usermod -aG docker "$USER" 2>/dev/null || true
         fi
-        echo -e "${GREEN}  ✓ Arch/CachyOS Docker motoru başarıyla kuruldu!${NC}"
+        echo -e "${GREEN}  ✓ CachyOS/Arch Docker motoru başarıyla kuruldu ve başlatıldı!${NC}"
     elif [ "$OS" = "Linux" ]; then
         # Ubuntu, Debian, Fedora vb.
         if curl -fsSL https://get.docker.com -o /tmp/get-docker.sh; then
             $SUDO sh /tmp/get-docker.sh || {
-                echo -e "${YELLOW}  -> Paket yöneticisi ile doğrudan deneniyor...${NC}"
+                echo -e "${YELLOW}  -> Paket yöneticisi ile deneniyor...${NC}"
                 install_pkg docker.io || install_pkg docker || true
             }
             rm -f /tmp/get-docker.sh
@@ -116,7 +117,7 @@ else
     echo -e "${GREEN}  ✓ Docker zaten kurulu ($(docker --version))${NC}"
 fi
 
-# Docker Compose tespiti
+# Docker Compose kontrolü
 DOCKER_COMPOSE="docker compose"
 if ! docker compose version >/dev/null 2>&1; then
     if command -v docker-compose >/dev/null 2>&1; then
@@ -134,19 +135,18 @@ echo -e "${GREEN}  ✓ Docker Compose hazır!${NC}"
 # 5. Ollama Yerel Yapay Zeka Motoru
 echo -e "\n${CYAN}🧠 3/5 Ollama Yerel GPU/CPU Motoru denetleniyor...${NC}"
 if ! command -v ollama >/dev/null 2>&1; then
-    echo -e "${YELLOW}  -> Ollama yerel yapay zeka motoru eksik. Resmi kurulum başlatılıyor...${NC}"
+    echo -e "${YELLOW}  -> Ollama motoru eksik. Resmi kurulum başlatılıyor...${NC}"
     curl -fsSL https://ollama.com/install.sh | sh
     
     if command -v systemctl >/dev/null 2>&1; then
         $SUDO systemctl enable --now ollama || true
     fi
     sleep 3
-    echo -e "${GREEN}  ✓ Ollama motoru kuruldu ve GPU/CPU desteğiyle başlatıldı!${NC}"
+    echo -e "${GREEN}  ✓ Ollama motoru kuruldu ve başlatıldı!${NC}"
 else
     echo -e "${GREEN}  ✓ Ollama zaten kurulu ve hazır!${NC}"
 fi
 
-# Servisi açık tut
 if command -v systemctl >/dev/null 2>&1; then
     $SUDO systemctl start ollama 2>/dev/null || true
 fi
@@ -155,12 +155,12 @@ fi
 if command -v ollama >/dev/null 2>&1; then
     MODEL_COUNT=$(ollama list 2>/dev/null | grep -v 'NAME' | grep -v '^$' | wc -l || echo "0")
     if [ "$MODEL_COUNT" -eq 0 ]; then
-        echo -e "${YELLOW}  -> Hızlı başlangıç modeli (qwen2.5-coder:1.5b) indiriliyor...${NC}"
+        echo -e "${YELLOW}  -> İlk hızlı başlangıç modeli (qwen2.5-coder:1.5b) indiriliyor...${NC}"
         ollama pull qwen2.5-coder:1.5b 2>/dev/null || true
     fi
 fi
 
-# 6. Cloudflared Tünel Motoru
+# 6. Cloudflared Dış Erişim Tüneli
 echo -e "\n${CYAN}🌐 4/5 Cloudflared Dış Erişim Tüneli denetleniyor...${NC}"
 if [ ! -f "/usr/local/bin/cloudflared" ] && ! command -v cloudflared >/dev/null 2>&1; then
     echo -e "${YELLOW}  -> Cloudflared tünel ikilisi indiriliyor...${NC}"
