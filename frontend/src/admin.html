@@ -972,34 +972,77 @@
             <section id="sec-deployments" class="cp-section">
                 <div class="cp-section-header">
                     <div>
-                        <h2 class="cp-section-title">🌍 Canlı Yayınlar & Cloudflare Tüneli</h2>
-                        <p class="cp-section-desc">Nexus AI Studio tarafından üretilen ve dünyaya canlı yayınlanan web projeleri ve genel HTTPS erişim tüneli.</p>
+                        <h2 class="cp-section-title">🌍 Nexus AI Studio & Kontrol Paneli Dış Erişim</h2>
+                        <p class="cp-section-desc">Nexus AI Studio'yu ve Kontrol Panelini port açmadan, Cloudflare tüneliyle dünyanın her yerinden (cep telefonu, uzaktaki bilgisayar vb.) kontrol edin.</p>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button class="btn-action" style="padding: 8px 14px; font-size: 0.82rem; background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 242, 254, 0.3);" onclick="restartTunnel()"><i class="fa-solid fa-rotate-right"></i> Tüneli Yenile</button>
+                        <button class="btn-action" style="padding: 8px 14px; font-size: 0.82rem; background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 242, 254, 0.3);" onclick="restartTunnel()"><i class="fa-solid fa-rotate-right"></i> Tüneli Yenile / Başlat</button>
                         <button class="btn-action" style="padding: 8px 14px; font-size: 0.82rem;" onclick="fetchDeployments()"><i class="fa-solid fa-rotate"></i> Yenile</button>
                     </div>
                 </div>
 
-                <!-- Tunnel Status Box -->
-                <div class="glass-panel" style="border-color: rgba(0, 245, 160, 0.3);">
-                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <!-- Studio & Admin Remote Access Dashboard Card -->
+                <div class="glass-panel" style="border: 1px solid rgba(0, 245, 160, 0.35); background: linear-gradient(135deg, rgba(14, 20, 32, 0.9), rgba(6, 12, 24, 0.95));">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
                         <div style="display: flex; align-items: center; gap: 14px;">
-                            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(0, 245, 160, 0.15); border: 1px solid rgba(0, 245, 160, 0.3); display: flex; align-items: center; justify-content: center; color: var(--accent-green); font-size: 1.2rem;">
+                            <div style="width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, rgba(0, 245, 160, 0.2), rgba(0, 242, 254, 0.2)); border: 1px solid rgba(0, 245, 160, 0.4); display: flex; align-items: center; justify-content: center; color: var(--accent-green); font-size: 1.4rem; box-shadow: 0 0 20px rgba(0, 245, 160, 0.2);">
                                 <i class="fa-solid fa-tower-broadcast"></i>
                             </div>
                             <div>
-                                <div style="font-weight: 800; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 8px;">
-                                    <span>Cloudflare Quick Tunnel Durumu</span>
+                                <div style="font-weight: 800; font-size: 1.05rem; color: #fff; display: flex; align-items: center; gap: 10px;">
+                                    <span>Cloudflare Quick Tunnel (Uzaktan Dış Erişim)</span>
                                     <span class="status-pill" id="tunnel-status-pill"><span class="pulse-dot"></span> Kontrol Ediliyor</span>
                                 </div>
-                                <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">Dünya çapında ücretsiz, otomatik SSL/HTTPS tünelleme köprüsü.</div>
+                                <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">Dünya genelinde port açmadan, statik IP gerekmeden güvenli SSL/HTTPS uzaktan erişim.</div>
                             </div>
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="text" id="admin-tunnel-url" readonly style="background: #04060c; border: 1px solid var(--card-border); color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; width: 320px;" value="Tünel başlatılıyor...">
-                            <a id="admin-tunnel-link" href="#" target="_blank" class="btn-action" style="padding: 8px 14px; font-size: 0.82rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Aç</a>
+                            <span style="font-size: 0.78rem; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">SSL / TLS Şifreli</span>
+                        </div>
+                    </div>
+
+                    <!-- Remote URLs & QR Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; align-items: center;">
+                        <!-- Left: Remote URLs -->
+                        <div style="space-y: 1rem; display: flex; flex-direction: column; gap: 12px;">
+                            <!-- 1. AI Studio Remote URL -->
+                            <div style="background: rgba(0, 0, 0, 0.45); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(0, 242, 254, 0.2);">
+                                <label style="font-size: 0.78rem; font-weight: 800; color: var(--accent-cyan); display: flex; align-items: center; gap: 6px; margin-bottom: 6px; text-transform: uppercase;">
+                                    <i class="fa-solid fa-comments"></i> <span>1. Nexus AI Studio (Dış Sohbet & Kodlama)</span>
+                                </label>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="text" id="admin-studio-remote-url" readonly class="custom-input" style="font-size: 0.82rem; padding: 7px 12px; font-family: 'JetBrains Mono', monospace; color: #fff;" value="Tünel başlatılıyor...">
+                                    <button class="btn-action" style="padding: 7px 12px; font-size: 0.8rem;" onclick="copyRemoteUrl('studio')"><i class="fa-regular fa-copy"></i></button>
+                                    <a id="admin-studio-remote-link" href="#" target="_blank" class="btn-action" style="padding: 7px 12px; font-size: 0.8rem; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                                </div>
+                            </div>
+
+                            <!-- 2. Control Panel Remote URL -->
+                            <div style="background: rgba(0, 0, 0, 0.45); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(138, 43, 226, 0.3);">
+                                <label style="font-size: 0.78rem; font-weight: 800; color: var(--accent-purple); display: flex; align-items: center; gap: 6px; margin-bottom: 6px; text-transform: uppercase;">
+                                    <i class="fa-solid fa-sliders"></i> <span>2. Nexus Kontrol Paneli (Dıştan Yönetim)</span>
+                                </label>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="text" id="admin-cp-remote-url" readonly class="custom-input" style="font-size: 0.82rem; padding: 7px 12px; font-family: 'JetBrains Mono', monospace; color: #fff;" value="Tünel başlatılıyor...">
+                                    <button class="btn-action" style="padding: 7px 12px; font-size: 0.8rem;" onclick="copyRemoteUrl('cp')"><i class="fa-regular fa-copy"></i></button>
+                                    <a id="admin-cp-remote-link" href="#" target="_blank" class="btn-action" style="padding: 7px 12px; font-size: 0.8rem; background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                                </div>
+                            </div>
+
+                            <!-- 3. Local LAN Fallback Info -->
+                            <div style="font-size: 0.76rem; color: #64748b; font-family: 'JetBrains Mono', monospace; padding-left: 4px;">
+                                🏠 Yerel Ağ (LAN): <span style="color: #94a3b8;">http://192.168.0.188:3050</span> | Port: <span style="color: #94a3b8;">3050 / 8500</span>
+                            </div>
+                        </div>
+
+                        <!-- Right: Mobile Remote QR Box -->
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.4); padding: 14px; border-radius: 14px; border: 1px solid var(--card-border);">
+                            <div style="background: #fff; padding: 6px; border-radius: 10px; margin-bottom: 8px;">
+                                <img id="admin-remote-qr-img" src="" alt="Remote Access QR" style="width: 120px; height: 120px; display: block;">
+                            </div>
+                            <div style="font-size: 0.8rem; font-weight: 700; color: #fff; text-align: center;">📱 Telefondan Dış Erişim</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 2px;">Kameranızı açıp taratarak her yerden bağlanın.</div>
                         </div>
                     </div>
                 </div>

@@ -24,7 +24,7 @@ class TunnelManager:
         self.is_running = False
         self.lock = threading.Lock()
 
-    def start_tunnel(self, port: int = 8500):
+    def start_tunnel(self, port: int = 3050):
         with self.lock:
             if self.is_running and self.public_url:
                 return self.public_url
@@ -91,8 +91,8 @@ class TunnelManager:
 
 tunnel_manager = TunnelManager()
 
-# Automatically attempt tunnel startup in background
-threading.Thread(target=lambda: tunnel_manager.start_tunnel(8500), daemon=True).start()
+# Automatically attempt tunnel startup in background for port 3050 (Full Nexus Studio & Control Panel)
+threading.Thread(target=lambda: tunnel_manager.start_tunnel(3050), daemon=True).start()
 
 def load_metadata() -> Dict[str, Any]:
     if os.path.exists(METADATA_FILE):
@@ -202,17 +202,35 @@ async def delete_deployment(deploy_id: str):
     return {"status": "ok", "message": f"Deployment '{deploy_id}' deleted."}
 
 @router.get("/api/deploy/tunnel")
+@router.get("/api/deploy/studio-tunnel")
 async def get_tunnel_status():
     pub_url = tunnel_manager.public_url
     return {
         "status": "ok",
         "active": bool(pub_url),
         "url": pub_url or "",
-        "service": "Cloudflare Quick Tunnel"
+        "public_studio_url": pub_url or "",
+        "public_admin_url": f"{pub_url}/admin.html" if pub_url else "",
+        "local_studio_url": "http://192.168.0.188:3050",
+        "local_admin_url": "http://192.168.0.188:3050/admin.html",
+        "service": "Cloudflare Quick Tunnel (Zero-Config HTTPS)"
     }
 
 @router.post("/api/deploy/tunnel/restart")
+@router.post("/api/deploy/studio-tunnel/restart")
 async def restart_tunnel():
     tunnel_manager.stop_tunnel()
-    pub_url = tunnel_manager.start_tunnel(8500)
-    return {"status": "ok", "url": pub_url or "", "active": bool(pub_url)}
+    pub_url = tunnel_manager.start_tunnel(3050)
+    return {
+        "status": "ok",
+        "active": bool(pub_url),
+        "url": pub_url or "",
+        "public_studio_url": pub_url or "",
+        "public_admin_url": f"{pub_url}/admin.html" if pub_url else ""
+    }
+
+@router.post("/api/deploy/studio-tunnel/stop")
+async def stop_tunnel():
+    tunnel_manager.stop_tunnel()
+    return {"status": "ok", "message": "Tunnel stopped"}
+

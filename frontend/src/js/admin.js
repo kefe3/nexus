@@ -435,24 +435,41 @@ async function fetchLogs() {
 async function fetchDeployments() {
     const tbody = document.getElementById('deployments-tbody');
     const pill = document.getElementById('tunnel-status-pill');
-    const inputUrl = document.getElementById('admin-tunnel-url');
-    const linkBtn = document.getElementById('admin-tunnel-link');
+    const studioInput = document.getElementById('admin-studio-remote-url');
+    const studioLink = document.getElementById('admin-studio-remote-link');
+    const cpInput = document.getElementById('admin-cp-remote-url');
+    const cpLink = document.getElementById('admin-cp-remote-link');
+    const qrImg = document.getElementById('admin-remote-qr-img');
 
     try {
-        const res = await fetch(`${API_BASE}/deploy/list`);
+        const res = await fetch(`${API_BASE}/deploy/studio-tunnel`);
         const data = await res.json();
+        const resList = await fetch(`${API_BASE}/deploy/list`);
+        const dataList = await resList.json();
 
-        // Update tunnel status
-        if (data.tunnel_active && data.tunnel_url) {
+        // Update tunnel status & Remote URLs
+        if (data.active && data.public_studio_url) {
             pill.className = 'status-pill';
             pill.style.background = 'rgba(0, 245, 160, 0.12)';
             pill.style.borderColor = 'rgba(0, 245, 160, 0.3)';
             pill.style.color = 'var(--accent-green)';
-            pill.innerHTML = '<span class="pulse-dot"></span> Canlı Tünel Yayında';
+            pill.innerHTML = '<span class="pulse-dot"></span> Canlı Dış Tünel Yayında';
 
-            inputUrl.value = data.tunnel_url;
-            linkBtn.href = data.tunnel_url;
-            linkBtn.style.display = 'inline-flex';
+            if (studioInput) studioInput.value = data.public_studio_url;
+            if (studioLink) {
+                studioLink.href = data.public_studio_url;
+                studioLink.style.display = 'inline-flex';
+            }
+
+            if (cpInput) cpInput.value = data.public_admin_url;
+            if (cpLink) {
+                cpLink.href = data.public_admin_url;
+                cpLink.style.display = 'inline-flex';
+            }
+
+            if (qrImg) {
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(data.public_studio_url)}`;
+            }
         } else {
             pill.className = 'status-pill';
             pill.style.background = 'rgba(255, 179, 0, 0.12)';
@@ -460,13 +477,15 @@ async function fetchDeployments() {
             pill.style.color = 'var(--accent-amber)';
             pill.innerHTML = '<i class="fa-solid fa-clock"></i> Tünel Bekleniyor';
 
-            inputUrl.value = 'http://192.168.0.188:3050 (Yerel Ağ Aktif)';
-            linkBtn.href = 'http://192.168.0.188:3050';
+            if (studioInput) studioInput.value = 'http://192.168.0.188:3050 (Yerel Ağ)';
+            if (cpInput) cpInput.value = 'http://192.168.0.188:3050/admin.html (Yerel Ağ)';
+            if (studioLink) studioLink.href = 'http://192.168.0.188:3050';
+            if (cpLink) cpLink.href = 'http://192.168.0.188:3050/admin.html';
         }
 
         // Render table
         tbody.innerHTML = '';
-        if (data.deployments && data.deployments.length > 0) {
+        if (dataList.deployments && dataList.deployments.length > 0) {
             document.getElementById('deploy-table-count-badge').textContent = `${data.deployments.length} Proje`;
             document.getElementById('badge-deployments-count').textContent = data.deployments.length;
 
@@ -546,6 +565,16 @@ function round(val, precision) {
 
 function escapeHtml(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function copyRemoteUrl(type) {
+    const inputId = type === 'studio' ? 'admin-studio-remote-url' : 'admin-cp-remote-url';
+    const input = document.getElementById(inputId);
+    if (input && input.value) {
+        navigator.clipboard.writeText(input.value);
+        const name = type === 'studio' ? 'Nexus AI Studio' : 'Nexus Kontrol Paneli';
+        alert(`✅ ${name} dış erişim linki panoya kopyalandı!`);
+    }
 }
 
 // Initial Load & Auto Refresh Interval

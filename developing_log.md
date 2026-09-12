@@ -205,11 +205,31 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
 
 ---
 
+#### 🕒 17:28:45 — [Commit: `6b91ea4`] • 🌐 Tam AI Studio & Kontrol Paneli Uzaktan / Dış Erişim Sistemi
+* **Modül:** `Remote Access & Cloudflare Full Platform Tunnel`
+* **Yapılan İşlemler:**
+  * Nexus platformunun tamamı (hem AI Studio hem de Kontrol Paneli) Cloudflare tüneli üzerinden dış dünyaya açıldı:
+    * **Tünel Hedefi Nginx (Port 3050):** `cloudflared` tüneli doğrudan Nginx ters proxy portuna (`3050`) bağlanarak tek bir dinamik SSL/HTTPS alan adı altında:
+      * `https://*.trycloudflare.com` -> Nexus AI Studio (Sohbet & Canlı Kodlama Canvası)
+      * `https://*.trycloudflare.com/admin.html` -> Nexus Kontrol Paneli (Donanım, VRAM, Model Yönetimi & Benchmark)
+      * `https://*.trycloudflare.com/share/{id}` -> Canlı Yayınlanan AI Web Projeleri
+      * `https://*.trycloudflare.com/api/...` -> FastAPI Asenkron Akış API'si
+    * **Kontrol Paneli Dış Erişim Kartı (`frontend/src/admin.html` & `frontend/src/js/admin.js`):**
+      * Kontrol paneline zümrüt yeşili ve mor cam temalı **"Uzaktan Dış Erişim Gösterge Paneli"** entegre edildi.
+      * AI Studio Dış Erişim Linki (`https://*.trycloudflare.com`) + 1-tık kopyalama ve yeni sekmede açma.
+      * Kontrol Paneli Dış Erişim Linki (`https://*.trycloudflare.com/admin.html`) + 1-tık kopyalama ve yeni sekmede açma.
+      * **Mobil Dış Erişim QR Kodu:** Kullanıcının cep telefonu kamerasıyla QR kodu taratarak ev/ofis dışındayken tüm yapay zeka kümesine anında bağlanıp kontrol edebilmesi sağlandı.
+    * **Backend API Desteği (`backend/app/api/deploy.py`):**
+      * `/api/deploy/studio-tunnel` & `/api/deploy/studio-tunnel/restart` & `/api/deploy/studio-tunnel/stop` uç noktaları eklendi.
+
+---
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.
 2. **İzole Sandbox & Güvenli Yayın:** Yapay zekanın ürettiği JavaScript kodları ve web arayüzleri `sandbox="allow-scripts allow-modals"` yetkileriyle izole bir iframe içinde çalıştırılır, ana web paneline ve çerezlere erişemez.
 3. **Sıfır Yapılandırmalı Canlı Tünel (Cloudflare Quick Tunnel):** Kullanıcının port açmasına, statik IP almasına veya Cloudflare hesabı bağlamasına gerek kalmadan uçtan uca TLS şifreli `https://*.trycloudflare.com` alan adlarıyla canlı web paylaşımı sağlanır.
 4. **SSE Performansı:** Server-Sent Events akışı `proxy_buffering off` ve `GZipMiddleware` ile tamponlama gecikmesi olmadan sıfır gecikmeyle istemciye aktarılır.
+
 
 
