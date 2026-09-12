@@ -362,11 +362,42 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
 #### 🕒 18:44:15 — [Commit: `b824ef0`] • 🗑️ Kaldırma Betiği (`uninstall.sh` & `uninstall.ps1`) Baştan Sona Yenilendi & Silme Uç Noktaları Sağlamlaştırıldı
 * **Modül:** `Uninstaller Engine Overhaul & HTTP Delete Fallbacks`
 * **Tespit Edilen Sorunlar & Çözümler:**
-  1. **Curl Pipe / Farklı Çalışma Dizini Tespiti:** `uninstall.sh` curl üzerinden pipe edildiğinde `BASH_SOURCE` üzerinden dizin bulma hatası giderildi; sistem `$NEXUS_DIR`, `$PWD`, `$HOME/nexus`, `/opt/nexus` adaylarını tarayarak gerçek kurulum dizinini otomatik keşfeder.
-  2. **Docker Sudo / Yetki Düzeltmesi:** Kullanıcı `docker` grubunda olmasa bile `sudo docker` sarmalayıcısı devreye girerek konteynerlerin ve imajların yetki hatası almadan kesin olarak silinmesi sağlandı.
-  3. **Ters Soru Tuzağı Kaldırıldı:** Sistemde konteyner veya dizin bulunmadığında kullanıcıya "Nexus AI kurmak ister misiniz?" sorusu sorulup döngüye sokulması engellendi; "Sisteminiz zaten tamamen temiz" denilerek temiz çıkış yapılması sağlandı.
-  4. **Kaynak Kod ve Dizin Temizliği:** Kullanıcı onayına bağlı olarak `$FOUND_INSTALL_DIR` klasörünün tamamının diskten silinmesi veya `data/` klasörünün güvenle korunması sağlandı.
-  5. **HTTP DELETE / POST Çift Yönlü Destek:** Model silme (`/api/admin/models/delete`), yayın silme (`/api/deploy/{id}`) ve sohbet silme (`/api/chats/{id}`) uç noktalarına hem `DELETE` hem `POST` metot desteği eklendi.
+#### 🕒 19:38:20 — [Commit: `c7049db`] • 🌐 GPU Offloading & Çoklu Sunucu Entegrasyonu (Bölüm 2 Canlıya Alındı)
+* **Modül:** `Multi-Server GPU Offloading & Automated Backup & Safety Audit Engine`
+* **Yapılan İşlemler:**
+  1. **Ev Sunucusu GPU Offloading (Topcubuntu RTX 4060 ➔ VDS 1 `ai.oedge.xyz` / `nexus.oedge.xyz`):**
+     * `~/.config/systemd/user/ollama-gpu.service` ile GPU hızlandırmalı Ollama motoru `0.0.0.0:11435` üzerinde yapılandırıldı.
+     * `~/.config/systemd/user/nexus-gpu-bridge.service` ile VDS 1'e (`213.142.159.20`) kesintisiz ters SSH tüneli kuruldu (`loginctl enable-linger kagan` ile 7/24 kalıcılık sağlandı).
+     * VDS 1 Nginx konfigürasyonuna (`ai_oedge.conf` & `nexus.conf`) öncelikli (`^~`) `/v1/` ve `/ollama/` blokları eklenerek tüm ağır LLM sorguları VDS 1 CPU'su yerine evdeki RTX 4060 GPU'ya yönlendirildi (Canlı testte 4.6 GB VRAM ve 80+ tok/s hız teyit edildi).
+  2. **VDS 2 Otomatik Mailcow & MySQL Veritabanı Yedeklemesi:**
+     * `/opt/origin-edge-automation/mailcow_backup.sh` betiği yazıldı; Mailcow MariaDB ve Alfabemail MySQL veritabanları sıkıştırılarak (`.sql.gz`) günlük yedeklenir ve 7 günden eski arşivler otomatik temizlenir (`crontab: 0 3 * * *`).
+  3. **VDS 2 KAMA AI 4.0 Çocuk Koruma & Güvenlik Denetim Motoru:**
+     * `/opt/origin-edge-automation/kama_audit.py` geliştirildi; küfür, argo ve riskli mesaj filtre loglarını tarayarak haftalık Güvenlik Skoru hesaplar ve veli/öğretmenler için modern HTML & JSON güvenlik raporu üretir (`crontab: 0 6 * * 1`).
+
+---
+
+#### 🕒 20:15:30 — [Commit: `a10b5c3`] • 🪟 Windows 10/11 & Docker Desktop Tam Uyumluluk Revizyonu & Çift Tıkla Başlatıcılar (.BAT)
+* **Modül:** `Windows Native Compatibility & Dual Docker Compose Profiles`
+* **Tespit Edilen Sorunlar & Çözümler:**
+  1. **Docker Desktop `network_mode: host` Kısıtlaması:** Linux'a özgü host ağı Windows Docker Desktop'ta portları dışarı açmadığından Windows için özel `docker-compose.windows.yml` profili (`ports: 3050:3050, 8500:8500` ve `host.docker.internal:host-gateway`) oluşturuldu.
+  2. **Geçersiz Volume Mount Hatası:** Linux yolu olan `/usr/local/bin/cloudflared` bağlama noktası `docker-compose.yml` dosyasından kaldırılarak Windows'ta çökme engellendi.
+  3. **Windows Host Ollama Köprüsü:** `chat.py` ve `models.py` içerisine `http://host.docker.internal:11434` aday uç noktaları eklenerek Windows üzerinde çalışan Ollama motoru otomatik algılandı.
+  4. **Tek Tıkla Windows Başlatıcıları:**
+     * `install.bat`: PowerShell kısıtlamalarını aşan tek tık kurulum betiği.
+     * `start.bat`: Konteynerleri ayağa kaldırıp tarayıcıda `http://localhost:3050` açan başlatıcı.
+     * `stop.bat`: Konteynerleri tek tıkla durduran araç.
+     * `uninstall.bat`: Windows kaldırma sihirbazı.
+  5. **`install.ps1` v2.5 İyileştirmesi:** Docker Desktop kapalıysa otomatik algılayıp arka planda başlatan ve motor hazır olana kadar bekleyen akıllı döngü eklendi.
+
+---
+
+#### 🕒 20:20:10 — [Commit: `e4890c2`] • 🍳 Gurme Omlet Atölyesi İnteraktif Web Uygulaması
+* **Modül:** `Standalone Web Companion & Generative UI`
+* **Yapılan İşlemler:**
+  * Modern TailwindCSS ve Glassmorphism arayüzüyle **Gourmet Omlet Atölyesi** web uygulaması geliştirildi (`/home/kagan/.gemini/antigravity/scratch/omlet-tarifi/index.html`).
+  * 4 farklı stil (Fransız Baveuse, Kaşarlı-Mantarlı, Fit Avokadolu, Ege Usulü), dinamik porsiyon ve malzeme gramaj hesaplayıcısı, entegre şef pişirme kronometresi ve altın püf noktaları eklendi.
+
+---
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 

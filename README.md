@@ -124,9 +124,17 @@ Terminalinizi açın ve aşağıdaki komutu yapıştırın:
 curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
 ```
 
-### 🪟 Windows (PowerShell ile Otomatik Kurulum)
-PowerShell'i açın ve çalıştırın:
+### 🪟 Windows (1-Click Kurulum & Başlatma)
+**Seçenek 1: PowerShell ile Tek Satır Kurulum**
 ```powershell
+irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex
+```
+
+**Seçenek 2: Çift Tıklayarak Çalıştırma (.BAT Başlatıcılar)**
+1. Depoyu indirin: `git clone https://github.com/kefe3/nexus.git`
+2. **`install.bat`** veya **`start.bat`** dosyasına çift tıklayın!
+3. Sistem otomatik olarak Docker Desktop ile ayağa kalkıp tarayıcınızda açılacaktır.
+
 ### 🗑️ Sistemi Kaldırma (Tek Komutla Temiz Kaldırma)
 ```bash
 # Linux / macOS
