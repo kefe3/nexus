@@ -44,24 +44,42 @@ function runSandboxCode() {
     const iframe = document.getElementById("sandboxIframe");
     if (!iframe) return;
 
-    let html = currentSandboxCode;
+    let html = currentSandboxCode || "";
 
-    // Auto-inject Tailwind and Icons if missing
-    if (!html.includes("tailwindcss") && !html.includes("tailwind.min.css")) {
-        if (html.includes("<head>")) {
-            html = html.replace("<head>", '<head>\n  <script src="https://cdn.tailwindcss.com"></script>');
+    // If it's not a full HTML document, wrap it
+    if (!html.includes("<html") && !html.includes("<!DOCTYPE")) {
+        html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 1.5rem; background: #0f172a; color: #f8fafc; }
+  </style>
+</head>
+<body>
+  ${html}
+</body>
+</html>`;
+    } else {
+        // Auto-inject Tailwind and Icons if missing
+        if (!html.includes("tailwindcss") && !html.includes("tailwind.min.css")) {
+            if (html.includes("<head>")) {
+                html = html.replace("<head>", '<head>\n  <script src="https://cdn.tailwindcss.com"></script>');
+            } else {
+                html = `<script src="https://cdn.tailwindcss.com"></script>\n` + html;
+            }
+        }
+        if (!html.includes("font-awesome") && !html.includes("fontawesome")) {
+            if (html.includes("</head>")) {
+                html = html.replace("</head>", '  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">\n</head>');
+            }
         }
     }
-    if (!html.includes("font-awesome") && !html.includes("fontawesome")) {
-        if (html.includes("</head>")) {
-            html = html.replace("</head>", '  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">\n</head>');
-        }
-    }
 
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(html);
-    doc.close();
+    iframe.srcdoc = html;
 }
 
 function downloadSandboxHtml() {
@@ -286,3 +304,17 @@ function createPublishModalElement() {
     `;
     document.body.appendChild(div);
 }
+
+// Global scope window exports
+window.openSandbox = openSandbox;
+window.closeSandbox = closeSandbox;
+window.setDeviceMode = setDeviceMode;
+window.runSandboxCode = runSandboxCode;
+window.downloadSandboxHtml = downloadSandboxHtml;
+window.copySandboxCode = copySandboxCode;
+window.publishCurrentArtifact = publishCurrentArtifact;
+window.publishDirectCode = publishDirectCode;
+window.openPublishModal = openPublishModal;
+window.closePublishModal = closePublishModal;
+window.copyPublishUrl = copyPublishUrl;
+

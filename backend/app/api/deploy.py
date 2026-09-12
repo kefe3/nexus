@@ -31,8 +31,10 @@ class TunnelManager:
 
             # Check if cloudflared exists
             has_cf = False
+            cmd_bin = "cloudflared"
             for bin_path in ["/usr/local/bin/cloudflared", "/usr/bin/cloudflared", "cloudflared"]:
                 if os.path.exists(bin_path) or subprocess.run(f"which {bin_path}", shell=True, capture_output=True).returncode == 0:
+                    cmd_bin = bin_path
                     has_cf = True
                     break
 
@@ -41,7 +43,7 @@ class TunnelManager:
 
             try:
                 self.process = subprocess.Popen(
-                    ["cloudflared", "tunnel", "--url", f"http://127.0.0.1:{port}", "--no-autoupdate"],
+                    [cmd_bin, "tunnel", "--url", f"http://127.0.0.1:{port}", "--no-autoupdate"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
