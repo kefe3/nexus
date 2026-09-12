@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# ⚡ Nexus AI Studio — Evrensel Akıllı Kurulum Betiği (Universal Installer v2.1)
+# ⚡ Nexus AI Studio — Evrensel Akıllı Kurulum Betiği (Universal Installer v2.2)
 # CachyOS, Arch Linux, Manjaro, EndeavourOS, Ubuntu, Debian, Fedora, CentOS, Alpine, macOS & WSL2
 # ==============================================================================
 
@@ -117,6 +117,11 @@ else
     echo -e "${GREEN}  ✓ Docker zaten kurulu ($(docker --version))${NC}"
 fi
 
+# Docker soket izinlerini aç (Permission Denied hatasını kesin önler)
+if [ -S /var/run/docker.sock ]; then
+    $SUDO chmod 666 /var/run/docker.sock 2>/dev/null || true
+fi
+
 # Docker Compose kontrolü
 DOCKER_COMPOSE="docker compose"
 if ! docker compose version >/dev/null 2>&1; then
@@ -190,8 +195,15 @@ fi
 mkdir -p "$INSTALL_DIR/data/deployments"
 chmod -R 777 "$INSTALL_DIR/data" 2>/dev/null || true
 
-# Konteynerleri başlat
-$DOCKER_COMPOSE up -d --build
+# Docker soket iznini son kez kontrol et
+if [ -S /var/run/docker.sock ]; then
+    $SUDO chmod 666 /var/run/docker.sock 2>/dev/null || true
+fi
+
+# Konteynerleri başlat (Yetki hatası alırsa otomatik sudo ile dener)
+if ! $DOCKER_COMPOSE up -d --build 2>/dev/null; then
+    $SUDO $DOCKER_COMPOSE up -d --build
+fi
 
 # IP Tespiti
 LOCAL_IP="127.0.0.1"
@@ -202,12 +214,36 @@ if [ -z "$LOCAL_IP" ]; then
     LOCAL_IP="localhost"
 fi
 
+STUDIO_URL="http://${LOCAL_IP}:3050"
+ADMIN_URL="http://${LOCAL_IP}:3050/admin.html"
+
+# Panoya (Clipboard) Kopyalama
+COPIED=false
+if command -v wl-copy >/dev/null 2>&1; then
+    echo -n "$STUDIO_URL" | wl-copy 2>/dev/null && COPIED=true
+elif command -v xclip >/dev/null 2>&1; then
+    echo -n "$STUDIO_URL" | xclip -selection clipboard 2>/dev/null && COPIED=true
+elif command -v pbcopy >/dev/null 2>&1; then
+    echo -n "$STUDIO_URL" | pbcopy 2>/dev/null && COPIED=true
+fi
+
+# Evrensel ANSI/OSC 52 Terminal Panosu Kopyalama
+printf "\033]52;c;%s\a" "$(echo -n "$STUDIO_URL" | base64)" 2>/dev/null || true
+
 echo -e "\n${GREEN}========================================================================${NC}"
-echo -e "${GREEN}${BOLD}🎉 TEBRİKLER! NEXUS AI STUDIO VE TÜM BİLEŞENLER EKSİKSİZ KURULDU!${NC}"
+echo -e "${GREEN}${BOLD}🎉 TEBRİKLER! NEXUS AI STUDIO BAŞARIYLA BAŞLATILDI!${NC}"
 echo -e "${GREEN}========================================================================${NC}\n"
-echo -e "📱 ${CYAN}${BOLD}Nexus AI Studio (Kullanıcı Arayüzü):${NC}  http://${LOCAL_IP}:3050"
-echo -e "🎛️ ${CYAN}${BOLD}Nexus Kontrol Paneli (Specs & VRAM):${NC} http://${LOCAL_IP}:3050/admin.html"
-echo -e "⚡ ${CYAN}${BOLD}FastAPI Backend Uç Noktası:${NC}        http://${LOCAL_IP}:8500"
-echo -e "🧠 ${CYAN}${BOLD}Ollama Yerel Çıkarım Motoru:${NC}       http://127.0.0.1:11434"
-echo -e "🌐 ${CYAN}${BOLD}Canlı Dış Tünel:${NC}                    Kontrol Paneli > Canlı Yayınlar sekmesinden açabilirsiniz."
+
+echo -e "📱 ${CYAN}${BOLD}Nexus AI Studio:${NC}            ${BOLD}${STUDIO_URL}${NC}"
+echo -e "🎛️ ${CYAN}${BOLD}Nexus Kontrol Paneli (Specs):${NC} ${BOLD}${ADMIN_URL}${NC}"
+echo -e "⚡ ${CYAN}${BOLD}FastAPI Backend Portu:${NC}        http://${LOCAL_IP}:8500"
+echo -e "🧠 ${CYAN}${BOLD}Ollama Yerel Çıkarım Motoru:${NC}  http://127.0.0.1:11434"
+echo -e "🌐 ${CYAN}${BOLD}Canlı Dış Tünel:${NC}               Kontrol Paneli > Canlı Yayınlar sekmesinden açabilirsiniz."
+
+if [ "$COPIED" = true ]; then
+    echo -e "\n${GREEN}📋 ${BOLD}${STUDIO_URL}${NC} adresi panonuza (clipboard) otomatik kopyalandı! Tarayıcınızda CTRL+V ile yapıştırabilirsiniz.${NC}"
+else
+    echo -e "\n${GREEN}📋 ${BOLD}${STUDIO_URL}${NC} adresine tarayıcınızdan doğrudan gidebilirsiniz.${NC}"
+fi
+
 echo -e "\n${YELLOW}💡 Her şey arka planda çalışıyor. Bilgisayarınızı kapatsanız bile servisler otomatik başlayacaktır.${NC}\n"
