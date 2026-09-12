@@ -1,29 +1,38 @@
 // Nexus AI Studio — Multi-Provider API Connector
+
 const PROVIDERS = {
-    ollama: { name: "Ollama (Local GPU)", icon: "fa-solid fa-server", requiresKey: false },
-    gemini: { name: "Google Gemini (Pro/Flash)", icon: "fa-brands fa-google", requiresKey: true },
+    ollama: { name: "Ollama (Yerel GPU)", icon: "fa-solid fa-server", requiresKey: false },
+    gemini: { name: "Google Gemini", icon: "fa-brands fa-google", requiresKey: true },
     openai: { name: "OpenAI (GPT-4o)", icon: "fa-solid fa-brain", requiresKey: true },
-    groq: { name: "Groq (Ultra Fast)", icon: "fa-solid fa-bolt", requiresKey: true },
+    groq: { name: "Groq (Ultra Hızlı)", icon: "fa-solid fa-bolt", requiresKey: true },
     anthropic: { name: "Anthropic (Claude)", icon: "fa-solid fa-robot", requiresKey: true },
-    custom: { name: "Custom Endpoint", icon: "fa-solid fa-link", requiresKey: false }
+    custom: { name: "Özel Uç Nokta", icon: "fa-solid fa-link", requiresKey: false }
 };
 
 let activeProvider = localStorage.getItem("nexus_provider") || "ollama";
-let activeModel = localStorage.getItem("nexus_model") || "qwen2.5-coder:7b";
+let activeModel = localStorage.getItem(`nexus_model_${activeProvider}`) || "";
 
 function getProviderHeaders() {
     return {
         "x-provider": activeProvider,
-        "x-api-key": localStorage.getItem(`nexus_key_${activeProvider}`) || "",
+        "x-api-key": localStorage.getItem(`nexus_key_${activeProvider}`) || localStorage.getItem(`nexus_${activeProvider}_key`) || "",
         "x-custom-url": localStorage.getItem(`nexus_url_${activeProvider}`) || ""
     };
+}
+
+function initProviderSelector() {
+    const provSelect = document.getElementById("providerSelect");
+    if (provSelect) {
+        provSelect.value = activeProvider;
+    }
 }
 
 async function fetchModelsForActiveProvider() {
     const select = document.getElementById("modelSelect");
     if (!select) return;
 
-    select.innerHTML = '<option value="">Yükleniyor...</option>';
+    select.innerHTML = '<option value="">Modeller yükleniyor...</option>';
+    initProviderSelector();
 
     try {
         const res = await fetch("/api/models", {
@@ -33,28 +42,31 @@ async function fetchModelsForActiveProvider() {
         
         select.innerHTML = "";
         if (data.models && data.models.length > 0) {
-            // Automatically clean up deprecated 2.x models
-            if (activeProvider === 'gemini' && (activeModel.includes('gemini-2') || activeModel.includes('gemini-1.'))) {
-                activeModel = 'gemini-3.6-flash';
+            let savedModel = localStorage.getItem(`nexus_model_${activeProvider}`) || "";
+            
+            // Auto clean obsolete model names
+            if (activeProvider === "gemini" && (savedModel.includes("gemini-2.") || savedModel.includes("gemini-1."))) {
+                savedModel = "gemini-3.6-flash";
             }
 
-            let foundSelected = false;
+            let found = false;
             data.models.forEach(m => {
                 const opt = document.createElement("option");
                 opt.value = m.id;
                 opt.textContent = m.name;
-                if (m.id === activeModel) {
+                if (m.id === savedModel) {
                     opt.selected = true;
-                    foundSelected = true;
+                    found = true;
                 }
                 select.appendChild(opt);
             });
 
-            if (!foundSelected && select.options.length > 0) {
+            if (!found && select.options.length > 0) {
                 select.options[0].selected = true;
             }
 
             activeModel = select.value;
+            localStorage.setItem(`nexus_model_${activeProvider}`, activeModel);
             localStorage.setItem("nexus_model", activeModel);
         } else {
             select.innerHTML = '<option value="default">Model bulunamadı</option>';
@@ -64,3 +76,21 @@ async function fetchModelsForActiveProvider() {
         select.innerHTML = '<option value="default">Bağlantı hatası</option>';
     }
 }
+
+function switchProvider(prov) {
+    activeProvider = prov;
+    localStorage.setItem("nexus_provider", prov);
+    activeModel = localStorage.getItem(`nexus_model_${prov}`) || "";
+    fetchModelsForActiveProvider();
+}
+
+function switchModel(model) {
+    activeModel = model;
+    localStorage.setItem(`nexus_model_${activeProvider}`, model);
+    localStorage.setItem("nexus_model", model);
+}
+
+// Global initialization
+document.addEventListener("DOMContentLoaded", () => {
+    initProviderSelector();
+});
