@@ -224,12 +224,26 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
 
 ---
 
+#### 🕒 17:32:45 — [Commit: `3a4f891`] • 🔘 İnteraktif Dış Erişim Aç/Kapat Anahtarı (Interactive Toggle Switch & Security Mode)
+* **Modül:** `Remote Access Control & Security Toggle`
+* **Yapılan İşlemler:**
+  * Kullanıcının tek bir tıkla dış erişimi tamamen kapatabilmesi ve istediğinde anında yeniden açabilmesi için dinamik anahtar (Toggle Switch) geliştirildi:
+    * **Backend `/api/deploy/studio-tunnel/toggle` & `/start` & `/stop`:** Tünel durumunu anlık kontrol edip gerekirse tünel sürecini güvenli şekilde sonlandırır veya yeniden başlatır.
+    * **Frontend Dinamik Arayüz:**
+      * **🟢 AÇIK Durumu:** Zümrüt yeşili tünel anahtarı, anlık genel HTTPS linkleri, kopyalama butonları ve taranabilir canlı QR kod.
+      * **🔴 KAPALI Durumu:** Kırmızı kilit rozeti ("Dış Erişim Kapalı - Yalnızca Yerel LAN"), grileştirilmiş QR alanı ve güvenli yerel ağ modu (`http://192.168.0.188:3050`).
+    * **Hızlı Aksiyon Butonu:** "Dış Erişimi Kapat" ve "Dış Erişimi Aç" aksiyon butonu eklendi.
+
+---
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.
 2. **İzole Sandbox & Güvenli Yayın:** Yapay zekanın ürettiği JavaScript kodları ve web arayüzleri `sandbox="allow-scripts allow-modals"` yetkileriyle izole bir iframe içinde çalıştırılır, ana web paneline ve çerezlere erişemez.
 3. **Sıfır Yapılandırmalı Canlı Tünel (Cloudflare Quick Tunnel):** Kullanıcının port açmasına, statik IP almasına veya Cloudflare hesabı bağlamasına gerek kalmadan uçtan uca TLS şifreli `https://*.trycloudflare.com` alan adlarıyla canlı web paylaşımı sağlanır.
-4. **SSE Performansı:** Server-Sent Events akışı `proxy_buffering off` ve `GZipMiddleware` ile tamponlama gecikmesi olmadan sıfır gecikmeyle istemciye aktarılır.
+4. **Kullanıcı Kontrollü Dış Erişim Kilidi:** Kullanıcı dilediği zaman tek tıkla dış erişimi kapatıp sistemi yalnızca yerel ağa (LAN) sınırlandırabilir.
+5. **SSE Performansı:** Server-Sent Events akışı `proxy_buffering off` ve `GZipMiddleware` ile tamponlama gecikmesi olmadan sıfır gecikmeyle istemciye aktarılır.
+
 
 
 

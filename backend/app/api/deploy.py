@@ -216,10 +216,42 @@ async def restart_tunnel():
         "public_admin_url": f"{pub_url}/admin.html" if pub_url else ""
     }
 
+@router.post("/api/deploy/studio-tunnel/toggle")
+async def toggle_tunnel():
+    if tunnel_manager.is_running and tunnel_manager.public_url:
+        tunnel_manager.stop_tunnel()
+        return {
+            "status": "ok",
+            "active": False,
+            "message": "Dış erişim tüneli kapatıldı. Sistem artık yalnızca yerel ağda (LAN) erişilebilir.",
+            "public_studio_url": "",
+            "public_admin_url": ""
+        }
+    else:
+        tunnel_manager.stop_tunnel()
+        pub_url = tunnel_manager.start_tunnel(3050)
+        return {
+            "status": "ok",
+            "active": bool(pub_url),
+            "message": "Dış erişim tüneli başarıyla başlatıldı ve dünyaya açıldı.",
+            "public_studio_url": pub_url or "",
+            "public_admin_url": f"{pub_url}/admin.html" if pub_url else ""
+        }
+
+@router.post("/api/deploy/studio-tunnel/start")
+async def start_tunnel_route():
+    pub_url = tunnel_manager.start_tunnel(3050)
+    return {
+        "status": "ok",
+        "active": bool(pub_url),
+        "public_studio_url": pub_url or "",
+        "public_admin_url": f"{pub_url}/admin.html" if pub_url else ""
+    }
+
 @router.post("/api/deploy/studio-tunnel/stop")
 async def stop_tunnel():
     tunnel_manager.stop_tunnel()
-    return {"status": "ok", "message": "Tunnel stopped"}
+    return {"status": "ok", "active": False, "message": "Tunnel stopped"}
 
 @router.delete("/api/deploy/{deploy_id}")
 async def delete_deployment(deploy_id: str):

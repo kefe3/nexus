@@ -432,6 +432,7 @@ async function fetchLogs() {
 }
 
 // Live Deployments & Cloudflare Tunnel Management
+// Live Deployments & Cloudflare Tunnel Management
 async function fetchDeployments() {
     const tbody = document.getElementById('deployments-tbody');
     const pill = document.getElementById('tunnel-status-pill');
@@ -440,6 +441,11 @@ async function fetchDeployments() {
     const cpInput = document.getElementById('admin-cp-remote-url');
     const cpLink = document.getElementById('admin-cp-remote-link');
     const qrImg = document.getElementById('admin-remote-qr-img');
+    const checkbox = document.getElementById('tunnel-toggle-checkbox');
+    const sliderSpan = document.getElementById('tunnel-slider-span');
+    const btnAction = document.getElementById('btn-tunnel-action');
+    const btnActionText = document.getElementById('btn-tunnel-action-text');
+    const iconBox = document.getElementById('tunnel-icon-box');
 
     try {
         const res = await fetch(`${API_BASE}/deploy/studio-tunnel`);
@@ -449,11 +455,30 @@ async function fetchDeployments() {
 
         // Update tunnel status & Remote URLs
         if (data.active && data.public_studio_url) {
-            pill.className = 'status-pill';
-            pill.style.background = 'rgba(0, 245, 160, 0.12)';
-            pill.style.borderColor = 'rgba(0, 245, 160, 0.3)';
-            pill.style.color = 'var(--accent-green)';
-            pill.innerHTML = '<span class="pulse-dot"></span> Canlı Dış Tünel Yayında';
+            if (pill) {
+                pill.className = 'status-pill';
+                pill.style.background = 'rgba(0, 245, 160, 0.12)';
+                pill.style.borderColor = 'rgba(0, 245, 160, 0.3)';
+                pill.style.color = 'var(--accent-green)';
+                pill.innerHTML = '<span class="pulse-dot"></span> Canlı Dış Tünel Açık (Yayında)';
+            }
+
+            if (checkbox) checkbox.checked = true;
+            if (sliderSpan) {
+                sliderSpan.style.background = 'linear-gradient(135deg, #00f5a0, #00f2fe)';
+                sliderSpan.style.boxShadow = '0 0 12px rgba(0, 245, 160, 0.4)';
+            }
+            if (btnAction) {
+                btnAction.style.background = 'rgba(255, 65, 108, 0.2)';
+                btnAction.style.color = '#ff4b2b';
+                btnAction.style.border = '1px solid rgba(255, 65, 108, 0.4)';
+            }
+            if (btnActionText) btnActionText.textContent = 'Dış Erişimi Kapat';
+            if (iconBox) {
+                iconBox.style.background = 'linear-gradient(135deg, rgba(0, 245, 160, 0.2), rgba(0, 242, 254, 0.2))';
+                iconBox.style.borderColor = 'rgba(0, 245, 160, 0.4)';
+                iconBox.style.color = 'var(--accent-green)';
+            }
 
             if (studioInput) studioInput.value = data.public_studio_url;
             if (studioLink) {
@@ -469,27 +494,54 @@ async function fetchDeployments() {
 
             if (qrImg) {
                 qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(data.public_studio_url)}`;
+                qrImg.style.opacity = '1';
+                qrImg.style.filter = 'none';
             }
         } else {
-            pill.className = 'status-pill';
-            pill.style.background = 'rgba(255, 179, 0, 0.12)';
-            pill.style.borderColor = 'rgba(255, 179, 0, 0.3)';
-            pill.style.color = 'var(--accent-amber)';
-            pill.innerHTML = '<i class="fa-solid fa-clock"></i> Tünel Bekleniyor';
+            if (pill) {
+                pill.className = 'status-pill';
+                pill.style.background = 'rgba(255, 65, 108, 0.12)';
+                pill.style.borderColor = 'rgba(255, 65, 108, 0.3)';
+                pill.style.color = 'var(--accent-red)';
+                pill.innerHTML = '<i class="fa-solid fa-lock"></i> Dış Erişim Kapalı (Yalnızca Yerel LAN)';
+            }
 
-            if (studioInput) studioInput.value = 'http://192.168.0.188:3050 (Yerel Ağ)';
-            if (cpInput) cpInput.value = 'http://192.168.0.188:3050/admin.html (Yerel Ağ)';
-            if (studioLink) studioLink.href = 'http://192.168.0.188:3050';
-            if (cpLink) cpLink.href = 'http://192.168.0.188:3050/admin.html';
+            if (checkbox) checkbox.checked = false;
+            if (sliderSpan) {
+                sliderSpan.style.background = '#334155';
+                sliderSpan.style.boxShadow = 'none';
+            }
+            if (btnAction) {
+                btnAction.style.background = 'linear-gradient(135deg, var(--accent-green), var(--accent-blue))';
+                btnAction.style.color = '#04060c';
+                btnAction.style.border = 'none';
+            }
+            if (btnActionText) btnActionText.textContent = 'Dış Erişimi Aç';
+            if (iconBox) {
+                iconBox.style.background = 'rgba(255, 255, 255, 0.05)';
+                iconBox.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                iconBox.style.color = '#94a3b8';
+            }
+
+            if (studioInput) studioInput.value = '🔒 Dış erişim kapalı (Açmak için butona basın)';
+            if (cpInput) cpInput.value = '🔒 Dış erişim kapalı (Açmak için butona basın)';
+            if (studioLink) studioLink.style.display = 'none';
+            if (cpLink) cpLink.style.display = 'none';
+
+            if (qrImg) {
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=http://192.168.0.188:3050`;
+                qrImg.style.opacity = '0.35';
+                qrImg.style.filter = 'grayscale(100%)';
+            }
         }
 
         // Render table
         tbody.innerHTML = '';
         if (dataList.deployments && dataList.deployments.length > 0) {
-            document.getElementById('deploy-table-count-badge').textContent = `${data.deployments.length} Proje`;
-            document.getElementById('badge-deployments-count').textContent = data.deployments.length;
+            document.getElementById('deploy-table-count-badge').textContent = `${dataList.deployments.length} Proje`;
+            document.getElementById('badge-deployments-count').textContent = dataList.deployments.length;
 
-            data.deployments.forEach(d => {
+            dataList.deployments.forEach(d => {
                 const tr = document.createElement('tr');
                 const sizeKb = round((d.size_bytes || 0) / 1024, 1);
                 tr.innerHTML = `
@@ -527,12 +579,31 @@ async function fetchDeployments() {
     }
 }
 
-async function restartTunnel() {
+async function toggleStudioTunnel() {
     const pill = document.getElementById('tunnel-status-pill');
-    pill.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Tünel Yeniden Başlatılıyor...';
+    if (pill) pill.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> İşleniyor...';
 
     try {
-        const res = await fetch(`${API_BASE}/deploy/tunnel/restart`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/deploy/studio-tunnel/toggle`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || (data.active ? '🟢 Dış erişim açıldı!' : '🔴 Dış erişim kapatıldı.'));
+        await fetchDeployments();
+    } catch (e) {
+        alert(`Hata: ${e.message}`);
+        await fetchDeployments();
+    }
+}
+
+function handleTunnelCheckbox(isChecked) {
+    toggleStudioTunnel();
+}
+
+async function restartTunnel() {
+    const pill = document.getElementById('tunnel-status-pill');
+    if (pill) pill.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Tünel Yeniden Başlatılıyor...';
+
+    try {
+        const res = await fetch(`${API_BASE}/deploy/studio-tunnel/restart`, { method: 'POST' });
         const data = await res.json();
         if (data.status === 'ok') {
             setTimeout(fetchDeployments, 2000);
@@ -570,10 +641,12 @@ function escapeHtml(str) {
 function copyRemoteUrl(type) {
     const inputId = type === 'studio' ? 'admin-studio-remote-url' : 'admin-cp-remote-url';
     const input = document.getElementById(inputId);
-    if (input && input.value) {
+    if (input && input.value && !input.value.includes('kapalı')) {
         navigator.clipboard.writeText(input.value);
         const name = type === 'studio' ? 'Nexus AI Studio' : 'Nexus Kontrol Paneli';
         alert(`✅ ${name} dış erişim linki panoya kopyalandı!`);
+    } else {
+        alert('Dış erişim kapalı olduğu için kopyalanacak bağlantı yok. Lütfen önce tüneli açın.');
     }
 }
 
