@@ -6,23 +6,19 @@ services:
       context: ./backend
     container_name: nexus-backend
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    network_mode: host
     environment:
       - HOST=0.0.0.0
-      - PORT=8000
+      - PORT=8500
       - DEFAULT_PROVIDER=ollama
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - OLLAMA_BASE_URL=http://127.0.0.1:11434
 
   frontend:
     build:
       context: ./frontend
     container_name: nexus-frontend
     restart: unless-stopped
-    ports:
-      - "3000:80"
+    network_mode: host
     depends_on:
       - backend
 
