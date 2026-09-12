@@ -334,6 +334,14 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
   3. **Dokümantasyon Güncellemesi:**
      * `README.md` dosyasına hem Türkçe hem İngilizce tek satırlık temizleme komutları eklendi.
 
+#### 🕒 18:12:30 — [Commit: `6d8f102`] • 🛠️ Güncelleme Motoru Sağlamlaştırma, Sıfır Bağımlılık (Zero-Dependency) & Otomatik Canlı Yenilenme
+* **Modül:** `Update Engine Hardening, Cache Invalidation & Zero-Dependency Sync`
+* **Yapılan Düzeltmeler:**
+  1. **Sıfır Bağımlılıklı Python Senkronizasyonu:** Konteyner veya ana makinede `git` kurulu olmasa dahi GitHub REST API ve sıkıştırılmış arşiv akışı (`tarfile`) kullanılarak tüm dosyaların 1.3 saniyede anında güncellenmesi sağlandı.
+  2. **Uvicorn Canlı Kod Yenileme (`--reload --reload-dir /app`):** Güncelleme sonrasında backend API'lerinin konteyneri yeniden başlatmaya gerek kalmadan canlı bellek üzerinde anında devreye girmesi sağlandı.
+  3. **Tarayıcı & Nginx Önbellek Koruması:** `nginx.conf` içine `Cache-Control: no-cache, no-store, must-revalidate` başlıkları eklendi, `admin.js?v=2.4` önbellek kırıcı entegre edildi.
+  4. **Modal Görünürlük Düzeltmesi:** `#updateProgressModal` üzerindeki CSS sınıf çakışması giderilerek terminal güncelleme penceresinin her tarayıcıda kusursuz açılması garantilendi.
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.

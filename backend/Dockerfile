@@ -11,5 +11,6 @@ COPY . .
 
 EXPOSE 8500
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8500"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8500 --reload --reload-dir /app"]
+
 
