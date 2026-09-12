@@ -12,6 +12,34 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchModelsForActiveProvider();
 });
 
+async function syncChatsWithServer() {
+    try {
+        const res = await fetch("/api/chats");
+        const data = await res.json();
+        if (data.status === "ok" && data.chats && data.chats.length > 0) {
+            chatsHistory = data.chats;
+            localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
+            renderChatsList();
+            if (!currentChatId || !chatsHistory.find(c => c.id === currentChatId)) {
+                loadChat(chatsHistory[0].id);
+            }
+        }
+    } catch (e) {
+        console.warn("Server chat sync skipped:", e);
+    }
+}
+
+async function persistChatToServer(chatObj) {
+    if (!chatObj) return;
+    try {
+        await fetch("/api/chats", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(chatObj)
+        });
+    } catch (e) {}
+}
+
 function initChatInterface() {
     renderChatsList();
     if (chatsHistory.length > 0) {
@@ -19,6 +47,7 @@ function initChatInterface() {
     } else {
         createNewChat();
     }
+    syncChatsWithServer();
 
     const input = document.getElementById("promptInput");
     if (input) {
@@ -83,10 +112,13 @@ function loadChat(id) {
     renderMessages();
 }
 
-function deleteChat(id, e) {
+async function deleteChat(id, e) {
     if (e) e.stopPropagation();
     chatsHistory = chatsHistory.filter(c => c.id !== id);
     localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
+    try {
+        await fetch(`/api/chats/${id}`, { method: "DELETE" });
+    } catch (e) {}
     if (currentChatId === id) {
         if (chatsHistory.length > 0) loadChat(chatsHistory[0].id);
         else createNewChat();
@@ -157,6 +189,7 @@ async function sendMessage() {
         chatObj.messages = currentMessages;
     }
     localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
+    persistChatToServer(chatObj);
     renderChatsList();
 
     // Create assistant message container
@@ -240,6 +273,7 @@ async function sendMessage() {
         currentMessages.push({ role: "assistant", content: fullResponse });
         chatObj.messages = currentMessages;
         localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
+        persistChatToServer(chatObj);
 
     } catch (e) {
         if (e.name === "AbortError") {
@@ -419,4 +453,87 @@ function showToast(msg) {
         toast.classList.remove("opacity-100", "translate-y-0");
         toast.classList.add("opacity-0", "translate-y-4", "pointer-events-none");
     }, 2500);
+}
+
+
+// Settings Modal Handlers
+async function openSettingsModal() {
+    const modal = document.getElementById("settingsModal");
+    if (!modal) return;
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+
+    // Load existing settings
+    ['gemini', 'openai', 'groq', 'anthropic'].forEach(prov => {
+        const input = document.getElementById(`input_key_${prov}`);
+        if (input) {
+            input.value = localStorage.getItem(`nexus_key_${prov}`) || "";
+        }
+    });
+    const ollamaInput = document.getElementById("input_url_ollama");
+    if (ollamaInput) {
+        ollamaInput.value = localStorage.getItem("nexus_url_ollama") || "http://localhost:11434";
+    }
+
+    // Also fetch server settings preview
+    try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (data.status === "ok" && data.providers) {
+            Object.keys(data.providers).forEach(prov => {
+                const info = data.providers[prov];
+                const input = document.getElementById(`input_key_${prov}`);
+                if (input && !input.value && info.has_key && info.key_preview) {
+                    input.placeholder = `Sunucuda Kayıtlı (${info.key_preview})`;
+                }
+            });
+        }
+    } catch (e) {}
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById("settingsModal");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+}
+
+async function saveSettings() {
+    const providers = ['gemini', 'openai', 'groq', 'anthropic'];
+    for (const prov of providers) {
+        const input = document.getElementById(`input_key_${prov}`);
+        if (input && input.value.trim()) {
+            const val = input.value.trim();
+            localStorage.setItem(`nexus_key_${prov}`, val);
+            localStorage.setItem(`nexus_${prov}_key`, val);
+            try {
+                await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ provider: prov, api_key: val })
+                });
+            } catch (e) {}
+        }
+    }
+
+    const ollamaInput = document.getElementById("input_url_ollama");
+    if (ollamaInput && ollamaInput.value.trim()) {
+        const url = ollamaInput.value.trim();
+        localStorage.setItem("nexus_url_ollama", url);
+        try {
+            await fetch("/api/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ provider: "ollama", base_url: url })
+            });
+        } catch (e) {}
+    }
+
+    closeSettingsModal();
+    showToast("Ayarlar ve API anahtarları sunucuya kaydedildi!");
+    if (typeof fetchModelsForActiveProvider === "function") {
+        fetchModelsForActiveProvider();
+    }
 }

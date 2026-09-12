@@ -1,4 +1,4 @@
-// Nexus AI Studio — Multi-Provider API Connector
+// Nexus AI Studio — Multi-Provider API Connector with Server-Side Key Sync
 
 const PROVIDERS = {
     ollama: { name: "Ollama (Yerel GPU)", icon: "fa-solid fa-server", requiresKey: false },
@@ -9,11 +9,31 @@ const PROVIDERS = {
     custom: { name: "Özel Uç Nokta", icon: "fa-solid fa-link", requiresKey: false }
 };
 
+let serverProvidersConfig = {};
 let activeProvider = localStorage.getItem("nexus_provider") || "ollama";
 let activeModel = localStorage.getItem(`nexus_model_${activeProvider}`) || "";
 
+async function fetchServerSettingsForProviders() {
+    try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (data.status === "ok" && data.providers) {
+            serverProvidersConfig = data.providers;
+        }
+    } catch (e) {
+        console.warn("Failed to fetch server settings for providers:", e);
+    }
+}
+
 function isProviderConfigured(prov) {
     if (prov === "ollama") return true;
+    
+    // Check server-side configured state first
+    if (serverProvidersConfig[prov] && serverProvidersConfig[prov].configured) {
+        return true;
+    }
+    
+    // Check local client storage
     if (prov === "custom") {
         return !!(localStorage.getItem("nexus_url_custom") || "").trim();
     }
@@ -22,14 +42,25 @@ function isProviderConfigured(prov) {
 }
 
 function getProviderHeaders() {
-    return {
-        "x-provider": activeProvider,
-        "x-api-key": localStorage.getItem(`nexus_key_${activeProvider}`) || localStorage.getItem(`nexus_${activeProvider}_key`) || "",
-        "x-custom-url": localStorage.getItem(`nexus_url_${activeProvider}`) || ""
+    const headers = {
+        "x-provider": activeProvider
     };
+    
+    const clientKey = localStorage.getItem(`nexus_key_${activeProvider}`) || localStorage.getItem(`nexus_${activeProvider}_key`) || "";
+    if (clientKey) {
+        headers["x-api-key"] = clientKey;
+    }
+    
+    const clientUrl = localStorage.getItem(`nexus_url_${activeProvider}`) || "";
+    if (clientUrl) {
+        headers["x-custom-url"] = clientUrl;
+    }
+    
+    return headers;
 }
 
-function initProviderSelector() {
+async function initProviderSelector() {
+    await fetchServerSettingsForProviders();
     const provSelect = document.getElementById("providerSelect");
     if (!provSelect) return;
 
@@ -52,7 +83,6 @@ function initProviderSelector() {
         provSelect.appendChild(opt);
     });
 
-    // If currently selected provider lacks API key, fallback to ollama or first ready provider
     if (!isProviderConfigured(activeProvider)) {
         activeProvider = "ollama";
         localStorage.setItem("nexus_provider", "ollama");
@@ -65,7 +95,7 @@ async function fetchModelsForActiveProvider() {
     const select = document.getElementById("modelSelect");
     if (!select) return;
 
-    initProviderSelector();
+    await initProviderSelector();
     select.innerHTML = '<option value="">Modeller yükleniyor...</option>';
 
     try {
@@ -78,7 +108,6 @@ async function fetchModelsForActiveProvider() {
         if (data.models && data.models.length > 0) {
             let savedModel = localStorage.getItem(`nexus_model_${activeProvider}`) || "";
             
-            // Auto clean obsolete model names
             if (activeProvider === "gemini" && (savedModel.includes("gemini-2.") || savedModel.includes("gemini-1."))) {
                 savedModel = "gemini-3.6-flash";
             }
@@ -130,7 +159,6 @@ function switchModel(model) {
     localStorage.setItem("nexus_model", model);
 }
 
-// Global initialization
 document.addEventListener("DOMContentLoaded", () => {
     initProviderSelector();
 });

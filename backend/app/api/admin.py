@@ -9,6 +9,7 @@ import asyncio
 from typing import Optional, List, Dict, Any
 from collections import deque
 from app.core.config import settings
+from app.api.settings_api import get_server_key, load_server_settings
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 _START_TIME = time.time()
@@ -125,9 +126,9 @@ async def get_admin_overview():
             "ollama_active_vram_models": len(running_models),
             "total_requests_processed": len(REQUEST_LOGS),
             "default_provider": settings.DEFAULT_PROVIDER,
-            "gemini_ready": bool(settings.GEMINI_API_KEY),
-            "openai_ready": bool(settings.OPENAI_API_KEY),
-            "groq_ready": bool(settings.GROQ_API_KEY),
+            "gemini_ready": bool(get_server_key("gemini")),
+            "openai_ready": bool(get_server_key("openai")),
+            "groq_ready": bool(get_server_key("groq")),
         },
         "telemetry_history": list(TELEMETRY_HISTORY)
     }
@@ -297,7 +298,7 @@ async def test_provider(req: TestProviderRequest):
             return {"status": "error", "latency_ms": int((time.time() - t0) * 1000), "message": str(e)}
             
     elif prov == "gemini":
-        key = (req.api_key or settings.GEMINI_API_KEY or "").strip()
+        key = (req.api_key or get_server_key("gemini") or "").strip()
         if not key:
             return {"status": "error", "message": "API Anahtarı bulunamadı. Lütfen geçerli bir Google AI Studio anahtarı girin."}
         try:
@@ -319,7 +320,7 @@ async def test_provider(req: TestProviderRequest):
             return {"status": "error", "message": f"Bağlantı Hatası: {str(e)}"}
 
     elif prov == "openai":
-        key = (req.api_key or settings.OPENAI_API_KEY or "").strip()
+        key = (req.api_key or get_server_key("openai") or "").strip()
         if not key:
             return {"status": "error", "message": "OpenAI API Anahtarı bulunamadı."}
         try:
@@ -334,7 +335,7 @@ async def test_provider(req: TestProviderRequest):
             return {"status": "error", "message": str(e)}
 
     elif prov == "groq":
-        key = (req.api_key or settings.GROQ_API_KEY or "").strip()
+        key = (req.api_key or get_server_key("groq") or "").strip()
         if not key:
             return {"status": "error", "message": "Groq API Anahtarı bulunamadı."}
         try:

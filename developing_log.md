@@ -236,6 +236,28 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
 
 ---
 
+---
+
+#### 🕒 17:36:30 — [Commit: `582e91a`] • 🔄 Merkezi Sunucu Tabanlı API Anahtarı & Sohbet Geçmişi Senkronizasyonu
+* **Modül:** `Server-Side Centralized State, Key Fallback & Chat Sync`
+* **Sorun Analizi:**
+  * Tarayıcıların güvenlik mimarisi (Same-Origin Policy), `http://192.168.0.188:3050` (Yerel LAN) ile `https://*.trycloudflare.com` (Dış Tünel) adreslerinin `localStorage` alanlarını birbirinden tamamen izole eder.
+  * Bu sebeple kullanıcı yerel ağda girdiği API anahtarlarını veya geçmiş sohbetlerini dış tünel bağlantısı (veya cep telefonu) üzerinden açtığında göremiyor, modeller kilitli kalıyor ve her cihazda anahtarları yeniden girmek zorunda kalıyordu.
+* **Çözüm & Geliştirilen Özellikler:**
+  1. **Kalıcı Sunucu Ayarları ve API Key Yönetimi (`/api/settings`):**
+     * `backend/app/api/settings_api.py` geliştirildi ve `data/settings.json` dosyasına bağlandı.
+     * Google Gemini, OpenAI, Groq, Anthropic anahtarları ve özel Ollama URL'leri sunucu tarafında merkezi olarak saklanır.
+     * `backend/app/api/chat.py` ve `backend/app/api/models.py`, istemciden API anahtarı gelmediğinde (`x-api-key` boşsa) sunucuda kayıtlı anahtarı otomatik olarak devreye alır.
+  2. **Tüm Cihazlarla Eşzamanlı Sohbet Geçmişi (`/api/chats`):**
+     * `backend/app/api/chats.py` ile sunucu tabanlı sohbet depolaması (`data/chats.json`) kuruldu.
+     * `GET /api/chats`, `POST /api/chats`, `DELETE /api/chats/{id}` uç noktaları eklendi.
+     * `frontend/src/js/app.js`, sayfa açıldığında sunucudaki tüm sohbetleri anında yükler ve yapılan her yeni mesajlaşmayı sunucuya anlık kaydeder.
+     * Böylece kullanıcı hem yerel ağdan hem de dış tünelden (ister masaüstü ister cep telefonu) bağlandığında **birebir aynı sohbet geçmişini, aynı modelleri ve aynı hazır sağlayıcıları** kesintisiz olarak kullanır.
+  3. **Arayüz Entegrasyonu & Ayarlar Modalı:**
+     * `frontend/src/js/providers.js`: Açılışta sunucudaki sağlayıcı durumlarını sorgular, anahtarı girilmiş sağlayıcıları doğrudan `🟢 Hazır` durumuna getirir.
+     * `frontend/src/js/admin.js`: Kontrol Paneli'nde girilen veya test edilen anahtarlar sunucuya kalıcı kaydedilir ve maskeli önizleme (`AIzaSy...4xQ`) ile gösterilir.
+     * `frontend/src/js/app.js`: Studio içerisindeki Ayarlar modalı üzerinden girilen anahtarlar da sunucuya otomatik senkronize edilir.
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.

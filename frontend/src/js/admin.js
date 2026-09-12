@@ -390,7 +390,8 @@ async function testProvider(prov) {
     }
 }
 
-function testAllProviders() {
+async function testAllProviders() {
+    await fetchServerSettingsForAdmin();
     ['ollama', 'gemini', 'openai', 'groq'].forEach(p => {
         const key = localStorage.getItem(`nexus_key_${p}`) || localStorage.getItem(`nexus_${p}_key`);
         const input = document.getElementById(`input-api-${p}`);
@@ -399,11 +400,40 @@ function testAllProviders() {
     });
 }
 
-function saveKey(prov, val) {
+async function saveKey(prov, val) {
     const clean = val.trim();
     localStorage.setItem(`nexus_key_${prov}`, clean);
     localStorage.setItem(`nexus_${prov}_key`, clean);
+    
+    try {
+        await fetch(`${API_BASE}/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider: prov, api_key: clean })
+        });
+    } catch (e) {}
+
     testProvider(prov);
+}
+
+async function fetchServerSettingsForAdmin() {
+    try {
+        const res = await fetch(`${API_BASE}/settings`);
+        const data = await res.json();
+        if (data.status === 'ok' && data.providers) {
+            ['gemini', 'openai', 'groq', 'anthropic'].forEach(p => {
+                const info = data.providers[p];
+                const input = document.getElementById(`input-api-${p}`);
+                if (input && !input.value) {
+                    if (localStorage.getItem(`nexus_key_${p}`)) {
+                        input.value = localStorage.getItem(`nexus_key_${p}`);
+                    } else if (info && info.has_key && info.key_preview) {
+                        input.placeholder = `Sunucuda Kayıtlı (${info.key_preview})`;
+                    }
+                }
+            });
+        }
+    } catch (e) {}
 }
 
 // Fetch Request Logs
