@@ -1,0 +1,166 @@
+# 📜 Nexus AI Studio — Detaylı Geliştirme ve Değişiklik Dokümantasyonu (Changelog & Audit Log)
+
+Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfırdan mimari tasarımından son sürümüne kadar gerçekleştirilen tüm geliştirme adımlarını, mimari kararları, hata tespit ve çözümlerini gün, ay, yıl, saat, dakika ve saniye bazında ayrıntılı olarak kayıt altına almaktadır.
+
+---
+
+## 🏗️ Proje Mimarisi ve Teknoloji Yığını
+
+| Katman | Teknoloji | Açıklama |
+| :--- | :--- | :--- |
+| **Backend API** | Python 3.11, FastAPI, Uvicorn, HTTPX, Pydantic | Asenkron SSE (Server-Sent Events) çoklu sağlayıcı akış köprüsü |
+| **Frontend UI** | Modern Vanilla JS (ES6+), HTML5, CSS3, Tailwind (CDN) | Dark Luxury Glassmorphism arayüz, Responsive Canvas |
+| **Sandbox Engine** | HTML5 Iframe, Blob URL, DOMParser | Canlı kod çalıştırma ve interaktif web sandbox'ı |
+| **Grafik & Telemetri** | Chart.js | Donanım (CPU/RAM) çift eksenli anlık alan grafikleri |
+| **Konteynerizasyon** | Docker, Nginx Alpine, Docker Compose | Hafif imajlar, host network ve hızlı derleme |
+| **Yapay Zeka Motorları** | Ollama (Yerel GPU), Google Gemini 3.6, OpenAI, Groq | Çoklu model orkestrasyonu ve dinamik model listeleme |
+
+---
+
+## ⏱️ Kronolojik Geliştirme ve İşlem Günlüğü (Timeline)
+
+### 📅 12 Eylül 2026 (Cumartesi)
+
+---
+
+#### 🕒 16:34:52 — [Commit: `d4a2d01`] • Mimari Tasarım & İlk Sürüm (v1.0.0 Initial Release)
+* **Modül:** `Tüm Sistem (Core Architecture)`
+* **Yapılan İşlemler:**
+  * Modern, açık kaynaklı ve kendi sunucunda barındırılabilir (self-hosted) Nexus AI Studio platformu sıfırdan tasarlandı.
+  * **Backend Mimarisi:**
+    * `backend/app/main.py`: FastAPI uygulaması, CORS ve GZip middleware yapılandırması.
+    * `backend/app/api/chat.py`: Ollama, Gemini, OpenAI, Groq ve Anthropic için SSE akış (streaming) köprüsü.
+    * `backend/app/api/models.py`: Yapay zeka sağlayıcılarından dinamik model listeleme uç noktası.
+    * `backend/app/api/presets.py`: Geliştirici, veri bilimci, yazar vb. rol şablonları (Persona Store).
+  * **Frontend Mimarisi:**
+    * `frontend/src/index.html`: ChatGPT / Claude / Bolt standartlarında karanlık cam arayüz.
+    * `frontend/src/js/app.js`: Sohbet yönetimi, Markdown parsing, KaTeX matematik gösterimi ve kod renklendirme.
+    * `frontend/src/js/sandbox.js`: Üretilen HTML/CSS/JS web projelerini tarayıcı içinde izole iframe'de canlı çalıştırma (Masaüstü, Tablet, Mobil çözünürlük geçişleri ve `.html` indirme).
+    * `frontend/src/js/voice.js`: Web Speech API ile sesli konuşma ve mikrofon dalga görselleştirmesi.
+    * `frontend/src/js/i18n.js`: Türkçe 🇹🇷 ve İngilizce 🇬🇧 anlık dil motoru.
+  * **Docker Entegrasyonu:**
+    * `backend/Dockerfile` & `frontend/Dockerfile` & `frontend/nginx.conf` & `docker-compose.yml` hazırlandı.
+
+---
+
+#### 🕒 16:40:24 — [Commit: `2380bf8`] • Çift Dilli Kapsamlı Dokümantasyon (README & Docs)
+* **Modül:** `Dokümantasyon`
+* **Yapılan İşlemler:**
+  * `README.md` dosyası GitHub standartlarında, rozetlerle (Shields.io), Mermaid mimari diyagramıyla ve iki dilde (🇬🇧 English & 🇹🇷 Türkçe) hazırlandı.
+  * Projeye MIT Lisansı (`LICENSE`) ve Açık Kaynak Katkı Kılavuzu (`CONTRIBUTING.md`) eklendi.
+
+---
+
+#### 🕒 16:41:41 — [Commit: `4b2ab71`] • Yönetim & Kontrol Paneli (Admin Modal & Stats API)
+* **Modül:** `Backend & Frontend (Admin Dashboard)`
+* **Yapılan İşlemler:**
+  * `backend/app/api/stats.py` uç noktası yazıldı:
+    * `/api/stats/system`: CPU çekirdek sayısı, RAM kullanımı (GB/%), Disk alanı ve sunucu çalışma süresi (uptime).
+    * `/api/stats/providers`: Ollama (gecikme ms ve model sayısı), Gemini, OpenAI, Groq anahtar durumları.
+  * `frontend/src/js/dashboard.js`: Arayüz içine canlı donanım barları ve servis durum kartları eklendi.
+
+---
+
+#### 🕒 16:44:57 — [Commit: `06ad34d`] • Docker Derleme Optimizasyonu (Apt-Get İptali)
+* **Modül:** `DevOps & Dockerfile`
+* **Sorun Analizi:**
+  * Docker imajı derlenirken Debian paket aynalarında (`deb.debian.org`) ağ zaman aşımı oluştuğu tespit edildi.
+* **Çözüm:**
+  * Backend Dockerfile'daki gereksiz `apt-get install curl` satırı kaldırıldı. Python bağımlılıkları doğrudan tekerlek (wheel) üzerinden önbelleksiz kurulacak şekilde optimize edildi, derleme süresi 5 saniyenin altına düşürüldü.
+
+---
+
+#### 🕒 16:50:38 — [Commit: `4853b04`] • Bağımsız Kontrol Paneli Süiti (Dedicated Control Panel `/admin.html`)
+* **Modül:** `Admin Control Suite`
+* **Yapılan İşlemler:**
+  * Kullanıcının talebi doğrultusunda sohbet ekranından ayrı, müstakil bir yönetim merkezi inşa edildi:
+    * `frontend/src/admin.html`: Cyberpunk & Glassmorphism temalı tam sayfa kontrol merkezi.
+    * `frontend/src/js/admin.js`: Panel mantığı, asenkron sorgular ve periyodik veri yenileme.
+    * `backend/app/api/admin.py`: Yönetim API'si (`/api/admin/overview`, `/api/admin/models`, `/api/admin/models/pull`, `/api/admin/models/delete`, `/api/admin/logs`, `/api/admin/providers/test`).
+  * **Ollama Model Merkezi:** Sunucudaki modellerin disk boyutlarını görme, model silme ve kütüphaneden yeni model indirme (`ollama pull`) eklendi.
+
+---
+
+#### 🕒 16:54:52 — [Commit: `1f3b805`] • Kontrol Paneli 2.0 (Chart.js Telemetrisi, VRAM Monitörü & Benchmark Arenası)
+* **Modül:** `Telemetry & Benchmarking Engine`
+* **Yapılan İşlemler:**
+  * **Chart.js Telemetrisi:** CPU ve RAM yükünü zaman serisi halinde çizen canlı alan grafiği eklendi.
+  * **VRAM & Bellek Monitörü:** `/api/admin/models/running` ile GPU'da yüklü modellerin VRAM tüketimi ve tek tıkla boşaltma (`keep_alive: 0`) mekanizması kuruldu.
+  * **Model Hız & Benchmark Arenası:** `/api/admin/benchmark` ile modellerin saniyede ürettiği token (tok/s), TTFT ve toplam gecikme süresini ölçen hız testi motoru yazıldı.
+  * **Canlı İstek Terminali:** Sunucuya gelen sorguların yanıt süreleri ve hız dökümü canlı log tablosuna bağlandı.
+
+---
+
+#### 🕒 16:57:51 — [Commit: `1f6de78`] • API Anahtarı Kalıcılığı ve Ping Testi Düzeltmesi
+* **Modül:** `Providers & Security`
+* **Sorun Analizi:**
+  * Kontrol panelinde API anahtarı girildikten hemen sonra Ping Test butonuna basıldığında `onchange` tetiklenmediği için anahtarın boş gitmesi ve `localStorage` anahtar isimlerinin farklılığı (`nexus_key_gemini` vs `nexus_gemini_key`) tespit edildi.
+* **Çözüm:**
+  * `oninput` tetikleyicisi eklendi, giriş kutusundaki değer anında okunacak şekilde çift yönlü `localStorage` senkronizasyonu sağlandı. Hata mesajları açık ve anlaşılır Türkçe metinlere dönüştürüldü.
+
+---
+
+#### 🕒 16:59:58 — [Commit: `34e12bf`] • Host Networking & Tailscale MagicDNS Engeli Çözümü
+* **Modül:** `Ağ Mimarisi (Networking & Docker)`
+* **Sorun Analizi:**
+  * Sunucuda Tailscale çalıştığı için ana makine DNS adresi `100.100.100.100` kullanıyordu. Docker'ın varsayılan köprü (bridge) ağı bu adrese erişemediği için Google AI Studio ve bulut API'lerine giden istekler zaman aşımına (`ConnectTimeout`) uğruyordu.
+* **Çözüm:**
+  * `docker-compose.yml` ve `frontend/nginx.conf` **Host Network (`network_mode: host`)** mimarisine geçirildi.
+  * Backend ve Frontend sunucunun yerel donanım ağına bağlanarak gecikmesiz (200ms altında) doğrudan dış API erişimine kavuşturuldu.
+
+---
+
+#### 🕒 17:00:24 — [Commit: `240ecc8`] • Uvicorn Port Bağlama Ayarı (`PORT 8500`)
+* **Modül:** `Backend Configuration`
+* **Yapılan İşlemler:**
+  * Host network modunda sunucudaki mevcut Django servisi (port 8000) ile çakışmayı önlemek için backend `PORT 8500` üzerine bağlandı.
+
+---
+
+#### 🕒 17:02:11 — [Commit: `2152261`] • Google Gemini 3.6 Desteği ve Dinamik Model Keşfi
+* **Modül:** `AI Model Provider Bridge`
+* **Sorun Analizi:**
+  * Google, 2026 yılı itibarıyla eski `gemini-2.0-flash` modelini kullanımdan kaldırıp yerini `gemini-3.6-flash` modeline bıraktığı için eski istekler Google tarafından 404 (Not Found) ile reddediliyordu.
+* **Çözüm:**
+  * `backend/app/api/models.py` içerisine API anahtarı girildiğinde Google AI Studio'dan aktif modelleri dinamik olarak sorgulayan yapı kuruldu.
+  * `backend/app/api/chat.py` içine eski model isimlerini otomatik olarak `gemini-3.6-flash` / `gemini-3.6-pro` modellerine yönlendiren akıllı normalizasyon katmanı eklendi.
+
+---
+
+#### 🕒 17:05:02 — [Commit: `8d11f46`] • Gemini 3.6 Kesin Normalizasyon ve Frontend Filtresi
+* **Modül:** `AI Model Routing`
+* **Yapılan İşlemler:**
+  * Google'ın yeni kullanıcılara kapattığı `gemini-2.5-flash` model adları da temizlendi ve sistemin varsayılan olarak `gemini-3.6-flash` ile çalışması zorunlu kılındı.
+
+---
+
+#### 🕒 17:05:30 — [Commit: `727f77d`] • Sağlayıcı Bazlı Bağımsız Model Depolaması
+* **Modül:** `Frontend State Management`
+* **Sorun Analizi:**
+  * Tek bir `nexus_model` değişkeni tutulduğunda, Gemini seçiliyken Ollama'ya geçildiğinde yerel model yerine Gemini modelinin görünmesi sorunu oluşuyordu.
+* **Çözüm:**
+  * Her sağlayıcının seçili modeli `nexus_model_ollama`, `nexus_model_gemini`, `nexus_model_openai` şeklinde birbirinden tamamen izole edildi.
+
+---
+
+#### 🕒 17:07:21 — [Commit: `8faa91b`] • Akıllı Sağlayıcı Kilidi (`🔒 API Key Gerekli`)
+* **Modül:** `Security & UI/UX`
+* **Yapılan İşlemler:**
+  * API anahtarı girilmemiş olan sağlayıcılar (`OpenAI`, `Groq`, `Anthropic` vb.) model seçim menüsünde **`🔒 Sağlayıcı Adı (Key Gerekli)`** rozetiyle grileştirildi ve `disabled` (seçilemez) hale getirildi.
+  * Yalnızca anahtarı tanımlı veya yerel olan sağlayıcılar (`Ollama (Hazır)`, `Google Gemini (Hazır)`) seçilebilir yapıldı.
+  * Kullanıcı anahtar girdiği anda sağlayıcının kilidi anında açılarak aktif hale gelmesi sağlandı.
+
+---
+
+#### 🕒 17:09:48 — [Commit: `a966b3c`] • README Güncellemesi & Dokümantasyon Senkronizasyonu
+* **Modül:** `Dokümantasyon`
+* **Yapılan İşlemler:**
+  * Çift dilli `README.md` dosyasına Kontrol Paneli 2.0 özellikleri (Telemetri, VRAM Yöneticisi, Benchmark Arenası) ve Gemini 3.6 standartları işlendi.
+
+---
+
+## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
+
+1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.
+2. **İzole Sandbox:** Yapay zekanın ürettiği JavaScript kodları ve web arayüzleri `sandbox="allow-scripts allow-modals"` yetkileriyle izole bir iframe içinde çalıştırılır, ana web paneline ve çerezlere erişemez.
+3. **SSE Performansı:** Server-Sent Events akışı `proxy_buffering off` ve `GZipMiddleware` ile tamponlama gecikmesi olmadan sıfır gecikmeyle istemciye aktarılır.
