@@ -149,7 +149,9 @@ async def publish_deployment(req: PublishRequest):
     }
 
 @router.get("/share/{deploy_id}", response_class=HTMLResponse)
+@router.head("/share/{deploy_id}", response_class=HTMLResponse)
 @router.get("/p/{deploy_id}", response_class=HTMLResponse)
+@router.head("/p/{deploy_id}", response_class=HTMLResponse)
 async def serve_share_page(deploy_id: str):
     file_path = os.path.join(DEPLOYMENTS_DIR, f"{deploy_id}.html")
     if not os.path.exists(file_path):
