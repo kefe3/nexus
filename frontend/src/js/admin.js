@@ -792,13 +792,21 @@ async function checkUpdates(showToast = false) {
             const loc = data.local || {};
             const rem = data.remote || {};
             
-            document.getElementById('val-local-sha').textContent = loc.sha || 'latest';
-            document.getElementById('val-local-date').textContent = loc.date || 'Aktif';
-            document.getElementById('val-local-msg').textContent = loc.message || 'Nexus AI Release';
+            const elLocalSha = document.getElementById('val-local-sha');
+            const elLocalDate = document.getElementById('val-local-date');
+            const elLocalMsg = document.getElementById('val-local-msg');
 
-            document.getElementById('val-remote-sha').textContent = rem.sha || loc.sha || 'main';
-            document.getElementById('val-remote-date').textContent = rem.date ? new Date(rem.date).toLocaleString('tr-TR') : 'Güncel';
-            document.getElementById('val-remote-msg').textContent = rem.message || 'Nexus Kararlı Sürüm';
+            if (elLocalSha) elLocalSha.textContent = loc.sha || 'latest';
+            if (elLocalDate) elLocalDate.textContent = loc.date || 'Aktif';
+            if (elLocalMsg) elLocalMsg.textContent = loc.message || 'Nexus AI Release';
+
+            const elRemSha = document.getElementById('val-remote-sha');
+            const elRemDate = document.getElementById('val-remote-date');
+            const elRemMsg = document.getElementById('val-remote-msg');
+
+            if (elRemSha) elRemSha.textContent = rem.sha || loc.sha || 'main';
+            if (elRemDate) elRemDate.textContent = rem.date ? new Date(rem.date).toLocaleString('tr-TR') : 'Güncel';
+            if (elRemMsg) elRemMsg.textContent = rem.message || 'Nexus Kararlı Sürüm';
 
             const topBanner = document.getElementById('update-top-banner');
             const statusBadge = document.getElementById('update-status-badge');
@@ -808,7 +816,8 @@ async function checkUpdates(showToast = false) {
             if (data.update_available) {
                 if (topBanner) {
                     topBanner.style.display = 'flex';
-                    document.getElementById('update-top-text').textContent = `🚀 Yeni Güncelleme: ${rem.sha}`;
+                    const topText = document.getElementById('update-top-text');
+                    if (topText) topText.textContent = `🚀 Yeni Güncelleme: ${rem.sha}`;
                 }
                 if (statusBadge) {
                     statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-amber);"></i> <span style="color: var(--accent-amber);">Yeni Güncelleme Mevcut!</span>';
@@ -851,32 +860,145 @@ async function checkUpdates(showToast = false) {
             btnCheck.disabled = false;
         }
     }
+
+    // Also fetch recent commits
+    fetchCommitHistory();
 }
 
-async function applyUpdate() {
-    if (!confirm('Nexus AI Studio en son resmi GitHub sürümüne güncellensin mi?')) {
-        return;
-    }
+// Fetch and render recent commits history
+async function fetchCommitHistory() {
+    const tbody = document.getElementById('github-commits-tbody');
+    if (!tbody) return;
 
-    const btnApply = document.getElementById('btn-apply-update');
-    if (btnApply) {
-        btnApply.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Güncelleniyor...';
-        btnApply.disabled = true;
+    try {
+        const res = await fetch(`${API_BASE}/admin/updates/history`);
+        const data = await res.json();
+        
+        if (data.status === 'ok' && data.commits && data.commits.length > 0) {
+            tbody.innerHTML = '';
+            data.commits.forEach(c => {
+                const tr = document.createElement('tr');
+                const dateStr = c.date ? new Date(c.date).toLocaleString('tr-TR') : '-';
+                tr.innerHTML = `
+                    <td>
+                        <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-cyan); background: rgba(0, 242, 254, 0.1); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(0, 242, 254, 0.2);">
+                            ${escapeHtml(c.sha)}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600; color: #fff; max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${escapeHtml(c.message)}
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-user-gear" style="color: var(--accent-purple);"></i> ${escapeHtml(c.author)}
+                        </span>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">${dateStr}</td>
+                    <td style="text-align: right;">
+                        <a href="${c.url || 'https://github.com/kefe3/nexus'}" target="_blank" class="btn-action" style="padding: 4px 10px; font-size: 0.75rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                            <span>İncele</span> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.65rem;"></i>
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.25rem;">Commit geçmişi alınamadı: ${data.error || 'Bilinmeyen hata'}</td></tr>`;
+        }
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--accent-red); padding: 1.25rem;">Bağlantı hatası: ${e.message}</td></tr>`;
     }
+}
+
+// 1-Click Update Application with Live Terminal Modal
+async function applyUpdate() {
+    const modal = document.getElementById('updateProgressModal');
+    const termBox = document.getElementById('update-terminal-box');
+    const modalSub = document.getElementById('update-modal-sub');
+    const btnClose = document.getElementById('btn-update-modal-close');
+    const btnApply = document.getElementById('btn-apply-update');
+
+    if (modal) modal.style.display = 'flex';
+    if (termBox) {
+        termBox.innerHTML = `
+            <div style="color: var(--accent-cyan); font-weight: 700;">> [1/4] Nexus Güncelleme Motoru Başlatıldı...</div>
+            <div style="color: #64748b;">> Hedef Depo: https://github.com/kefe3/nexus.git (Dal: main)</div>
+            <div style="color: var(--accent-amber);">> [2/4] GitHub remote referansları taranıyor (git fetch)...</div>
+        `;
+    }
+    if (btnClose) btnClose.style.display = 'none';
+    if (btnApply) btnApply.disabled = true;
 
     try {
         const res = await fetch(`${API_BASE}/admin/updates/apply`, { method: 'POST' });
         const data = await res.json();
+        
         if (data.status === 'ok') {
-            alert('🎉 Sistem başarıyla güncellendi! Servisler yeniden başlatılıyor...');
+            if (termBox) {
+                if (data.steps && data.steps.length > 0) {
+                    data.steps.forEach(st => {
+                        const stepDiv = document.createElement('div');
+                        stepDiv.style.color = st.status === 'ok' ? 'var(--accent-green)' : 'var(--accent-amber)';
+                        stepDiv.innerHTML = `> [✓] Adım: ${st.step} -> ${escapeHtml(st.output || 'Tamamlandı')}`;
+                        termBox.appendChild(stepDiv);
+                    });
+                }
+                const finDiv = document.createElement('div');
+                finDiv.style.color = 'var(--accent-green)';
+                finDiv.style.fontWeight = '800';
+                finDiv.style.marginTop = '8px';
+                finDiv.innerHTML = `> [3/4] ${data.message} (Yeni Commit: ${data.new_commit?.sha || 'latest'})`;
+                termBox.appendChild(finDiv);
+
+                const reloadDiv = document.createElement('div');
+                reloadDiv.style.color = 'var(--accent-cyan)';
+                reloadDiv.innerHTML = `> [4/4] Sayfa 3 saniye içinde otomatik yenileniyor...`;
+                termBox.appendChild(reloadDiv);
+                termBox.scrollTop = termBox.scrollHeight;
+            }
+
+            if (modalSub) {
+                modalSub.textContent = 'Güncelleme başarıyla tamamlandı! Yenileniyor...';
+                modalSub.style.color = 'var(--accent-green)';
+            }
+            if (btnClose) btnClose.style.display = 'inline-flex';
+
             setTimeout(() => {
                 location.reload();
-            }, 2000);
+            }, 3000);
         } else {
-            alert(`Güncelleme Hatası: ${data.message}`);
+            if (termBox) {
+                const errDiv = document.createElement('div');
+                errDiv.style.color = 'var(--accent-red)';
+                errDiv.style.fontWeight = '700';
+                errDiv.style.marginTop = '8px';
+                errDiv.innerHTML = `> [X] HATA: ${data.message || 'Güncelleme başarısız'}`;
+                termBox.appendChild(errDiv);
+            }
+            if (modalSub) {
+                modalSub.textContent = 'Güncelleme sırasında bir hata oluştu.';
+                modalSub.style.color = 'var(--accent-red)';
+            }
+            if (btnClose) {
+                btnClose.style.display = 'inline-flex';
+                btnClose.textContent = 'Kapat';
+                btnClose.onclick = () => { modal.style.display = 'none'; };
+            }
         }
     } catch (e) {
-        alert(`Hata: ${e.message}`);
+        if (termBox) {
+            const errDiv = document.createElement('div');
+            errDiv.style.color = 'var(--accent-red)';
+            errDiv.innerHTML = `> [X] Ağ / İstek Hatası: ${e.message}`;
+            termBox.appendChild(errDiv);
+        }
+        if (btnClose) {
+            btnClose.style.display = 'inline-flex';
+            btnClose.textContent = 'Kapat';
+            btnClose.onclick = () => { modal.style.display = 'none'; };
+        }
     } finally {
         if (btnApply) btnApply.disabled = false;
     }
@@ -886,3 +1008,4 @@ async function applyUpdate() {
 document.addEventListener('DOMContentLoaded', () => {
     checkUpdates();
 });
+

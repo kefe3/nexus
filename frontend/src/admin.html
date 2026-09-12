@@ -998,6 +998,33 @@
                     </div>
                 </div>
 
+                
+                <!-- GitHub Recent Commits & Changelog Table -->
+                <div class="glass-panel" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h3 class="glass-panel-title" style="margin: 0;">
+                            <span><i class="fa-solid fa-code-branch" style="color: var(--accent-purple); margin-right: 8px;"></i> Son GitHub Değişiklikleri & Commit Geçmişi</span>
+                        </h3>
+                        <a href="https://github.com/kefe3/nexus/commits/main" target="_blank" class="btn-action" style="padding: 6px 12px; font-size: 0.78rem; text-decoration: none;">
+                            <i class="fa-brands fa-github"></i> GitHub'da İncele <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem; margin-left: 4px;"></i>
+                        </a>
+                    </div>
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Commit SHA</th>
+                                <th>Açıklama / Değişiklik</th>
+                                <th>Geliştirici</th>
+                                <th>Tarih</th>
+                                <th style="text-align: right;">Bağlantı</th>
+                            </tr>
+                        </thead>
+                        <tbody id="github-commits-tbody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.25rem;">Commit geçmişi yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <div class="glass-panel">
                     <h3 class="glass-panel-title"><span><i class="fa-brands fa-docker" style="color: #0db7ed; margin-right: 8px;"></i> Aktif Container Mimarisi</span></h3>
                     <table class="custom-table">
@@ -1379,6 +1406,33 @@
             </section>
 
         </main>
+    </div>
+
+    
+    <!-- Update Progress Modal -->
+    <div id="updateProgressModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-2xl hidden z-50 items-center justify-center p-4" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(16px); z-index: 1000; display: none; align-items: center; justify-content: center;">
+        <div style="background: #0b0f19; border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 20px; width: 100%; max-width: 540px; padding: 1.75rem; box-shadow: 0 0 50px rgba(0, 242, 254, 0.25);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #04060c;">
+                    <i class="fa-solid fa-cloud-arrow-down fa-bounce"></i>
+                </div>
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 2px;">Nexus Otomatik Güncelleme</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;" id="update-modal-sub">Resmi GitHub deposu ile eşitleniyor...</p>
+                </div>
+            </div>
+
+            <!-- Terminal output log -->
+            <div id="update-terminal-box" style="background: #04060c; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #94a3b8; height: 180px; overflow-y: auto; line-height: 1.6; margin-bottom: 1.25rem;">
+                <div style="color: var(--accent-cyan);">> [1/3] GitHub bağlantısı kuruluyor...</div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button id="btn-update-modal-close" class="btn-action" style="display: none; padding: 8px 18px; font-weight: 800; background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan)); color: #04060c; border: none;" onclick="location.reload()">
+                    <i class="fa-solid fa-rotate-right"></i> Paneli Yenile
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Control Panel Logic JS -->

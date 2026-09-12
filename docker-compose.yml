@@ -12,6 +12,7 @@ services:
       - OLLAMA_BASE_URL=http://127.0.0.1:11434
     volumes:
       - ./backend:/app
+      - ./:/repo
       - /usr/local/bin/cloudflared:/usr/local/bin/cloudflared:ro
       - ./data:/app/data
 

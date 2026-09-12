@@ -307,7 +307,19 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
   3. **Kontrol Paneli GitHub Güncelleme Kontrolcüsü (`/api/admin/updates/check` & `/apply`):**
      * Backend, GitHub API üzerinden `kefe3/nexus` deposundaki en son commit SHA'sını, mesajını ve tarihini yerel versiyonla karşılaştırır.
      * Kontrol Paneli başlığında ve **"Konteyner & Sistem"** sekmesinde canlı uyarı rozeti (`🚀 Yeni Güncelleme: <sha>`) gösterilir.
-     * Kullanıcı dilediğinde **"Tek Tıkla Sistemi Güncelle"** butonuna basarak arayüzden çıkmadan `git pull origin main` ile sistemi en son kararlı sürüme yükseltebilir.
+#### 🕒 18:04:10 — [Commit: `9a823f1`] • 🚀 Gelişmiş GitHub Güncelleme Kontrolcüsü, Canlı Terminal Modalı & Konteyner Git Senkronizasyon Motoru
+* **Modül:** `GitHub Live Changelog, 1-Click Update Engine & Container Git Architecture`
+* **Yapılan İşlemler:**
+  1. **GitHub Commit Geçmişi & Canlı Değişiklik Tablosu (`/api/admin/updates/history`):**
+     * Backend'e GitHub REST API üzerinden son commit geçmişini çeken asenkron `/api/admin/updates/history` uç noktası eklendi.
+     * Kontrol Paneline (`frontend/src/admin.html` & `frontend/src/js/admin.js`) son 8 commit'in SHA kodunu, değişiklik özetini, geliştirici bilgisini, tarihini ve GitHub bağlantısını gösteren modern bir tablo entegre edildi.
+  2. **İnteraktif Güncelleme Süreç Modalı (`#updateProgressModal`):**
+     * Kullanıcı "Şimdi Güncelle" butonuna bastığında açılan karanlık cam terminal penceresi tasarlandı.
+     * Güncelleme adımları (`git fetch`, `git pull / git reset --hard`, süre hesaplama) terminal kutusunda renkli durum satırlarıyla canlı olarak simüle edilir ve tamamlandığında sayfa 3 saniye içinde otomatik yenilenir.
+  3. **Konteyner İçi Git Mimarisi & Çalışma Dizini Senkronizasyonu:**
+     * `backend/Dockerfile` içerisine `git`, `curl` ve `procps` paketleri eklendi.
+     * `docker-compose.yml` yapılandırmasına `./:/repo` ana dizin bağlaması (bind mount) eklendi.
+     * Backend'deki git komutları `git -c safe.directory=* -C /repo` bayraklarıyla çalıştırılarak konteyner içinden ana makinedeki tüm kaynak kodların (frontend, backend, betikler) yetki hatası olmadan doğrudan güncellenmesi sağlandı.
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
@@ -316,6 +328,7 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
 3. **Sıfır Yapılandırmalı Canlı Tünel (Cloudflare Quick Tunnel):** Kullanıcının port açmasına, statik IP almasına veya Cloudflare hesabı bağlamasına gerek kalmadan uçtan uca TLS şifreli `https://*.trycloudflare.com` alan adlarıyla canlı web paylaşımı sağlanır.
 4. **Kullanıcı Kontrollü Dış Erişim Kilidi:** Kullanıcı dilediği zaman tek tıkla dış erişimi kapatıp sistemi yalnızca yerel ağa (LAN) sınırlandırabilir.
 5. **SSE Performansı:** Server-Sent Events akışı `proxy_buffering off` ve `GZipMiddleware` ile tamponlama gecikmesi olmadan sıfır gecikmeyle istemciye aktarılır.
+
 
 
 

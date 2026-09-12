@@ -507,17 +507,31 @@ async def get_system_specs():
     return {"status": "ok", "specs": get_detailed_hardware_specs()}
 
 
+def get_repo_dir():
+    candidates = ["/repo", ".", "..", "/app", "/app/.."]
+    for c in candidates:
+        if os.path.isdir(os.path.join(c, ".git")):
+            return os.path.abspath(c)
+    return "."
+
+def run_git_cmd(args):
+    repo_dir = get_repo_dir()
+    cmd = ["git", "-c", "safe.directory=*", "-C", repo_dir] + args
+    return subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode().strip()
+
 def get_local_commit_info():
     sha = ""
     msg = ""
     date = ""
+    branch = "main"
     try:
-        sha = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
-        msg = subprocess.check_output(["git", "log", "-1", "--pretty=%s"], stderr=subprocess.DEVNULL).decode().strip()
-        date = subprocess.check_output(["git", "log", "-1", "--pretty=%cd", "--date=relative"], stderr=subprocess.DEVNULL).decode().strip()
+        sha = run_git_cmd(["rev-parse", "--short", "HEAD"])
+        msg = run_git_cmd(["log", "-1", "--pretty=%s"])
+        date = run_git_cmd(["log", "-1", "--pretty=%cd", "--date=relative"])
+        branch = run_git_cmd(["rev-parse", "--abbrev-ref", "HEAD"])
     except Exception:
         pass
-    return {"sha": sha or "main", "message": msg or "Nexus AI Station", "date": date or "Güncel"}
+    return {"sha": sha or "main", "message": msg or "Nexus AI Station", "date": date or "Güncel", "branch": branch}
 
 @router.get("/updates/check")
 async def check_github_updates():
@@ -543,7 +557,8 @@ async def check_github_updates():
                     "sha": remote_sha,
                     "message": remote_msg,
                     "author": remote_author,
-                    "date": remote_date
+                    "date": remote_date,
+                    "url": data.get("html_url", "https://github.com/kefe3/nexus")
                 }
                 
                 if local["sha"] and remote_sha and local["sha"] != remote_sha and local["sha"] != "main":
@@ -562,10 +577,63 @@ async def check_github_updates():
         "error": error
     }
 
+@router.get("/updates/history")
+async def get_github_commit_history():
+    commits = []
+    error = None
+    try:
+        async with httpx.AsyncClient(timeout=6.0) as client:
+            res = await client.get(
+                "https://api.github.com/repos/kefe3/nexus/commits?per_page=8",
+                headers={"User-Agent": "Nexus-AI-Platform"}
+            )
+            if res.status_code == 200:
+                data = res.json()
+                for c in data:
+                    commits.append({
+                        "sha": c.get("sha", "")[:7],
+                        "full_sha": c.get("sha", ""),
+                        "message": c.get("commit", {}).get("message", "").split("\n")[0],
+                        "author": c.get("commit", {}).get("author", {}).get("name", "Geliştirici"),
+                        "date": c.get("commit", {}).get("author", {}).get("date", ""),
+                        "url": c.get("html_url", "")
+                    })
+            else:
+                error = f"HTTP {res.status_code}"
+    except Exception as e:
+        error = str(e)
+
+    return {"status": "ok" if not error else "error", "commits": commits, "error": error}
+
 @router.post("/updates/apply")
 async def apply_update():
+    steps = []
+    t0 = time.time()
     try:
-        out = subprocess.check_output(["git", "pull", "origin", "main"], stderr=subprocess.STDOUT).decode()
-        return {"status": "ok", "message": "Nexus başarıyla en son sürüme güncellendi!", "output": out}
+        # Step 1: Git Fetch
+        try:
+            fetch_out = run_git_cmd(["fetch", "origin", "main"])
+            steps.append({"step": "git_fetch", "status": "ok", "output": fetch_out or "Remote refs fetched successfully."})
+        except subprocess.CalledProcessError as e:
+            steps.append({"step": "git_fetch", "status": "warning", "output": e.output.decode() if hasattr(e, 'output') else str(e)})
+
+        # Step 2: Git Pull / Reset to origin/main
+        try:
+            pull_out = run_git_cmd(["pull", "origin", "main"])
+            steps.append({"step": "git_pull", "status": "ok", "output": pull_out or "Repository updated to latest origin/main."})
+        except Exception:
+            # Fallback to reset if merge conflicts exist in tracked files
+            reset_out = run_git_cmd(["reset", "--hard", "origin/main"])
+            steps.append({"step": "git_reset_hard", "status": "ok", "output": reset_out})
+
+        elapsed = round(time.time() - t0, 2)
+        new_commit = get_local_commit_info()
+        return {
+            "status": "ok",
+            "message": f"Nexus {new_commit['sha']} sürümüne başarıyla güncellendi ({elapsed}s)!",
+            "elapsed_seconds": elapsed,
+            "steps": steps,
+            "new_commit": new_commit
+        }
     except Exception as e:
-        return {"status": "error", "message": f"Güncelleme Hatası: {str(e)}"}
+        return {"status": "error", "message": f"Güncelleme Hatası: {str(e)}", "steps": steps}
