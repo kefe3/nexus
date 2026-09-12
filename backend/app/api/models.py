@@ -21,11 +21,14 @@ async def list_models(
             if provider == "ollama":
                 candidates = [x_custom_url.rstrip("/")] if x_custom_url else [
                     cfg.get("ollama_base_url", settings.OLLAMA_BASE_URL),
-                    "http://host.docker.internal:11434",
-                    "http://host.docker.internal:11435",
                     "http://127.0.0.1:11435",
                     "http://127.0.0.1:11434",
-                    "http://localhost:11434"
+                    "http://host.docker.internal:11434",
+                    "http://host.docker.internal:11435",
+                    "http://172.18.0.1:11435",
+                    "http://172.17.0.1:11435",
+                    "http://localhost:11434",
+                    "http://localhost:11435"
                 ]
                 for url in candidates:
                     if not url:

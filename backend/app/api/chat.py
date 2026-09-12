@@ -30,11 +30,14 @@ async def chat_stream(
     if provider == "ollama":
         base_urls = [x_custom_url.rstrip("/")] if x_custom_url else [
             cfg.get("ollama_base_url", settings.OLLAMA_BASE_URL),
-            "http://host.docker.internal:11434",
-            "http://host.docker.internal:11435",
             "http://127.0.0.1:11435",
             "http://127.0.0.1:11434",
-            "http://localhost:11434"
+            "http://host.docker.internal:11434",
+            "http://host.docker.internal:11435",
+            "http://172.18.0.1:11435",
+            "http://172.17.0.1:11435",
+            "http://localhost:11434",
+            "http://localhost:11435"
         ]
         # Deduplicate while preserving order
         unique_urls = list(dict.fromkeys([u for u in base_urls if u]))
