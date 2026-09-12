@@ -340,7 +340,16 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
   1. **Sıfır Bağımlılıklı Python Senkronizasyonu:** Konteyner veya ana makinede `git` kurulu olmasa dahi GitHub REST API ve sıkıştırılmış arşiv akışı (`tarfile`) kullanılarak tüm dosyaların 1.3 saniyede anında güncellenmesi sağlandı.
   2. **Uvicorn Canlı Kod Yenileme (`--reload --reload-dir /app`):** Güncelleme sonrasında backend API'lerinin konteyneri yeniden başlatmaya gerek kalmadan canlı bellek üzerinde anında devreye girmesi sağlandı.
   3. **Tarayıcı & Nginx Önbellek Koruması:** `nginx.conf` içine `Cache-Control: no-cache, no-store, must-revalidate` başlıkları eklendi, `admin.js?v=2.4` önbellek kırıcı entegre edildi.
-  4. **Modal Görünürlük Düzeltmesi:** `#updateProgressModal` üzerindeki CSS sınıf çakışması giderilerek terminal güncelleme penceresinin her tarayıcıda kusursuz açılması garantilendi.
+#### 🕒 18:17:15 — [Commit: `b149a02`] • 🎨 Temiz Terminal Arayüzü & Akıcı Kurulum Adımları
+* **Modül:** `Installer Terminal UI & Streamlined Progress`
+* **Yapılan Düzeltmeler:**
+  1. **Ham Çıktıların Bastırılması:** Git (`remote: Enumerating...`, `Fast-forward`), Docker Build (`Step 1/9`, `pip`, `debconf`, `apt-get`) ve paket yöneticisi ham log kalabalığı bastırılarak tamamen temiz terminal görünümüne geçildi.
+  2. **Net ve Sıralı İlerleme Metinleri:**
+     * `-> 📥 Nexus AI kuruluyor / güncelleniyor...`
+     * `-> ⚙️ Gereken eksik kütüphane ve bağımlılıklar kuruluyor...`
+     * `-> ⚡ Nexus AI servisleri başlatılıyor...`
+     * `✓ Nexus AI Studio ve tüm servisler başarıyla aktif edildi!`
+  3. **Windows PowerShell Eşitlemesi:** `install.ps1` aynı temiz ve sıralı bildirim formatına geçirildi.
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 

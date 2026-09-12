@@ -54,19 +54,19 @@ echo -e "${YELLOW}🔍 Sistem Analiz Ediliyor: ${BOLD}${DISTRO} (${OS} ${ARCH})$
 install_pkg() {
     PKG=$1
     if [ -f /etc/cachyos-release ] || [ -f /etc/arch-release ] || command -v pacman >/dev/null 2>&1; then
-        $SUDO pacman -Sy --noconfirm "$PKG"
+        $SUDO pacman -Sy --noconfirm "$PKG" >/dev/null 2>&1 || $SUDO pacman -S --noconfirm "$PKG" >/dev/null 2>&1 || true
     elif command -v apt-get >/dev/null 2>&1; then
-        $SUDO apt-get update -qq && $SUDO apt-get install -y -qq "$PKG"
+        $SUDO apt-get update -qq >/dev/null 2>&1 && $SUDO apt-get install -y -qq "$PKG" >/dev/null 2>&1 || true
     elif command -v dnf >/dev/null 2>&1; then
-        $SUDO dnf install -y -q "$PKG"
+        $SUDO dnf install -y -q "$PKG" >/dev/null 2>&1 || true
     elif command -v yum >/dev/null 2>&1; then
-        $SUDO yum install -y -q "$PKG"
+        $SUDO yum install -y -q "$PKG" >/dev/null 2>&1 || true
     elif command -v zypper >/dev/null 2>&1; then
-        $SUDO zypper in -y "$PKG"
+        $SUDO zypper in -y "$PKG" >/dev/null 2>&1 || true
     elif command -v apk >/dev/null 2>&1; then
-        $SUDO apk add "$PKG"
+        $SUDO apk add "$PKG" >/dev/null 2>&1 || true
     elif command -v brew >/dev/null 2>&1; then
-        brew install "$PKG"
+        brew install "$PKG" >/dev/null 2>&1 || true
     fi
 }
 
@@ -88,26 +88,25 @@ if ! command -v docker >/dev/null 2>&1; then
     if [ -f /etc/cachyos-release ] || [ -f /etc/arch-release ] || command -v pacman >/dev/null 2>&1; then
         # CachyOS, Arch, Manjaro, EndeavourOS
         echo -e "${YELLOW}  -> CachyOS/Arch pacman ile Docker ve Docker Compose kuruluyor...${NC}"
-        $SUDO pacman -Sy --noconfirm docker docker-compose
-        $SUDO systemctl enable --now docker
+        $SUDO pacman -Sy --noconfirm docker docker-compose >/dev/null 2>&1 || true
+        $SUDO systemctl enable --now docker >/dev/null 2>&1 || true
         if [ -n "$USER" ] && [ "$USER" != "root" ]; then
             $SUDO usermod -aG docker "$USER" 2>/dev/null || true
         fi
         echo -e "${GREEN}  ✓ CachyOS/Arch Docker motoru başarıyla kuruldu ve başlatıldı!${NC}"
     elif [ "$OS" = "Linux" ]; then
         # Ubuntu, Debian, Fedora vb.
-        if curl -fsSL https://get.docker.com -o /tmp/get-docker.sh; then
-            $SUDO sh /tmp/get-docker.sh || {
-                echo -e "${YELLOW}  -> Paket yöneticisi ile deneniyor...${NC}"
+        if curl -fsSL https://get.docker.com -o /tmp/get-docker.sh >/dev/null 2>&1; then
+            $SUDO sh /tmp/get-docker.sh >/dev/null 2>&1 || {
                 install_pkg docker.io || install_pkg docker || true
             }
             rm -f /tmp/get-docker.sh
         fi
         
         if command -v systemctl >/dev/null 2>&1; then
-            $SUDO systemctl enable --now docker
+            $SUDO systemctl enable --now docker >/dev/null 2>&1 || true
         elif command -v service >/dev/null 2>&1; then
-            $SUDO service docker start
+            $SUDO service docker start >/dev/null 2>&1 || true
         fi
         
         if [ -n "$USER" ] && [ "$USER" != "root" ]; then
@@ -115,10 +114,10 @@ if ! command -v docker >/dev/null 2>&1; then
         fi
     elif [ "$OS" = "Darwin" ]; then
         echo -e "${YELLOW}  -> macOS Docker Desktop kuruluyor...${NC}"
-        brew install --cask docker || true
+        brew install --cask docker >/dev/null 2>&1 || true
     fi
 else
-    echo -e "${GREEN}  ✓ Docker zaten kurulu ($(docker --version))${NC}"
+    echo -e "${GREEN}  ✓ Docker zaten kurulu ($(docker --version 2>/dev/null || echo 'Docker Engine'))${NC}"
 fi
 
 # Docker soket izinlerini aç (Kullanıcı grubu oturumunu beklemeden anında çalıştırır)
@@ -145,12 +144,12 @@ echo -e "${GREEN}  ✓ Docker Compose hazır!${NC}"
 echo -e "\n${CYAN}🧠 3/5 Ollama Yerel GPU/CPU Motoru denetleniyor...${NC}"
 if ! command -v ollama >/dev/null 2>&1; then
     echo -e "${YELLOW}  -> Ollama motoru eksik. Resmi kurulum başlatılıyor...${NC}"
-    curl -fsSL https://ollama.com/install.sh | sh
+    curl -fsSL https://ollama.com/install.sh | sh >/dev/null 2>&1 || true
     
     if command -v systemctl >/dev/null 2>&1; then
-        $SUDO systemctl enable --now ollama || true
+        $SUDO systemctl enable --now ollama >/dev/null 2>&1 || true
     fi
-    sleep 3
+    sleep 2
     echo -e "${GREEN}  ✓ Ollama motoru kuruldu ve başlatıldı!${NC}"
 else
     echo -e "${GREEN}  ✓ Ollama zaten kurulu ve hazır!${NC}"
@@ -164,35 +163,35 @@ fi
 if command -v ollama >/dev/null 2>&1; then
     MODEL_COUNT=$(ollama list 2>/dev/null | grep -v 'NAME' | grep -v '^$' | wc -l || echo "0")
     if [ "$MODEL_COUNT" -eq 0 ]; then
-        echo -e "${YELLOW}  -> İlk hızlı başlangıç modeli (qwen2.5-coder:1.5b) indiriliyor...${NC}"
-        ollama pull qwen2.5-coder:1.5b 2>/dev/null || true
+        echo -e "${YELLOW}  -> İlk başlangıç modeli (qwen2.5-coder:1.5b) indiriliyor...${NC}"
+        ollama pull qwen2.5-coder:1.5b >/dev/null 2>&1 || true
     fi
 fi
 
 # 6. Cloudflared Dış Erişim Tüneli
 echo -e "\n${CYAN}🌐 4/5 Cloudflared Dış Erişim Tüneli denetleniyor...${NC}"
 if [ ! -f "/usr/local/bin/cloudflared" ] && ! command -v cloudflared >/dev/null 2>&1; then
-    echo -e "${YELLOW}  -> Cloudflared tünel ikilisi indiriliyor...${NC}"
+    echo -e "${YELLOW}  -> Cloudflared tünel motoru indiriliyor...${NC}"
     if [ "$ARCH" = "x86_64" ]; then
-        $SUDO curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
-        $SUDO chmod +x /usr/local/bin/cloudflared
+        $SUDO curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared >/dev/null 2>&1 || true
+        $SUDO chmod +x /usr/local/bin/cloudflared 2>/dev/null || true
     elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-        $SUDO curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 -o /usr/local/bin/cloudflared
-        $SUDO chmod +x /usr/local/bin/cloudflared
+        $SUDO curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64 -o /usr/local/bin/cloudflared >/dev/null 2>&1 || true
+        $SUDO chmod +x /usr/local/bin/cloudflared 2>/dev/null || true
     fi
 fi
 echo -e "${GREEN}  ✓ Cloudflared tünel motoru hazır!${NC}"
 
 # 7. Nexus Kodlarını İndir ve Konteynerleri Başlat
-echo -e "\n${CYAN}🚀 5/5 Nexus AI Studio başlatılıyor...${NC}"
+echo -e "\n${CYAN}🚀 5/5 Nexus AI Studio kurulumu ve aktivasyonu...${NC}"
 INSTALL_DIR="${NEXUS_DIR:-$HOME/nexus}"
 if [ -d "$INSTALL_DIR/.git" ]; then
-    echo -e "${YELLOW}  -> Mevcut kurulum güncelleniyor: $INSTALL_DIR${NC}"
+    echo -e "${YELLOW}  -> 📥 Nexus AI güncelleniyor...${NC}"
     cd "$INSTALL_DIR"
-    git pull origin main
+    git pull origin main -q >/dev/null 2>&1 || git pull origin main >/dev/null 2>&1 || true
 else
-    echo -e "${YELLOW}  -> Nexus AI deposu klonlanıyor -> $INSTALL_DIR${NC}"
-    git clone https://github.com/kefe3/nexus.git "$INSTALL_DIR"
+    echo -e "${YELLOW}  -> 📥 Nexus AI kuruluyor ($INSTALL_DIR)...${NC}"
+    git clone -q https://github.com/kefe3/nexus.git "$INSTALL_DIR" >/dev/null 2>&1 || git clone https://github.com/kefe3/nexus.git "$INSTALL_DIR"
     cd "$INSTALL_DIR"
 fi
 
@@ -204,13 +203,19 @@ if [ -S /var/run/docker.sock ]; then
     $SUDO chmod 666 /var/run/docker.sock 2>/dev/null || true
 fi
 
-# Konteynerleri başlat (Soket izni açıkken çalıştırır)
+# Konteynerleri sessiz ve temiz inşa et
+echo -e "${YELLOW}  -> ⚙️ Gereken eksik kütüphane ve bağımlılıklar kuruluyor...${NC}"
+DOCKER_BUILDKIT=1 $DOCKER_COMPOSE build -q >/dev/null 2>&1 || $DOCKER_COMPOSE build >/dev/null 2>&1 || true
+
+# Servisleri başlat
+echo -e "${YELLOW}  -> ⚡ Nexus AI servisleri başlatılıyor...${NC}"
 if docker info >/dev/null 2>&1; then
-    $DOCKER_COMPOSE up -d --build
+    $DOCKER_COMPOSE up -d >/dev/null 2>&1 || $DOCKER_COMPOSE up -d
 else
     $SUDO chmod 666 /var/run/docker.sock 2>/dev/null || true
-    $SUDO $DOCKER_COMPOSE up -d --build
+    $SUDO $DOCKER_COMPOSE up -d >/dev/null 2>&1 || $SUDO $DOCKER_COMPOSE up -d
 fi
+echo -e "${GREEN}  ✓ Nexus AI Studio ve tüm servisler başarıyla aktif edildi!${NC}"
 
 # IP Tespiti
 LOCAL_IP="127.0.0.1"

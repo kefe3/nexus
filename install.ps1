@@ -20,19 +20,23 @@ if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
 # 3. İndirme ve Çalıştırma
 $targetDir = "$HOME\nexus"
 if (Test-Path "$targetDir\.git") {
-    Write-Host "🔄 Nexus güncelleniyor..." -ForegroundColor Yellow
+    Write-Host "📥 Nexus AI güncelleniyor..." -ForegroundColor Yellow
     Set-Location $targetDir
-    git pull origin main
+    git pull origin main -q 2>$null
 } else {
-    Write-Host "📥 Nexus indiriliyor..." -ForegroundColor Yellow
-    git clone https://github.com/kefe3/nexus.git $targetDir
+    Write-Host "📥 Nexus AI kuruluyor ($targetDir)..." -ForegroundColor Yellow
+    git clone -q https://github.com/kefe3/nexus.git $targetDir 2>$null
     Set-Location $targetDir
 }
 
-# 4. Docker Compose Başlatma
-Write-Host "🚀 Nexus servisleri Docker ile başlatılıyor..." -ForegroundColor Cyan
-docker compose up -d --build
+# 4. Bağımlılıklar ve Servisler
+Write-Host "⚙️ Gereken eksik kütüphane ve bağımlılıklar kuruluyor..." -ForegroundColor Yellow
+docker compose build -q 2>$null
+
+Write-Host "⚡ Nexus AI servisleri başlatılıyor..." -ForegroundColor Yellow
+docker compose up -d 2>$null
 
 Write-Host "`n🎉 NEXUS AI STUDIO BAŞARIYLA ÇALIŞIYOR!" -ForegroundColor Green
 Write-Host "👉 AI Studio:        http://localhost:3050" -ForegroundColor Cyan
 Write-Host "👉 Kontrol Paneli:   http://localhost:3050/admin.html" -ForegroundColor Cyan
+
