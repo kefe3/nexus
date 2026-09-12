@@ -321,6 +321,19 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
      * `docker-compose.yml` yapılandırmasına `./:/repo` ana dizin bağlaması (bind mount) eklendi.
      * Backend'deki git komutları `git -c safe.directory=* -C /repo` bayraklarıyla çalıştırılarak konteyner içinden ana makinedeki tüm kaynak kodların (frontend, backend, betikler) yetki hatası olmadan doğrudan güncellenmesi sağlandı.
 
+#### 🕒 18:05:45 — [Commit: `5c9284a`] • 🗑️ Evrensel Kaldırma Betiği (`uninstall.sh` & `uninstall.ps1`) & Temizlik Sihirbazı
+* **Modül:** `Uninstaller & Clean Removal Suite`
+* **Yapılan İşlemler:**
+  1. **Linux / macOS Kaldırma Betiği (`uninstall.sh`):**
+     * Tüm Nexus Docker konteynerlerini (`nexus-frontend`, `nexus-backend`, `nexus-ollama`) ve imajlarını tek komutla durdurup kaldıran sihirbaz geliştirildi.
+     * Kullanıcıya sohbet geçmişi ve ayarları barındıran `data/` klasörünü koruma veya kalıcı olarak silme (`--purge-data` / `--keep-data`) seçenekleri sunuldu.
+     * Aktif Cloudflare tünel süreçleri güvenle sonlandırılır.
+     * `curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.sh | bash` tek komut desteği sağlandı.
+  2. **Windows PowerShell Kaldırma Betiği (`uninstall.ps1`):**
+     * Windows ortamları için `irm https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.ps1 | iex` desteği eklendi.
+  3. **Dokümantasyon Güncellemesi:**
+     * `README.md` dosyasına hem Türkçe hem İngilizce tek satırlık temizleme komutları eklendi.
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.

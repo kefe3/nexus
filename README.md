@@ -68,14 +68,14 @@ curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
 irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex
 ```
 
-### 🐳 Or via Docker Compose Manually
+### 🗑️ Uninstallation (1-Line Quick Removal)
 ```bash
-git clone https://github.com/kefe3/nexus.git
-cd nexus
-docker compose up -d
-```
+# Linux / macOS
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.sh | bash
 
-Open **`http://localhost:3050`** for AI Studio or **`http://localhost:3050/admin.html`** for Control Panel!
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.ps1 | iex
+```
 
 ---
 
@@ -127,14 +127,13 @@ curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
 ### 🪟 Windows (PowerShell ile Otomatik Kurulum)
 PowerShell'i açın ve çalıştırın:
 ```powershell
-irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex
-```
-
-### 🐳 Veya Manuel Docker Compose İle
+### 🗑️ Sistemi Kaldırma (Tek Komutla Temiz Kaldırma)
 ```bash
-git clone https://github.com/kefe3/nexus.git
-cd nexus
-docker compose up -d
+# Linux / macOS
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.sh | bash
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.ps1 | iex
 ```
 
 Tarayıcınızdan **`http://localhost:3050`** (AI Studio) veya **`http://localhost:3050/admin.html`** (Kontrol Paneli) adresine gidin!
