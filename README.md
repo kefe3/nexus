@@ -24,9 +24,15 @@
 ## 🌟 Key Features
 
 * 🚀 **1-Command Deployment:** Launch the entire platform in seconds using `docker compose up -d`.
+* ⚡ **Cluster Control Panel 2.0 (`/admin.html`):**
+  * 📈 **Real-Time Telemetry:** Live dual-axis Chart.js CPU & RAM hardware monitoring graphs.
+  * ⏱️ **Model Speed Benchmark Arena:** Measure real-time tokens-per-second (tok/s), TTFT, and latency across models.
+  * 🧠 **VRAM & Memory Manager:** Inspect loaded GPU models, memory footprints, and 1-click VRAM flush.
+  * 📦 **Ollama Model Hub:** Dynamic 1-click model puller and manager (`deepseek-r1`, `qwen2.5-coder`, `llama3.2`, etc.).
+  * 🔑 **Provider Speed Radar:** Real-time ping & health benchmarks for Ollama, Gemini 3.6, OpenAI, Groq.
 * 🔌 **Universal Multi-Provider Support:**
   * **Ollama (Local GPU/CPU):** Connect to local models (`qwen2.5-coder`, `deepseek-r1`, `llama3`, `mistral`, etc.).
-  * **Google Gemini:** Full support for Gemini 2.0 Flash / Pro (Google AI Studio key with 1M+ context).
+  * **Google Gemini:** Full support for Gemini 3.6 Flash / Pro (Google AI Studio key with 1M+ context).
   * **OpenAI & Anthropic:** GPT-4o, o3-mini, Claude 3.5 Sonnet.
   * **Groq:** Ultra-fast inference at 300+ tokens/second.
   * **Custom Endpoints:** Connect to any OpenAI-compatible API reverse proxy.
@@ -96,9 +102,15 @@ graph TD
 ## 🌟 Öne Çıkan Özellikler
 
 * 🚀 **Tek Komutla Kurulum:** `docker compose up -d` ile tüm sistemi 5 saniyede ayağa kaldırın.
+* ⚡ **Gelişmiş Kontrol Paneli 2.0 (`/admin.html`):**
+  * 📈 **Canlı Donanım Telemetrisi:** Chart.js destekli anlık CPU ve RAM yük grafikleri.
+  * ⏱️ **Model Hız & Benchmark Arenası:** Modellerin saniyede ürettiği token (tok/s), TTFT ve gecikme sürelerini anında test etme.
+  * 🧠 **VRAM & Bellek Monitörü:** GPU'ya yüklenmiş aktif modelleri görme ve tek tıkla VRAM boşaltma.
+  * 📦 **Ollama Model Merkezi:** Tek tıkla model indirme (`deepseek-r1`, `qwen2.5-coder`, `llama3.2` vb.) ve sunucudan silme.
+  * 🔑 **Sağlayıcı Hız Radarı:** Ollama, Gemini 3.6, OpenAI ve Groq için canlı gecikme (ping) testleri.
 * 🔌 **Sınırsız Çoklu Sağlayıcı (Multi-Provider):**
   * **Ollama (Yerel GPU/CPU):** Kendi ekran kartınızdaki yerel modeller (`qwen2.5-coder`, `deepseek-r1`, `llama3`, vb.).
-  * **Google Gemini:** Gemini 2.0 Flash / Pro ve 1.5 Pro (Google AI Studio anahtarıyla 1M+ token context).
+  * **Google Gemini:** Gemini 3.6 Flash / Pro (Google AI Studio anahtarıyla 1M+ token context).
   * **OpenAI & Anthropic:** GPT-4o, o3-mini, Claude 3.5 Sonnet.
   * **Groq:** 300+ token/saniye hızında yıldırım hızında çıkarım.
   * **Özel Uç Noktalar:** Herhangi bir OpenAI-uyumlu API köprüsüne bağlanabilme.
