@@ -508,6 +508,11 @@ async def get_system_specs():
     return {"status": "ok", "specs": get_detailed_hardware_specs()}
 
 
+import io
+import json
+import shutil
+import tarfile
+
 def get_repo_dir():
     candidates = ["/repo", ".", "..", "/app", "/app/.."]
     for c in candidates:
@@ -520,19 +525,71 @@ def run_git_cmd(args):
     cmd = ["git", "-c", "safe.directory=*", "-C", repo_dir] + args
     return subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode().strip()
 
+def read_git_head_direct():
+    """Reads git commit SHA directly from .git files without needing git binary."""
+    repo_dir = get_repo_dir()
+    git_dir = os.path.join(repo_dir, ".git")
+    if os.path.isdir(git_dir):
+        # Check refs/heads/main
+        head_file = os.path.join(git_dir, "refs", "heads", "main")
+        if os.path.isfile(head_file):
+            try:
+                with open(head_file, "r") as f:
+                    return f.read().strip()[:7]
+            except Exception:
+                pass
+        # Check HEAD directly
+        head_ptr = os.path.join(git_dir, "HEAD")
+        if os.path.isfile(head_ptr):
+            try:
+                with open(head_ptr, "r") as f:
+                    content = f.read().strip()
+                    if content.startswith("ref: "):
+                        ref_path = os.path.join(git_dir, content[5:].strip())
+                        if os.path.isfile(ref_path):
+                            with open(ref_path, "r") as rf:
+                                return rf.read().strip()[:7]
+                    elif len(content) >= 7:
+                        return content[:7]
+            except Exception:
+                pass
+    # Check data/version.json
+    version_file = os.path.join(repo_dir, "data", "version.json")
+    if os.path.isfile(version_file):
+        try:
+            with open(version_file, "r") as vf:
+                vdata = json.load(vf)
+                return vdata.get("sha", "")[:7]
+        except Exception:
+            pass
+    return "main"
+
 def get_local_commit_info():
     sha = ""
     msg = ""
     date = ""
     branch = "main"
-    try:
-        sha = run_git_cmd(["rev-parse", "--short", "HEAD"])
-        msg = run_git_cmd(["log", "-1", "--pretty=%s"])
-        date = run_git_cmd(["log", "-1", "--pretty=%cd", "--date=relative"])
-        branch = run_git_cmd(["rev-parse", "--abbrev-ref", "HEAD"])
-    except Exception:
-        pass
-    return {"sha": sha or "main", "message": msg or "Nexus AI Station", "date": date or "Güncel", "branch": branch}
+    
+    # Try git command if available
+    if shutil.which("git"):
+        try:
+            sha = run_git_cmd(["rev-parse", "--short", "HEAD"])
+            msg = run_git_cmd(["log", "-1", "--pretty=%s"])
+            date = run_git_cmd(["log", "-1", "--pretty=%cd", "--date=relative"])
+            branch = run_git_cmd(["rev-parse", "--abbrev-ref", "HEAD"])
+        except Exception:
+            pass
+            
+    # Fallback to direct file inspection
+    if not sha or sha == "main":
+        sha = read_git_head_direct()
+        
+    return {
+        "sha": sha or "main",
+        "message": msg or "Nexus AI Kararlı Sürüm",
+        "date": date or "Güncel",
+        "branch": branch or "main"
+    }
 
 @router.get("/updates/check")
 async def check_github_updates():
@@ -610,22 +667,60 @@ async def get_github_commit_history():
 async def apply_update():
     steps = []
     t0 = time.time()
+    repo_dir = get_repo_dir()
+    
     try:
-        # Step 1: Git Fetch
-        try:
-            fetch_out = run_git_cmd(["fetch", "origin", "main"])
-            steps.append({"step": "git_fetch", "status": "ok", "output": fetch_out or "Remote refs fetched successfully."})
-        except subprocess.CalledProcessError as e:
-            steps.append({"step": "git_fetch", "status": "warning", "output": e.output.decode() if hasattr(e, 'output') else str(e)})
+        # If git is installed, use git pull
+        if shutil.which("git"):
+            try:
+                fetch_out = run_git_cmd(["fetch", "origin", "main"])
+                steps.append({"step": "git_fetch", "status": "ok", "output": fetch_out or "Remote referanslar başarıyla çekildi."})
+            except Exception as e:
+                steps.append({"step": "git_fetch", "status": "warning", "output": str(e)})
 
-        # Step 2: Git Pull / Reset to origin/main
-        try:
-            pull_out = run_git_cmd(["pull", "origin", "main"])
-            steps.append({"step": "git_pull", "status": "ok", "output": pull_out or "Repository updated to latest origin/main."})
-        except Exception:
-            # Fallback to reset if merge conflicts exist in tracked files
-            reset_out = run_git_cmd(["reset", "--hard", "origin/main"])
-            steps.append({"step": "git_reset_hard", "status": "ok", "output": reset_out})
+            try:
+                pull_out = run_git_cmd(["pull", "origin", "main"])
+                steps.append({"step": "git_pull", "status": "ok", "output": pull_out or "Nexus en son sürüme güncellendi."})
+            except Exception:
+                reset_out = run_git_cmd(["reset", "--hard", "origin/main"])
+                steps.append({"step": "git_reset_hard", "status": "ok", "output": reset_out})
+        else:
+            # Pure Python Direct GitHub Tarball Sync (Zero-dependency fallback)
+            async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+                # 1. Fetch latest commit info
+                c_res = await client.get("https://api.github.com/repos/kefe3/nexus/commits/main", headers={"User-Agent": "Nexus-Platform"})
+                remote_sha = "latest"
+                remote_msg = "Güncel sürüm"
+                if c_res.status_code == 200:
+                    c_data = c_res.json()
+                    remote_sha = c_data.get("sha", "")[:7]
+                    remote_msg = c_data.get("commit", {}).get("message", "").split("\n")[0]
+                steps.append({"step": "github_metadata", "status": "ok", "output": f"Hedef Commit: {remote_sha} ({remote_msg})"})
+
+                # 2. Download tarball archive
+                tar_res = await client.get("https://github.com/kefe3/nexus/archive/refs/heads/main.tar.gz")
+                if tar_res.status_code != 200:
+                    raise Exception(f"GitHub arşivi indirilemedi: HTTP {tar_res.status_code}")
+                steps.append({"step": "download_archive", "status": "ok", "output": f"Arşiv başarıyla indirildi ({len(tar_res.content) // 1024} KB)."})
+
+                # 3. Extract in memory to repo_dir
+                tar_bytes = io.BytesIO(tar_res.content)
+                file_count = 0
+                with tarfile.open(fileobj=tar_bytes, mode="r:gz") as tar:
+                    for member in tar.getmembers():
+                        # Strip root folder 'nexus-main/'
+                        parts = member.name.split("/", 1)
+                        if len(parts) > 1 and parts[1]:
+                            member.name = parts[1]
+                            tar.extract(member, path=repo_dir)
+                            file_count += 1
+                steps.append({"step": "extract_files", "status": "ok", "output": f"{file_count} adet dosya ve modül güncellendi."})
+
+                # 4. Update data/version.json
+                v_dir = os.path.join(repo_dir, "data")
+                os.makedirs(v_dir, exist_ok=True)
+                with open(os.path.join(v_dir, "version.json"), "w") as vf:
+                    json.dump({"sha": remote_sha, "message": remote_msg, "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")}, vf, indent=2)
 
         elapsed = round(time.time() - t0, 2)
         new_commit = get_local_commit_info()
