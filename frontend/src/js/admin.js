@@ -788,30 +788,30 @@ async function checkUpdates(showToast = false) {
         const res = await fetch(`${API_BASE}/admin/updates/check?_cb=${Date.now()}`);
         const data = await res.json();
         
+        const elLocalSha = document.getElementById('val-local-sha');
+        const elLocalDate = document.getElementById('val-local-date');
+        const elLocalMsg = document.getElementById('val-local-msg');
+
+        const elRemSha = document.getElementById('val-remote-sha');
+        const elRemDate = document.getElementById('val-remote-date');
+        const elRemMsg = document.getElementById('val-remote-msg');
+
+        const topBanner = document.getElementById('update-top-banner');
+        const statusBadge = document.getElementById('update-status-badge');
+        const statusSub = document.getElementById('update-status-sub');
+        const btnApply = document.getElementById('btn-apply-update');
+
         if (data.status === 'ok') {
             const loc = data.local || {};
             const rem = data.remote || {};
             
-            const elLocalSha = document.getElementById('val-local-sha');
-            const elLocalDate = document.getElementById('val-local-date');
-            const elLocalMsg = document.getElementById('val-local-msg');
-
             if (elLocalSha) elLocalSha.textContent = loc.sha || 'latest';
             if (elLocalDate) elLocalDate.textContent = loc.date || 'Aktif';
-            if (elLocalMsg) elLocalMsg.textContent = loc.message || 'Nexus AI Release';
-
-            const elRemSha = document.getElementById('val-remote-sha');
-            const elRemDate = document.getElementById('val-remote-date');
-            const elRemMsg = document.getElementById('val-remote-msg');
+            if (elLocalMsg) elLocalMsg.textContent = loc.message || 'Nexus AI Kararlı Sürüm';
 
             if (elRemSha) elRemSha.textContent = rem.sha || loc.sha || 'main';
             if (elRemDate) elRemDate.textContent = rem.date ? new Date(rem.date).toLocaleString('tr-TR') : 'Güncel';
             if (elRemMsg) elRemMsg.textContent = rem.message || 'Nexus Kararlı Sürüm';
-
-            const topBanner = document.getElementById('update-top-banner');
-            const statusBadge = document.getElementById('update-status-badge');
-            const statusSub = document.getElementById('update-status-sub');
-            const btnApply = document.getElementById('btn-apply-update');
 
             if (data.update_available) {
                 if (topBanner) {
@@ -820,7 +820,7 @@ async function checkUpdates(showToast = false) {
                     if (topText) topText.textContent = `🚀 Yeni Güncelleme: ${rem.sha}`;
                 }
                 if (statusBadge) {
-                    statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-amber);"></i> <span style="color: var(--accent-amber); font-weight: 800;">Yeni Güncelleme Mevcut!</span>';
+                    statusBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-amber);"></i> <span style="color: var(--accent-amber); font-weight: 800;">Yeni Güncelleme Mevcut! (${rem.sha})</span>`;
                 }
                 if (statusSub) {
                     statusSub.textContent = `GitHub'da yeni sürüm (${rem.sha}: ${rem.message}) yayınlandı.`;
@@ -837,14 +837,14 @@ async function checkUpdates(showToast = false) {
             } else {
                 if (topBanner) topBanner.style.display = 'none';
                 if (statusBadge) {
-                    statusBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span style="color: var(--accent-green); font-weight: 800;">Sisteminiz En Güncel Sürümde</span>';
+                    statusBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span style="color: var(--accent-green); font-weight: 800;">Sisteminiz En Güncel Sürümde (${loc.sha})</span>`;
                 }
                 if (statusSub) {
                     statusSub.textContent = `Resmi GitHub deposu (kefe3/nexus: ${loc.sha || rem.sha}) ile senkronize.`;
                 }
                 if (btnApply) {
                     btnApply.style.background = 'rgba(255,255,255,0.08)';
-                    btnApply.style.color = '#94a3b8';
+                    btnApply.style.color = '#cbd5e1';
                     btnApply.innerHTML = '<i class="fa-solid fa-rotate"></i> <span>Sistemi Yeniden Eşitle</span>';
                     btnApply.disabled = false;
                 }
@@ -852,9 +852,24 @@ async function checkUpdates(showToast = false) {
                     alert(`✅ Sistem en güncel sürümde (${loc.sha}).`);
                 }
             }
+        } else {
+            if (statusBadge) {
+                statusBadge.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="color: var(--accent-amber);"></i> <span style="color: var(--accent-amber); font-weight: 800;">Güncelleme Kontrol Uyarısı</span>`;
+            }
+            if (statusSub) {
+                statusSub.textContent = data.error || 'GitHub sürüm kontrolü yapılamadı.';
+            }
+            if (btnApply) {
+                btnApply.disabled = false;
+                btnApply.innerHTML = '<i class="fa-solid fa-rotate"></i> <span>Sistemi Yeniden Eşitle</span>';
+            }
+            if (showToast) {
+                alert(`⚠️ Güncelleme denetleme uyarısı: ${data.error || 'Bilinmeyen hata'}`);
+            }
         }
     } catch (e) {
         console.error('Error checking updates:', e);
+        if (showToast) alert(`Ağ hatası: ${e.message}`);
     } finally {
         if (btnCheck && showToast) {
             btnCheck.innerHTML = '<i class="fa-solid fa-rotate"></i> <span>Güncellemeleri Denetle</span>';
@@ -872,7 +887,7 @@ async function fetchCommitHistory() {
     if (!tbody) return;
 
     try {
-        const res = await fetch(`${API_BASE}/admin/updates/history`);
+        const res = await fetch(`${API_BASE}/admin/updates/history?_cb=${Date.now()}`);
         const data = await res.json();
         
         if (data.status === 'ok' && data.commits && data.commits.length > 0) {
@@ -926,7 +941,7 @@ async function applyUpdate() {
         termBox.innerHTML = `
             <div style="color: var(--accent-cyan); font-weight: 700;">> [1/4] Nexus Güncelleme Motoru Başlatıldı...</div>
             <div style="color: #64748b;">> Hedef Depo: https://github.com/kefe3/nexus.git (Dal: main)</div>
-            <div style="color: var(--accent-amber);">> [2/4] GitHub remote referansları taranıyor (git fetch)...</div>
+            <div style="color: var(--accent-amber);">> [2/4] GitHub senkronizasyonu başlatılıyor...</div>
         `;
     }
     if (btnClose) btnClose.style.display = 'none';
@@ -942,7 +957,7 @@ async function applyUpdate() {
                     data.steps.forEach(st => {
                         const stepDiv = document.createElement('div');
                         stepDiv.style.color = st.status === 'ok' ? 'var(--accent-green)' : 'var(--accent-amber)';
-                        stepDiv.innerHTML = `> [✓] Adım: ${st.step} -> ${escapeHtml(st.output || 'Tamamlandı')}`;
+                        stepDiv.innerHTML = `> [✓] ${st.step}: ${escapeHtml(st.output || 'Tamamlandı')}`;
                         termBox.appendChild(stepDiv);
                     });
                 }
@@ -950,12 +965,12 @@ async function applyUpdate() {
                 finDiv.style.color = 'var(--accent-green)';
                 finDiv.style.fontWeight = '800';
                 finDiv.style.marginTop = '8px';
-                finDiv.innerHTML = `> [3/4] ${data.message} (Yeni Commit: ${data.new_commit?.sha || 'latest'})`;
+                finDiv.innerHTML = `> [3/4] ${data.message} (Yeni Sürüm: ${data.new_commit?.sha || 'latest'})`;
                 termBox.appendChild(finDiv);
 
                 const reloadDiv = document.createElement('div');
                 reloadDiv.style.color = 'var(--accent-cyan)';
-                reloadDiv.innerHTML = `> [4/4] Sayfa 3 saniye içinde otomatik yenileniyor...`;
+                reloadDiv.innerHTML = `> [4/4] Sistem güncellendi. Sayfa otomatik yenileniyor...`;
                 termBox.appendChild(reloadDiv);
                 termBox.scrollTop = termBox.scrollHeight;
             }
@@ -967,16 +982,25 @@ async function applyUpdate() {
             if (btnClose) btnClose.style.display = 'inline-flex';
 
             setTimeout(() => {
-                location.reload();
-            }, 3000);
+                window.location.href = window.location.pathname + '?_t=' + Date.now();
+            }, 2500);
         } else {
             if (termBox) {
+                if (data.steps && data.steps.length > 0) {
+                    data.steps.forEach(st => {
+                        const stepDiv = document.createElement('div');
+                        stepDiv.style.color = st.status === 'ok' ? 'var(--accent-green)' : 'var(--accent-amber)';
+                        stepDiv.innerHTML = `> [!] ${st.step}: ${escapeHtml(st.output || '')}`;
+                        termBox.appendChild(stepDiv);
+                    });
+                }
                 const errDiv = document.createElement('div');
                 errDiv.style.color = 'var(--accent-red)';
                 errDiv.style.fontWeight = '700';
                 errDiv.style.marginTop = '8px';
                 errDiv.innerHTML = `> [X] HATA: ${data.message || 'Güncelleme başarısız'}`;
                 termBox.appendChild(errDiv);
+                termBox.scrollTop = termBox.scrollHeight;
             }
             if (modalSub) {
                 modalSub.textContent = 'Güncelleme sırasında bir hata oluştu.';
@@ -1009,4 +1033,5 @@ async function applyUpdate() {
 document.addEventListener('DOMContentLoaded', () => {
     checkUpdates();
 });
+
 

@@ -512,18 +512,21 @@ import io
 import json
 import shutil
 import tarfile
+import copy
 
 def get_repo_dir():
-    candidates = ["/repo", ".", "..", "/app", "/app/.."]
+    candidates = ["/repo", ".", "..", "/app/..", "/app"]
     for c in candidates:
         if os.path.isdir(os.path.join(c, ".git")):
             return os.path.abspath(c)
     return "."
 
-def run_git_cmd(args):
-    repo_dir = get_repo_dir()
+def run_git_cmd(args, custom_dir=None):
+    repo_dir = custom_dir or get_repo_dir()
+    env = os.environ.copy()
+    env["GIT_TERMINAL_PROMPT"] = "0"
     cmd = ["git", "-c", "safe.directory=*", "-C", repo_dir] + args
-    return subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode().strip()
+    return subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=env, timeout=30).decode().strip()
 
 def read_git_head_direct():
     """Reads git commit SHA directly with multi-source fallback."""
@@ -534,7 +537,7 @@ def read_git_head_direct():
                 with open(v_path, "r") as vf:
                     vdata = json.load(vf)
                     sha = vdata.get("sha", "")
-                    if sha and sha != "main":
+                    if sha and sha not in ["main", "latest"]:
                         return sha[:7]
             except Exception:
                 pass
@@ -576,18 +579,38 @@ def get_local_commit_info():
     date = ""
     branch = "main"
     
-    # Try git command if available
+    # 1. Check version.json first
+    for v_path in ["/app/data/version.json", "data/version.json", "/repo/data/version.json"]:
+        if os.path.isfile(v_path):
+            try:
+                with open(v_path, "r") as vf:
+                    vdata = json.load(vf)
+                    v_sha = vdata.get("sha", "")
+                    if v_sha and v_sha not in ["main", "latest"]:
+                        sha = v_sha[:7]
+                        msg = vdata.get("message", "Nexus AI Kararlı Sürüm")
+                        date = vdata.get("updated_at", "Güncel")
+                        break
+            except Exception:
+                pass
+
+    # 2. Try git command if available
     if shutil.which("git"):
         try:
-            sha = run_git_cmd(["rev-parse", "--short", "HEAD"])
-            msg = run_git_cmd(["log", "-1", "--pretty=%s"])
-            date = run_git_cmd(["log", "-1", "--pretty=%cd", "--date=relative"])
-            branch = run_git_cmd(["rev-parse", "--abbrev-ref", "HEAD"])
+            git_sha = run_git_cmd(["rev-parse", "--short", "HEAD"])
+            git_msg = run_git_cmd(["log", "-1", "--pretty=%s"])
+            git_date = run_git_cmd(["log", "-1", "--pretty=%cd", "--date=relative"])
+            git_branch = run_git_cmd(["rev-parse", "--abbrev-ref", "HEAD"])
+            if git_sha:
+                sha = git_sha
+                msg = git_msg or msg
+                date = git_date or date
+                branch = git_branch or branch
         except Exception:
             pass
             
     # Fallback to direct file inspection
-    if not sha or sha == "main":
+    if not sha or sha in ["main", "latest"]:
         sha = read_git_head_direct()
         
     return {
@@ -604,9 +627,15 @@ async def check_github_updates():
     has_update = False
     error = None
     
+    cb = int(time.time())
+    remote_sha = ""
+    remote_msg = "En son resmi güncelleme"
+    remote_author = "Origin Edge"
+    remote_date = ""
+    remote_url = "https://github.com/kefe3/nexus"
+
+    # Layer 1: GitHub REST API with cache buster
     try:
-        # Avoid GitHub caching by appending timestamp
-        cb = int(time.time())
         async with httpx.AsyncClient(timeout=8.0) as client:
             res = await client.get(
                 f"https://api.github.com/repos/kefe3/nexus/commits/main?_cb={cb}",
@@ -618,26 +647,49 @@ async def check_github_updates():
                 remote_msg = data.get("commit", {}).get("message", "").split("\n")[0]
                 remote_author = data.get("commit", {}).get("author", {}).get("name", "Origin Edge")
                 remote_date = data.get("commit", {}).get("author", {}).get("date", "")
-                
-                remote = {
-                    "sha": remote_sha,
-                    "message": remote_msg,
-                    "author": remote_author,
-                    "date": remote_date,
-                    "url": data.get("html_url", "https://github.com/kefe3/nexus")
-                }
-                
-                local_sha = local.get("sha", "")
-                if remote_sha:
-                    if not local_sha or local_sha == "main" or local_sha.lower() != remote_sha.lower():
-                        has_update = True
+                remote_url = data.get("html_url", remote_url)
+            elif res.status_code == 403:
+                error = "GitHub API İstek Sınırı (Rate Limit), yedek kontrolcü kullanılıyor."
             else:
                 error = f"GitHub API HTTP {res.status_code}"
     except Exception as e:
         error = str(e)
-        
+
+    # Layer 2: Git ls-remote fallback (Unlimited, never rate-limited)
+    if not remote_sha and shutil.which("git"):
+        try:
+            ls_out = subprocess.check_output(
+                ["git", "ls-remote", "https://github.com/kefe3/nexus.git", "refs/heads/main"],
+                stderr=subprocess.DEVNULL, timeout=10
+            ).decode().strip()
+            if ls_out:
+                remote_sha = ls_out.split()[0][:7]
+                if not remote_date:
+                    remote_date = time.strftime("%Y-%m-%d %H:%M:%S")
+                error = None
+        except Exception as e:
+            if not error:
+                error = str(e)
+
+    if remote_sha:
+        remote = {
+            "sha": remote_sha,
+            "message": remote_msg,
+            "author": remote_author,
+            "date": remote_date,
+            "url": remote_url
+        }
+        local_sha = local.get("sha", "")
+        if not local_sha or local_sha in ["main", "latest"] or local_sha.lower() != remote_sha.lower():
+            has_update = True
+        else:
+            has_update = False
+        error = None
+    elif not error:
+        error = "Uzak sürüm bilgisi alınamadı."
+
     return {
-        "status": "ok" if not error else "error",
+        "status": "ok" if remote_sha else "error",
         "update_available": has_update,
         "local": local,
         "remote": remote,
@@ -681,12 +733,11 @@ async def apply_update():
     repo_dir = get_repo_dir()
     
     try:
+        # Step 1: Detect target commit from GitHub
         remote_sha = "latest"
-        remote_msg = "En son kararlı sürüm"
-        
-        # 1. Always query latest GitHub commit first
+        remote_msg = "Nexus AI Kararlı Güncellemesi"
+        cb = int(time.time())
         try:
-            cb = int(time.time())
             async with httpx.AsyncClient(timeout=10.0) as client:
                 c_res = await client.get(
                     f"https://api.github.com/repos/kefe3/nexus/commits/main?_cb={cb}",
@@ -696,37 +747,57 @@ async def apply_update():
                     c_data = c_res.json()
                     remote_sha = c_data.get("sha", "")[:7]
                     remote_msg = c_data.get("commit", {}).get("message", "").split("\n")[0]
-            steps.append({"step": "github_target", "status": "ok", "output": f"Hedef Sürüm: {remote_sha} - {remote_msg}"})
-        except Exception as e:
-            steps.append({"step": "github_target", "status": "warning", "output": str(e)})
+        except Exception:
+            pass
+            
+        if remote_sha == "latest" and shutil.which("git"):
+            try:
+                ls_out = subprocess.check_output(
+                    ["git", "ls-remote", "https://github.com/kefe3/nexus.git", "refs/heads/main"],
+                    stderr=subprocess.DEVNULL, timeout=10
+                ).decode().strip()
+                if ls_out:
+                    remote_sha = ls_out.split()[0][:7]
+            except Exception:
+                pass
+                
+        steps.append({"step": "github_target", "status": "ok", "output": f"Hedef Sürüm: {remote_sha} ({remote_msg})"})
 
-        # 2. Try git pull if git binary and .git directory exist
+        # Step 2: Primary Git Sync Engine
         git_success = False
         if shutil.which("git") and os.path.isdir(os.path.join(repo_dir, ".git")):
             try:
-                fetch_out = run_git_cmd(["fetch", "--all"])
-                steps.append({"step": "git_fetch", "status": "ok", "output": fetch_out or "Uzak depolar eşitlendi."})
                 try:
-                    pull_out = run_git_cmd(["pull", "origin", "main"])
-                    steps.append({"step": "git_pull", "status": "ok", "output": pull_out or "Git güncellendi."})
-                    git_success = True
+                    subprocess.run(["git", "config", "--global", "--add", "safe.directory", "*"], check=False)
                 except Exception:
-                    reset_out = run_git_cmd(["reset", "--hard", "origin/main"])
-                    steps.append({"step": "git_reset_hard", "status": "ok", "output": reset_out or "Git resetlendi."})
-                    git_success = True
+                    pass
+                    
+                fetch_out = run_git_cmd(["fetch", "origin", "main", "--force"])
+                steps.append({"step": "git_fetch", "status": "ok", "output": fetch_out or "GitHub referansları alındı."})
+                
+                # Hard reset to origin/main (discards local conflicts cleanly)
+                reset_out = run_git_cmd(["reset", "--hard", "origin/main"])
+                steps.append({"step": "git_reset_hard", "status": "ok", "output": reset_out or "Çalışma dizini origin/main ile eşitlendi."})
+                
+                # Clean untracked files except data and .env
+                try:
+                    run_git_cmd(["clean", "-fd", "-e", "data", "-e", ".env"])
+                except Exception:
+                    pass
+                    
+                git_success = True
             except Exception as e:
-                steps.append({"step": "git_pull", "status": "warning", "output": f"Git hatası: {str(e)}, Arşiv indirme motoruna geçiliyor..."})
+                steps.append({"step": "git_sync", "status": "warning", "output": f"Git uyarısı: {str(e)} — Arşiv indirme motoruna geçiliyor..."})
 
-        # 3. Direct GitHub Tarball Sync (Zero-dependency fallback)
+        # Step 3: Fallback Archive Sync Engine (Zero-dependency httpx + tarfile)
         if not git_success:
-            async with httpx.AsyncClient(timeout=45.0, follow_redirects=True) as client:
+            async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
                 tar_url = "https://github.com/kefe3/nexus/archive/refs/heads/main.tar.gz"
                 tar_res = await client.get(tar_url)
                 if tar_res.status_code != 200:
                     raise Exception(f"GitHub arşiv paketi indirilemedi: HTTP {tar_res.status_code}")
                 steps.append({"step": "download_archive", "status": "ok", "output": f"GitHub paketi indirildi ({len(tar_res.content) // 1024} KB)."})
 
-                # Extract in memory directly to repo_dir and /app
                 tar_bytes = io.BytesIO(tar_res.content)
                 file_count = 0
                 with tarfile.open(fileobj=tar_bytes, mode="r:gz") as tar:
@@ -734,27 +805,68 @@ async def apply_update():
                         parts = member.name.split("/", 1)
                         if len(parts) > 1 and parts[1]:
                             rel_path = parts[1]
-                            member.name = rel_path
-                            tar.extract(member, path=repo_dir)
-                            # If /app exists, also sync backend directly
+                            
+                            # Preserve user data directory
+                            if rel_path.startswith("data/") or rel_path == "data":
+                                continue
+                                
+                            member_copy = copy.copy(member)
+                            member_copy.name = rel_path
+                            tar.extract(member_copy, path=repo_dir)
+                            
+                            # If /app exists and file is inside backend/, also sync /app directly
                             if rel_path.startswith("backend/") and os.path.isdir("/app"):
                                 app_sub = rel_path[len("backend/"):]
                                 if app_sub:
-                                    member.name = app_sub
-                                    tar.extract(member, path="/app")
+                                    app_member = copy.copy(member)
+                                    app_member.name = app_sub
+                                    tar.extract(app_member, path="/app")
                             file_count += 1
                 steps.append({"step": "extract_files", "status": "ok", "output": f"{file_count} dosya ve bileşen güncellendi."})
 
-        # 4. Save version.json to all persistent locations
-        for v_dir in ["/app/data", "data", "/repo/data"]:
+        # Step 4: Recursive Full Permissions Fix (Prevents 'Permission denied' on host)
+        try:
+            for d in [repo_dir, "/app", "/app/data", os.path.join(repo_dir, "data")]:
+                if os.path.isdir(d):
+                    for root, dirs, files in os.walk(d):
+                        for di in dirs:
+                            try:
+                                os.chmod(os.path.join(root, di), 0o777)
+                            except Exception:
+                                pass
+                        for fi in files:
+                            try:
+                                os.chmod(os.path.join(root, fi), 0o666)
+                            except Exception:
+                                pass
+            steps.append({"step": "permissions", "status": "ok", "output": "Dosya izinleri (a+rwX) başarıyla yapılandırıldı."})
+        except Exception:
+            pass
+
+        # Step 5: Save version.json to all persistent data locations
+        v_record = {
+            "sha": remote_sha,
+            "message": remote_msg,
+            "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        for v_dir in ["/app/data", "data", os.path.join(repo_dir, "data")]:
             try:
                 os.makedirs(v_dir, exist_ok=True)
-                with open(os.path.join(v_dir, "version.json"), "w") as vf:
-                    json.dump({
-                        "sha": remote_sha,
-                        "message": remote_msg,
-                        "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")
-                    }, vf, indent=2)
+                v_file = os.path.join(v_dir, "version.json")
+                with open(v_file, "w") as vf:
+                    json.dump(v_record, vf, indent=2)
+                os.chmod(v_file, 0o666)
+            except Exception:
+                pass
+
+        # Step 6: Update .git refs if needed
+        git_dir = os.path.join(repo_dir, ".git")
+        if os.path.isdir(git_dir) and remote_sha and remote_sha != "latest":
+            try:
+                heads_dir = os.path.join(git_dir, "refs", "heads")
+                os.makedirs(heads_dir, exist_ok=True)
+                with open(os.path.join(heads_dir, "main"), "w") as f:
+                    f.write(remote_sha + "\n")
             except Exception:
                 pass
 
@@ -769,3 +881,4 @@ async def apply_update():
         }
     except Exception as e:
         return {"status": "error", "message": f"Güncelleme Hatası: {str(e)}", "steps": steps}
+
