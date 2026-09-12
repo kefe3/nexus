@@ -359,6 +359,14 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
      * Sistemde Nexus AI kurulu değilken kaldırma betiği çalıştırılırsa `⚠️ Nexus AI Studio sisteminizde yüklü bulunamadı (Zaten kurulu değil).` uyarısı verilir.
      * Kullanıcıya doğrudan `Nexus AI Studio'yu şimdi sıfırdan kurmak ister misiniz? [E/h]` teklifinde bulunulur; `Evet` seçilirse otomatik olarak resmi kurulum başlatılır.
 
+#### 🕒 18:26:40 — [Commit: `c6b1f12`] • 🔄 Güncelleme Kontrolcüsü & 1-Tık Canlı Güncelleyici Baştan Sona Yenilendi
+* **Modül:** `Update Check & 1-Click Live Updater Engine Overhaul`
+* **Tespit Edilen Sorunlar & Çözümler:**
+  1. **GitHub REST API İstek Sınırı (Rate Limit) Bypass:** GitHub API'si kimliksiz isteklerde 60 req/saat sınırına ulaştığında sürüm denetimi yapılamıyordu. Sisteme sıfır istek sınırı olan doğrudan `git ls-remote https://github.com/kefe3/nexus.git refs/heads/main` sorgulama motoru katman olarak entegre edildi.
+  2. **Yerel Commit SHA Tutarsızlığı:** Arşiv (tarball) üzerinden yapılan güncellemelerde `.git` dizini güncellenmediğinde `git rev-parse HEAD` komutunun eski sürümü göstermesi engellendi. `version.json`, `.git/refs/heads/main` ve `git rev-parse` çoklu okuyucusu ile yerel sürüm kesin ve anlık olarak doğrulanır.
+  3. **Konteyner ve Ana Makine Yetki (Permission Denied) Düzeltmesi:** Güncelleme sırasında `/repo` ve `/app` altındaki tüm dosyalara özyinelemeli (recursive) `0o777` (dizinler) ve `0o666` (dosyalar) izinleri uygulanarak ana makine kullanıcısının ve git süreçlerinin yetki hatası alması kalıcı olarak engellendi.
+  4. **Frontend Canlı Durum ve Önbellek Kırıcı:** `checkUpdates()` fonksiyonundaki hata yakalama geliştirildi, `admin.js?v=2.5` önbellek kırıcı ve güncelleme tamamlandığında sayfayı `?_t=<timestamp>` ile önbelleksiz tazeleyen otomatik geçiş eklendi.
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.
