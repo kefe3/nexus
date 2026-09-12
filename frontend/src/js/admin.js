@@ -360,7 +360,16 @@ async function testProvider(prov) {
     const resBox = document.getElementById(`test-result-${prov}`);
     if (resBox) resBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Test ediliyor...';
 
-    const apiKey = localStorage.getItem(`nexus_${prov}_key`) || '';
+    const input = document.getElementById(`input-api-${prov}`);
+    let apiKey = input ? input.value.trim() : '';
+    if (!apiKey) {
+        apiKey = localStorage.getItem(`nexus_key_${prov}`) || localStorage.getItem(`nexus_${prov}_key`) || '';
+        if (input && apiKey) input.value = apiKey;
+    } else {
+        // Automatically persist key
+        localStorage.setItem(`nexus_key_${prov}`, apiKey);
+        localStorage.setItem(`nexus_${prov}_key`, apiKey);
+    }
 
     try {
         const res = await fetch(`${API_BASE}/admin/providers/test`, {
@@ -371,18 +380,18 @@ async function testProvider(prov) {
         const data = await res.json();
 
         if (data.status === 'ok') {
-            resBox.innerHTML = `<span style="color: var(--accent-green);">🟢 ${data.message} (${data.latency_ms}ms)</span>`;
+            resBox.innerHTML = `<span style="color: var(--accent-green); font-weight: 600;">🟢 ${data.message} (${data.latency_ms}ms)</span>`;
         } else {
-            resBox.innerHTML = `<span style="color: var(--accent-red);">🔴 ${data.message}</span>`;
+            resBox.innerHTML = `<span style="color: var(--accent-red); font-weight: 600;">🔴 ${data.message}</span>`;
         }
     } catch (e) {
-        if (resBox) resBox.innerHTML = `<span style="color: var(--accent-red);">🔴 Hata: ${e.message}</span>`;
+        if (resBox) resBox.innerHTML = `<span style="color: var(--accent-red); font-weight: 600;">🔴 Bağlantı Hatası: ${e.message}</span>`;
     }
 }
 
 function testAllProviders() {
     ['ollama', 'gemini', 'openai', 'groq'].forEach(p => {
-        const key = localStorage.getItem(`nexus_${p}_key`);
+        const key = localStorage.getItem(`nexus_key_${p}`) || localStorage.getItem(`nexus_${p}_key`);
         const input = document.getElementById(`input-api-${p}`);
         if (input && key) input.value = key;
         testProvider(p);
@@ -390,7 +399,9 @@ function testAllProviders() {
 }
 
 function saveKey(prov, val) {
-    localStorage.setItem(`nexus_${prov}_key`, val.trim());
+    const clean = val.trim();
+    localStorage.setItem(`nexus_key_${prov}`, clean);
+    localStorage.setItem(`nexus_${prov}_key`, clean);
     testProvider(prov);
 }
 

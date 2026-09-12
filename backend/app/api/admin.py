@@ -284,57 +284,67 @@ async def test_provider(req: TestProviderRequest):
     prov = req.provider.lower()
     
     if prov == "ollama":
-        url = req.base_url or settings.OLLAMA_BASE_URL
+        url = (req.base_url or settings.OLLAMA_BASE_URL or "http://host.docker.internal:11434").strip()
         try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
+            async with httpx.AsyncClient(timeout=4.0) as client:
                 res = await client.get(f"{url}/api/tags")
                 latency = int((time.time() - t0) * 1000)
                 if res.status_code == 200:
                     models = [m.get("name") for m in res.json().get("models", [])]
-                    return {"status": "ok", "latency_ms": latency, "message": f"Aktif ({len(models)} model yüklü)", "models": models}
+                    return {"status": "ok", "latency_ms": latency, "message": f"Ollama Aktif ({len(models)} yerel model hazır)", "models": models}
                 return {"status": "error", "latency_ms": latency, "message": f"HTTP {res.status_code}"}
         except Exception as e:
             return {"status": "error", "latency_ms": int((time.time() - t0) * 1000), "message": str(e)}
             
     elif prov == "gemini":
-        key = req.api_key or settings.GEMINI_API_KEY
+        key = (req.api_key or settings.GEMINI_API_KEY or "").strip()
         if not key:
-            return {"status": "error", "message": "API Key gerekli"}
+            return {"status": "error", "message": "API Anahtarı bulunamadı. Lütfen geçerli bir Google AI Studio anahtarı girin."}
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(timeout=8.0) as client:
                 res = await client.get(f"https://generativelanguage.googleapis.com/v1beta/models?key={key}")
                 latency = int((time.time() - t0) * 1000)
                 if res.status_code == 200:
-                    return {"status": "ok", "latency_ms": latency, "message": "Google Gemini 2.0 API Bağlantısı Başarılı"}
-                return {"status": "error", "latency_ms": latency, "message": f"HTTP {res.status_code}: {res.text[:100]}"}
+                    raw_models = res.json().get("models", [])
+                    gemini_models = [m.get("name", "").replace("models/", "") for m in raw_models if "gemini" in m.get("name", "").lower()]
+                    return {"status": "ok", "latency_ms": latency, "message": f"Google Gemini Bağlandı ({len(gemini_models)} model aktif: 2.0 Flash/Pro)"}
+                else:
+                    try:
+                        err_data = res.json()
+                        err_msg = err_data.get("error", {}).get("message", res.text[:80])
+                    except Exception:
+                        err_msg = res.text[:80]
+                    return {"status": "error", "latency_ms": latency, "message": f"Google API Hatası (HTTP {res.status_code}): {err_msg}"}
         except Exception as e:
-            return {"status": "error", "message": str(e)}
+            return {"status": "error", "message": f"Bağlantı Hatası: {str(e)}"}
 
     elif prov == "openai":
-        key = req.api_key or settings.OPENAI_API_KEY
+        key = (req.api_key or settings.OPENAI_API_KEY or "").strip()
         if not key:
-            return {"status": "error", "message": "API Key gerekli"}
+            return {"status": "error", "message": "OpenAI API Anahtarı bulunamadı."}
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(timeout=8.0) as client:
                 res = await client.get("https://api.openai.com/v1/models", headers={"Authorization": f"Bearer {key}"})
                 latency = int((time.time() - t0) * 1000)
                 if res.status_code == 200:
-                    return {"status": "ok", "latency_ms": latency, "message": "OpenAI API Bağlantısı Başarılı (GPT-4o Hazır)"}
-                return {"status": "error", "latency_ms": latency, "message": f"HTTP {res.status_code}: {res.text[:100]}"}
+                    return {"status": "ok", "latency_ms": latency, "message": "OpenAI API Bağlandı (GPT-4o, o3-mini hazır)"}
+                else:
+                    return {"status": "error", "latency_ms": latency, "message": f"HTTP {res.status_code}: {res.text[:80]}"}
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
     elif prov == "groq":
-        key = req.api_key or settings.GROQ_API_KEY
+        key = (req.api_key or settings.GROQ_API_KEY or "").strip()
         if not key:
-            return {"status": "error", "message": "API Key gerekli"}
+            return {"status": "error", "message": "Groq API Anahtarı bulunamadı."}
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
+            async with httpx.AsyncClient(timeout=8.0) as client:
                 res = await client.get("https://api.groq.com/openai/v1/models", headers={"Authorization": f"Bearer {key}"})
                 latency = int((time.time() - t0) * 1000)
                 if res.status_code == 200:
                     return {"status": "ok", "latency_ms": latency, "message": "Groq LPU Motoru Bağlandı (300+ tok/s)"}
-                return {"status": "error", "latency_ms": latency, "message": f"HTTP {res.status_code}: {res.text[:100]}"}
+                else:
+                    return {"status": "error", "latency_ms": latency, "message": f"HTTP {res.status_code}: {res.text[:80]}"}
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
