@@ -19,11 +19,26 @@ async def list_models(
     try:
         async with httpx.AsyncClient(timeout=6.0) as client:
             if provider == "ollama":
-                url = x_custom_url.rstrip("/") if x_custom_url else cfg.get("ollama_base_url", settings.OLLAMA_BASE_URL)
-                res = await client.get(f"{url}/api/tags")
-                if res.status_code == 200:
-                    data = res.json()
-                    models = [{"id": m["name"], "name": m["name"], "provider": "ollama"} for m in data.get("models", [])]
+                candidates = [x_custom_url.rstrip("/")] if x_custom_url else [
+                    cfg.get("ollama_base_url", settings.OLLAMA_BASE_URL),
+                    "http://host.docker.internal:11434",
+                    "http://host.docker.internal:11435",
+                    "http://127.0.0.1:11435",
+                    "http://127.0.0.1:11434",
+                    "http://localhost:11434"
+                ]
+                for url in candidates:
+                    if not url:
+                        continue
+                    try:
+                        res = await client.get(f"{url}/api/tags")
+                        if res.status_code == 200:
+                            data = res.json()
+                            models = [{"id": m["name"], "name": m["name"], "provider": "ollama"} for m in data.get("models", [])]
+                            if models:
+                                break
+                    except Exception:
+                        continue
             
             elif provider == "gemini":
                 if api_key:

@@ -12,7 +12,7 @@ class Settings(BaseModel):
 
     # Provider Defaults
     DEFAULT_PROVIDER: str = os.getenv("DEFAULT_PROVIDER", "ollama")
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11435")
     
     # Server-side API Keys (Optional fallbacks)
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", "")

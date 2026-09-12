@@ -28,8 +28,17 @@ async def chat_stream(
     api_key = x_api_key.strip() or get_server_key(provider)
 
     if provider == "ollama":
-        base_url = x_custom_url.rstrip("/") if x_custom_url else cfg.get("ollama_base_url", settings.OLLAMA_BASE_URL)
-        url = f"{base_url}/api/chat"
+        base_urls = [x_custom_url.rstrip("/")] if x_custom_url else [
+            cfg.get("ollama_base_url", settings.OLLAMA_BASE_URL),
+            "http://host.docker.internal:11434",
+            "http://host.docker.internal:11435",
+            "http://127.0.0.1:11435",
+            "http://127.0.0.1:11434",
+            "http://localhost:11434"
+        ]
+        # Deduplicate while preserving order
+        unique_urls = list(dict.fromkeys([u for u in base_urls if u]))
+
         payload = {
             "model": req.model,
             "messages": req.messages,
@@ -38,25 +47,44 @@ async def chat_stream(
         }
 
         async def ollama_stream_generator():
+            success = False
+            last_err = "Ollama sunucusuna bağlanılamadı."
             async with httpx.AsyncClient(timeout=120.0) as client:
-                async with client.stream("POST", url, json=payload) as resp:
-                    if resp.status_code != 200:
-                        yield f"data: {json.dumps({'error': f'Ollama HTTP {resp.status_code}'})}\n\n"
-                        return
-                    async for line in resp.aiter_lines():
-                        if not line:
-                            continue
-                        try:
-                            data = json.loads(line)
-                            content = data.get("message", {}).get("content", "")
-                            done = data.get("done", False)
-                            yield f"data: {json.dumps({'content': content, 'done': done})}\n\n"
-                            if done:
-                                yield "data: [DONE]\n\n"
+                for b_url in unique_url_candidates:
+                    url = f"{b_url}/api/chat"
+                    try:
+                        async with client.stream("POST", url, json=payload) as resp:
+                            if resp.status_code == 200:
+                                success = True
+                                async for line in resp.aiter_lines():
+                                    if not line:
+                                        continue
+                                    try:
+                                        data = json.loads(line)
+                                        content = data.get("message", {}).get("content", "")
+                                        done = data.get("done", False)
+                                        yield f"data: {json.dumps({'content': content, 'done': done})}\n\n"
+                                        if done:
+                                            yield "data: [DONE]\n\n"
+                                            break
+                                    except Exception:
+                                        continue
                                 break
-                        except Exception:
-                            continue
+                            else:
+                                raw_err = await resp.aread()
+                                try:
+                                    err_json = json.loads(raw_err.decode())
+                                    last_err = err_json.get("error", f"Ollama HTTP {resp.status_code}")
+                                except Exception:
+                                    last_err = f"Ollama HTTP {resp.status_code}"
+                    except Exception as ex:
+                        last_err = f"Ollama bağlantı hatası ({b_url}): {str(ex)}"
+                        continue
 
+            if not success:
+                yield f"data: {json.dumps({'error': last_err})}\n\n"
+
+        unique_url_candidates = unique_urls
         return StreamingResponse(ollama_stream_generator(), media_type="text/event-stream")
 
     elif provider == "gemini":
