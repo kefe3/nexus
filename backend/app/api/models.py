@@ -44,10 +44,8 @@ async def list_models(
 
                 if not models:
                     models = [
-                        {"id": "gemini-3.6-flash", "name": "Gemini 3.6 Flash (Next-Gen Fast & Smart)", "provider": "gemini"},
-                        {"id": "gemini-3.6-pro", "name": "Gemini 3.6 Pro (Top Intelligence)", "provider": "gemini"},
-                        {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash (Ultra Fast)", "provider": "gemini"},
-                        {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro (Advanced Reasoning)", "provider": "gemini"},
+                        {"id": "gemini-3.6-flash", "name": "Gemini 3.6 Flash (Fast, Smart — Flagship)", "provider": "gemini"},
+                        {"id": "gemini-3.6-pro", "name": "Gemini 3.6 Pro (Deep Intelligence & Reasoning)", "provider": "gemini"},
                         {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro (2M Token Context)", "provider": "gemini"},
                         {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash (Lightweight)", "provider": "gemini"}
                     ]

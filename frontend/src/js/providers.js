@@ -33,13 +33,27 @@ async function fetchModelsForActiveProvider() {
         
         select.innerHTML = "";
         if (data.models && data.models.length > 0) {
+            // Automatically clean up deprecated 2.x models
+            if (activeProvider === 'gemini' && (activeModel.includes('gemini-2') || activeModel.includes('gemini-1.'))) {
+                activeModel = 'gemini-3.6-flash';
+            }
+
+            let foundSelected = false;
             data.models.forEach(m => {
                 const opt = document.createElement("option");
                 opt.value = m.id;
                 opt.textContent = m.name;
-                if (m.id === activeModel) opt.selected = true;
+                if (m.id === activeModel) {
+                    opt.selected = true;
+                    foundSelected = true;
+                }
                 select.appendChild(opt);
             });
+
+            if (!foundSelected && select.options.length > 0) {
+                select.options[0].selected = true;
+            }
+
             activeModel = select.value;
             localStorage.setItem("nexus_model", activeModel);
         } else {
