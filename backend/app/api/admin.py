@@ -57,6 +57,44 @@ class TestProviderRequest(BaseModel):
     api_key: Optional[str] = ""
     base_url: Optional[str] = ""
 
+async def resolve_ollama_base_url(client: Optional[httpx.AsyncClient] = None, custom_url: str = "") -> str:
+    if custom_url and custom_url.strip():
+        return custom_url.strip().rstrip("/")
+    cfg = load_server_settings()
+    configured = cfg.get("ollama_base_url", "").strip().rstrip("/")
+    candidates = []
+    if configured:
+        candidates.append(configured)
+    candidates.extend([
+        "http://host.docker.internal:11434",
+        "http://host.docker.internal:11435",
+        settings.OLLAMA_BASE_URL.rstrip("/"),
+        "http://127.0.0.1:11435",
+        "http://127.0.0.1:11434",
+        "http://localhost:11434",
+        "http://localhost:11435",
+        "http://172.17.0.1:11434",
+        "http://172.18.0.1:11434"
+    ])
+    unique_candidates = list(dict.fromkeys([c for c in candidates if c]))
+    
+    close_client = False
+    if client is None:
+        client = httpx.AsyncClient(timeout=1.5)
+        close_client = True
+    try:
+        for cand in unique_candidates:
+            try:
+                r = await client.get(f"{cand}/api/tags", timeout=1.0)
+                if r.status_code == 200:
+                    return cand
+            except Exception:
+                continue
+    finally:
+        if close_client:
+            await client.aclose()
+            
+    return configured or ("http://host.docker.internal:11434" if os.path.exists("/.dockerenv") else settings.OLLAMA_BASE_URL)
 
 def get_detailed_hardware_specs():
     # 1. CPU Inspection
@@ -230,12 +268,13 @@ async def get_admin_overview():
     ollama_status = "offline"
     try:
         async with httpx.AsyncClient(timeout=2.0) as client:
-            res = await client.get(f"{settings.OLLAMA_BASE_URL}/api/tags")
+            ollama_url = await resolve_ollama_base_url(client)
+            res = await client.get(f"{ollama_url}/api/tags")
             if res.status_code == 200:
                 ollama_count = len(res.json().get("models", []))
                 ollama_status = "online"
             
-            res_ps = await client.get(f"{settings.OLLAMA_BASE_URL}/api/ps")
+            res_ps = await client.get(f"{ollama_url}/api/ps")
             if res_ps.status_code == 200:
                 running_models = res_ps.json().get("models", [])
     except Exception:
@@ -286,11 +325,11 @@ async def get_telemetry_stream():
 
 @router.get("/models")
 async def get_installed_models(x_ollama_url: str = Header(default="")):
-    ollama_url = x_ollama_url or settings.OLLAMA_BASE_URL
     installed = []
     error = None
     try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            ollama_url = await resolve_ollama_base_url(client, x_ollama_url)
             res = await client.get(f"{ollama_url}/api/tags")
             if res.status_code == 200:
                 raw_models = res.json().get("models", [])
@@ -320,10 +359,10 @@ async def get_installed_models(x_ollama_url: str = Header(default="")):
 
 @router.get("/models/running")
 async def get_running_vram_models(x_ollama_url: str = Header(default="")):
-    ollama_url = x_ollama_url or settings.OLLAMA_BASE_URL
     running = []
     try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            ollama_url = await resolve_ollama_base_url(client, x_ollama_url)
             res = await client.get(f"{ollama_url}/api/ps")
             if res.status_code == 200:
                 raw = res.json().get("models", [])
@@ -342,9 +381,9 @@ async def get_running_vram_models(x_ollama_url: str = Header(default="")):
 
 @router.post("/models/unload")
 async def unload_model_from_vram(req: UnloadModelRequest, x_ollama_url: str = Header(default="")):
-    ollama_url = x_ollama_url or settings.OLLAMA_BASE_URL
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=6.0) as client:
+            ollama_url = await resolve_ollama_base_url(client, x_ollama_url)
             res = await client.post(
                 f"{ollama_url}/api/generate",
                 json={"model": req.name, "keep_alive": 0}
@@ -355,25 +394,24 @@ async def unload_model_from_vram(req: UnloadModelRequest, x_ollama_url: str = He
 
 @router.post("/models/pull")
 async def pull_ollama_model(req: PullModelRequest, x_ollama_url: str = Header(default="")):
-    ollama_url = x_ollama_url or settings.OLLAMA_BASE_URL
     model_name = req.name.strip()
     if not model_name:
         raise HTTPException(status_code=400, detail="Model name is required")
 
     try:
-        async with httpx.AsyncClient(timeout=300.0) as client:
+        async with httpx.AsyncClient(timeout=1800.0) as client:
+            ollama_url = await resolve_ollama_base_url(client, x_ollama_url)
             res = await client.post(f"{ollama_url}/api/pull", json={"name": model_name, "stream": False})
             if res.status_code == 200:
                 return {"status": "ok", "message": f"'{model_name}' başarıyla indirildi ve hazırlandı!"}
             else:
-                return {"status": "error", "message": f"Ollama hatası: HTTP {res.status_code} - {res.text}"}
+                return {"status": "error", "message": f"Ollama hatası ({ollama_url}): HTTP {res.status_code} - {res.text}"}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": f"Ollama bağlantı hatası: {str(e)}"}
 
 @router.delete("/models/delete")
 @router.post("/models/delete")
 async def delete_ollama_model(req: Optional[DeleteModelRequest] = None, name: Optional[str] = None, x_ollama_url: str = Header(default="")):
-    ollama_url = x_ollama_url or settings.OLLAMA_BASE_URL
     model_name = (req.name if req else "") or (name or "")
     model_name = model_name.strip()
     if not model_name:
@@ -381,12 +419,13 @@ async def delete_ollama_model(req: Optional[DeleteModelRequest] = None, name: Op
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
+            ollama_url = await resolve_ollama_base_url(client, x_ollama_url)
             req_obj = client.build_request("DELETE", f"{ollama_url}/api/delete", json={"name": model_name})
             res = await client.send(req_obj)
             if res.status_code in [200, 204]:
                 return {"status": "ok", "message": f"'{model_name}' modeli başarıyla silindi."}
             else:
-                return {"status": "error", "message": f"Ollama hatası: HTTP {res.status_code} - {res.text}"}
+                return {"status": "error", "message": f"Ollama hatası ({ollama_url}): HTTP {res.status_code} - {res.text}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -398,9 +437,10 @@ async def run_model_benchmark(req: BenchmarkRequest):
     
     if prov == "ollama":
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            async with httpx.AsyncClient(timeout=90.0) as client:
+                ollama_url = await resolve_ollama_base_url(client)
                 res = await client.post(
-                    f"{settings.OLLAMA_BASE_URL}/api/generate",
+                    f"{ollama_url}/api/generate",
                     json={"model": req.model, "prompt": prompt, "stream": False}
                 )
                 total_time_ms = int((time.time() - t0) * 1000)
@@ -422,7 +462,7 @@ async def run_model_benchmark(req: BenchmarkRequest):
                         "output_preview": d.get("response", "")[:300] + "..."
                     }
                 else:
-                    return {"status": "error", "message": f"HTTP {res.status_code}: {res.text}"}
+                    return {"status": "error", "message": f"HTTP {res.status_code} ({ollama_url}): {res.text}"}
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
@@ -434,17 +474,17 @@ async def test_provider(req: TestProviderRequest):
     prov = req.provider.lower()
     
     if prov == "ollama":
-        url = (req.base_url or settings.OLLAMA_BASE_URL or "http://host.docker.internal:11434").strip()
         try:
-            async with httpx.AsyncClient(timeout=4.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                url = await resolve_ollama_base_url(client, req.base_url)
                 res = await client.get(f"{url}/api/tags")
                 latency = int((time.time() - t0) * 1000)
                 if res.status_code == 200:
                     models = [m.get("name") for m in res.json().get("models", [])]
-                    return {"status": "ok", "latency_ms": latency, "message": f"Ollama Aktif ({len(models)} yerel model hazır)", "models": models}
-                return {"status": "error", "latency_ms": latency, "message": f"HTTP {res.status_code}"}
+                    return {"status": "ok", "latency_ms": latency, "message": f"Ollama Aktif ({len(models)} yerel model hazır)", "models": models, "url": url}
+                return {"status": "error", "latency_ms": latency, "message": f"HTTP {res.status_code} ({url})"}
         except Exception as e:
-            return {"status": "error", "latency_ms": int((time.time() - t0) * 1000), "message": str(e)}
+            return {"status": "error", "latency_ms": int((time.time() - t0) * 1000), "message": f"Ollama bağlantı hatası: {str(e)}"}
             
     elif prov == "gemini":
         key = (req.api_key or get_server_key("gemini") or "").strip()

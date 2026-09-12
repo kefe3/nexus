@@ -412,6 +412,21 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
      * Sohbetler oturum bazında `data/sessions/{sanitized_session_id}.json` olarak birbirinden %100 izole dosyalarda saklanmaya başlandı.
      * Artık her kullanıcı, her arkadaş ve her farklı tarayıcı yalnızca kendi oluşturduğu sohbetleri görebilir; diğer kullanıcıların sohbetlerine erişemez.
 
+#### 🕒 20:48:30 — [Commit: `9a8f23b`] • 🛠️ Windows & Çapraz Platform Kontrol Paneli & Model İndirme (Ollama Dynamic Bridge) Onarımı
+* **Modül:** `Control Panel Auto-Discovery, Ollama Model Puller & Multi-Platform Bridge`
+* **Sorun Analizi:**
+  * Kontrol Paneli'nde model listeleme, VRAM yönetimi, hız testi ve model indirme (`/api/admin/models/pull`) uç noktaları sabit `settings.OLLAMA_BASE_URL` (`http://127.0.0.1:11434`) kullanıyordu.
+  * Windows Docker Desktop veya WSL2 üzerinde çalışan kullanıcıların ana makinesindeki Ollama motoruna (`http://host.docker.internal:11434` / `11435`) ulaşılamadığı için Kontrol Paneli "Ollama Çevrimdışı" hatası veriyor ve model indirme istekleri başarısız oluyordu.
+  * `chat.py` içerisindeki akış döngüsünde `unique_url_candidates` değişken adı uyuşmazlığı giderildi.
+* **Çözüm & Yapılan İyileştirmeler:**
+  1. **Dinamik Ollama Uç Noktası Çözümleyicisi (`resolve_ollama_base_url`):**
+     * `backend/app/api/admin.py` içerisine dinamik adaptif adres çözümleyici eklendi.
+     * `x-ollama-url` başlığı, `settings.json` özel ayarı, `host.docker.internal:11434/11435` (Windows/Mac) ve `127.0.0.1:11435/11434` (Linux) adayları taranarak ilk yanıt veren aktif uç nokta otomatik olarak seçilir.
+  2. **Yüksek Zaman Aşımı & Model İndirme Güvenliği:**
+     * `pull_ollama_model` fonksiyonunun zaman aşımı süresi 1800 saniyeye (30 dakika) çıkarıldı; büyük boyutlu modeller (8B/14B/32B) indirilirken bağlantının kopması engellendi.
+  3. **Arayüz Başlık Entegrasyonu (`frontend/src/js/admin.js`):**
+     * Kontrol Paneli'ndeki `fetchRunningModels`, `unloadModel`, `fetchInstalledModels`, `pullModel`, `deleteModel` ve `populateBenchmarkModels` isteklerine dinamik `getOllamaHeaders()` eklendi.
+
 ---
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri

@@ -151,11 +151,18 @@ async function fetchOverview() {
     }
 }
 
+function getOllamaHeaders() {
+    const customUrl = localStorage.getItem('nexus_ollama_url') || localStorage.getItem('nexus_custom_url') || '';
+    return customUrl ? { 'x-ollama-url': customUrl } : {};
+}
+
 // Fetch Running VRAM Models
 async function fetchRunningModels() {
     const tbody = document.getElementById('vram-models-tbody');
     try {
-        const res = await fetch(`${API_BASE}/admin/models/running`);
+        const res = await fetch(`${API_BASE}/admin/models/running`, {
+            headers: getOllamaHeaders()
+        });
         const data = await res.json();
         tbody.innerHTML = '';
 
@@ -190,7 +197,7 @@ async function unloadModel(name) {
     try {
         const res = await fetch(`${API_BASE}/admin/models/unload`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getOllamaHeaders() },
             body: JSON.stringify({ name })
         });
         const data = await res.json();
@@ -206,7 +213,9 @@ async function unloadModel(name) {
 async function fetchInstalledModels() {
     const tbody = document.getElementById('installed-models-tbody');
     try {
-        const res = await fetch(`${API_BASE}/admin/models`);
+        const res = await fetch(`${API_BASE}/admin/models`, {
+            headers: getOllamaHeaders()
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
@@ -258,7 +267,7 @@ async function pullModel() {
     try {
         const res = await fetch(`${API_BASE}/admin/models/pull`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getOllamaHeaders() },
             body: JSON.stringify({ name: modelName })
         });
         const data = await res.json();
@@ -268,6 +277,7 @@ async function pullModel() {
             statusBox.textContent = `✅ Başarılı: ${data.message}`;
             input.value = '';
             fetchInstalledModels();
+            fetchRunningModels();
         } else {
             throw new Error(data.message || 'İndirme başarısız');
         }
@@ -288,12 +298,13 @@ async function deleteModel(name) {
     try {
         const res = await fetch(`${API_BASE}/admin/models/delete`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getOllamaHeaders() },
             body: JSON.stringify({ name })
         });
         const data = await res.json();
         if (data.status === 'ok') {
             fetchInstalledModels();
+            fetchRunningModels();
         } else {
             alert(`Hata: ${data.message}`);
         }
@@ -306,7 +317,9 @@ async function deleteModel(name) {
 async function populateBenchmarkModels() {
     const select = document.getElementById('bench-model-select');
     try {
-        const res = await fetch(`${API_BASE}/admin/models`);
+        const res = await fetch(`${API_BASE}/admin/models`, {
+            headers: getOllamaHeaders()
+        });
         const data = await res.json();
         select.innerHTML = '<option value="">Model Seçin...</option>';
         if (data.models) {

@@ -53,7 +53,7 @@ async def chat_stream(
             success = False
             last_err = "Ollama sunucusuna bağlanılamadı."
             async with httpx.AsyncClient(timeout=120.0) as client:
-                for b_url in unique_url_candidates:
+                for b_url in unique_urls:
                     url = f"{b_url}/api/chat"
                     try:
                         async with client.stream("POST", url, json=payload) as resp:
