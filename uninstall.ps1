@@ -20,6 +20,29 @@ Write-Host "      ⚠️ Nexus AI Studio Windows Kaldırma Sihirbazı`n" -Foregr
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $ScriptDir
 
+# 1. Kurulu Olup Olmadığını Denetle
+$targetDir = "$HOME\nexus"
+$isInstalled = (Test-Path "$targetDir\docker-compose.yml") -or (Test-Path "docker-compose.yml")
+if (Get-Command docker -ErrorAction SilentlyContinue) {
+    $existingContainers = docker ps -a --format '{{.Names}}' 2>$null
+    if ($existingContainers -match "nexus-frontend|nexus-backend|nexus-ollama") {
+        $isInstalled = $true
+    }
+}
+
+if (-not $isInstalled) {
+    Write-Host "⚠️ Nexus AI Studio sisteminizde yüklü bulunamadı (Zaten kurulu değil).`n" -ForegroundColor Yellow
+    $confirmInstall = Read-Host "Nexus AI Studio'yu şimdi sıfırdan kurmak ister misiniz? [E/h]"
+    if (-not $confirmInstall -or $confirmInstall -match "^[eEyY]") {
+        Write-Host "`n🚀 Nexus AI Studio kurulumu başlatılıyor..." -ForegroundColor Cyan
+        irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex
+        exit 0
+    } else {
+        Write-Host "`nİşlem sonlandırıldı." -ForegroundColor Cyan
+        exit 0
+    }
+}
+
 if (-not $Yes) {
     $confirm = Read-Host "Nexus AI Studio konteynerleri durdurulup kaldırılsın mı? [E/h]"
     if ($confirm -and $confirm -notmatch "^[eEyY]") {

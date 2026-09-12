@@ -349,7 +349,15 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
      * `-> ⚙️ Gereken eksik kütüphane ve bağımlılıklar kuruluyor...`
      * `-> ⚡ Nexus AI servisleri başlatılıyor...`
      * `✓ Nexus AI Studio ve tüm servisler başarıyla aktif edildi!`
-  3. **Windows PowerShell Eşitlemesi:** `install.ps1` aynı temiz ve sıralı bildirim formatına geçirildi.
+#### 🕒 18:21:30 — [Commit: `3c19f04`] • 🧠 Akıllı Durum Tespiti & Çıkmaz Durum Rehberi (`install.sh`, `uninstall.sh`, `install.ps1`, `uninstall.ps1`)
+* **Modül:** `Smart Installation State & Fallback Prompt Engine`
+* **Yapılan İyileştirmeler:**
+  1. **Kurulum Sırasında Zaten Kurulu Olma Tespiti (`install.sh` / `install.ps1`):**
+     * Sistemde Nexus AI zaten kurulu veya aktif olarak çalışıyorsa kullanıcıya `ℹ️ Nexus AI Studio sisteminizde zaten kurulu bulunmaktadır!` bilgisi verilir.
+     * `Mevcut kurulumu güncellemek ve yeniden başlatmak istiyor musunuz? [E/h]` sorusu sorularak kullanıcının kararına göre ya güncelleme yapılır ya da mevcut çalışan URL'ler gösterilip işlem güvenle sonlandırılır.
+  2. **Kaldırma Sırasında Kurulu Olmama Tespiti (`uninstall.sh` / `uninstall.ps1`):**
+     * Sistemde Nexus AI kurulu değilken kaldırma betiği çalıştırılırsa `⚠️ Nexus AI Studio sisteminizde yüklü bulunamadı (Zaten kurulu değil).` uyarısı verilir.
+     * Kullanıcıya doğrudan `Nexus AI Studio'yu şimdi sıfırdan kurmak ister misiniz? [E/h]` teklifinde bulunulur; `Evet` seçilirse otomatik olarak resmi kurulum başlatılır.
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 

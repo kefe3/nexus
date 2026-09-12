@@ -58,6 +58,37 @@ echo -e "      ${YELLOW}⚠️ Nexus AI Studio Kaldırma ve Temizlik Sihirbazı$
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# 1. Kurulu Olup Olmadığını Denetle (Smart Detection)
+INSTALL_DIR="${NEXUS_DIR:-$HOME/nexus}"
+IS_INSTALLED=false
+
+if [ -d "$INSTALL_DIR" ] || [ -f "docker-compose.yml" ]; then
+    IS_INSTALLED=true
+fi
+
+if command -v docker >/dev/null 2>&1; then
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -E -q 'nexus-frontend|nexus-backend|nexus-ollama'; then
+        IS_INSTALLED=true
+    fi
+    if docker images -q nexus-ai-frontend 2>/dev/null | grep -q .; then
+        IS_INSTALLED=true
+    fi
+fi
+
+if [ "$IS_INSTALLED" = false ]; then
+    echo -e "${YELLOW}⚠️ Nexus AI Studio sisteminizde yüklü bulunamadı (Zaten kurulu değil).${NC}\n"
+    read -p "Nexus AI Studio'yu şimdi sıfırdan kurmak ister misiniz? [E/h]: " CONFIRM_INSTALL </dev/tty || CONFIRM_INSTALL="E"
+    CONFIRM_INSTALL=${CONFIRM_INSTALL:-E}
+    if [[ "$CONFIRM_INSTALL" =~ ^[eEyY] ]]; then
+        echo -e "\n${CYAN}🚀 Nexus AI Studio kurulumu başlatılıyor...${NC}\n"
+        curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
+        exit 0
+    else
+        echo -e "\n${CYAN}İşlem sonlandırıldı.${NC}\n"
+        exit 0
+    fi
+fi
+
 # Kullanıcı Onayı
 if [ "$AUTO_YES" = false ]; then
     echo -e "${YELLOW}Nexus AI Studio konteynerleri durdurulacak ve sistemden kaldırılacaktır.${NC}"

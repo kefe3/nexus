@@ -25,7 +25,40 @@ echo "  ██║ ╚████║███████╗██╔╝ ██�
 echo "  ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝"
 echo -e "      ${PURPLE}⚡ Self-Hosted AI Studio & Cluster Control Platform${NC}\n"
 
-# 1. Root / Sudo Yetki Kontrolü & TTY Bağlantısı
+# 1. Önceden Kurulu Olma Durumu Kontrolü (Smart Detection)
+INSTALL_DIR="${NEXUS_DIR:-$HOME/nexus}"
+IS_ALREADY_INSTALLED=false
+IS_RUNNING=false
+
+if [ -d "$INSTALL_DIR" ] && [ -f "$INSTALL_DIR/docker-compose.yml" ]; then
+    IS_ALREADY_INSTALLED=true
+fi
+
+if command -v docker >/dev/null 2>&1; then
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q 'nexus-frontend'; then
+        IS_RUNNING=true
+        IS_ALREADY_INSTALLED=true
+    fi
+fi
+
+if [ "$IS_ALREADY_INSTALLED" = true ]; then
+    echo -e "${YELLOW}ℹ️ Nexus AI Studio sisteminizde zaten kurulu bulunmaktadır!${NC}"
+    if [ "$IS_RUNNING" = true ]; then
+        echo -e "${GREEN}✓ Servisler şu anda aktif olarak çalışıyor: ${BOLD}http://localhost:3050${NC}"
+    fi
+    echo ""
+    read -p "Mevcut kurulumu güncellemek ve yeniden başlatmak istiyor musunuz? [E/h]: " CONFIRM_REINSTALL </dev/tty || CONFIRM_REINSTALL="E"
+    CONFIRM_REINSTALL=${CONFIRM_REINSTALL:-E}
+    if [[ ! "$CONFIRM_REINSTALL" =~ ^[eEyY] ]]; then
+        echo -e "\n${CYAN}Kurulum sonlandırıldı. Mevcut sisteminiz çalışmaya devam ediyor.${NC}"
+        echo -e "👉 AI Studio:        ${BOLD}http://localhost:3050${NC}"
+        echo -e "👉 Kontrol Paneli:   ${BOLD}http://localhost:3050/admin.html${NC}\n"
+        exit 0
+    fi
+    echo -e "${CYAN}🔄 Mevcut kurulum güncelleniyor ve servisler yenileniyor...${NC}\n"
+fi
+
+# 2. Root / Sudo Yetki Kontrolü & TTY Bağlantısı
 SUDO=""
 if [ "$EUID" -ne 0 ]; then
     if command -v sudo >/dev/null 2>&1; then
@@ -40,7 +73,7 @@ if [ "$EUID" -ne 0 ]; then
     fi
 fi
 
-# 2. İşletim Sistemi ve Dağıtım Tespiti
+# 3. İşletim Sistemi ve Dağıtım Tespiti
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 DISTRO="Linux"
