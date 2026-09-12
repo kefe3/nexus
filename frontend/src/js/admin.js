@@ -79,6 +79,7 @@ function switchSection(secId) {
     if (targetSec) targetSec.classList.add('active');
 
     if (secId === 'overview') fetchOverview();
+    if (secId === 'specs') fetchSpecs();
     if (secId === 'vram') fetchRunningModels();
     if (secId === 'models') fetchInstalledModels();
     if (secId === 'benchmark') populateBenchmarkModels();
@@ -686,3 +687,89 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchOverview();
     setInterval(fetchOverview, 4000); // 4 saniyede bir donanım metriklerini güncelle
 });
+
+
+// Fetch Comprehensive Hardware & System Specs
+async function fetchSpecs(showToastAlert = false) {
+    try {
+        const res = await fetch(`${API_BASE}/admin/specs`);
+        const data = await res.json();
+        if (data.status === 'ok' && data.specs) {
+            const sp = data.specs;
+            const cpu = sp.cpu || {};
+            const ram = sp.ram || {};
+            const gpu = (sp.gpu && sp.gpu.length > 0) ? sp.gpu[0] : null;
+            const board = sp.board || {};
+            const disk = sp.disk || {};
+            const os = sp.os || {};
+
+            // Hero
+            const machineName = board.board_name || board.product_name || os.hostname || 'İş İstasyonu / Sunucu';
+            const machineVendor = board.board_vendor || board.sys_vendor || 'Donanım Platformu';
+            document.getElementById('spec-hero-machine').textContent = `${machineVendor} ${machineName}`;
+            document.getElementById('spec-hero-sub').textContent = `${cpu.model || 'CPU'} | ${gpu ? gpu.name : 'Standart Entegre Grafik'}`;
+
+            document.getElementById('spec-os-badge').textContent = os.pretty_name || 'Linux';
+            document.getElementById('spec-gpu-badge').textContent = gpu ? `${gpu.name} (${gpu.memory_total_gb} GB)` : 'CPU Modu (Yerel)';
+
+            // CPU
+            document.getElementById('spec-cpu-model').textContent = cpu.model || 'Bilinmeyen İşlemci';
+            document.getElementById('spec-cpu-arch').textContent = cpu.arch || 'x86_64';
+            document.getElementById('spec-cpu-cores').textContent = `${cpu.physical_cores || '-'} Fiziksel Çekirdek`;
+            document.getElementById('spec-cpu-threads').textContent = `${cpu.logical_threads || '-'} İş Parçacığı (Threads)`;
+            document.getElementById('spec-cpu-freq').textContent = `${cpu.current_freq_mhz || '-'} MHz`;
+            document.getElementById('spec-cpu-max-freq').textContent = cpu.max_freq_mhz ? `${cpu.max_freq_mhz} MHz (${(cpu.max_freq_mhz / 1000).toFixed(2)} GHz)` : 'Dinamik Boost';
+
+            // GPU
+            if (gpu) {
+                document.getElementById('spec-gpu-name').textContent = gpu.name;
+                document.getElementById('spec-gpu-vram-total').textContent = `${gpu.memory_total_gb} GB GDDR VRAM`;
+                document.getElementById('spec-gpu-vram-free').textContent = `${gpu.memory_free_gb} GB Boş`;
+                document.getElementById('spec-gpu-driver-ver').textContent = gpu.driver_version || 'NVIDIA Driver';
+                document.getElementById('spec-gpu-hw-type').textContent = gpu.type || 'CUDA Hızlandırıcı';
+                document.getElementById('spec-gpu-driver').textContent = 'CUDA Hızlandırma Aktif';
+            } else {
+                document.getElementById('spec-gpu-name').textContent = 'Ayrık GPU Tespit Edilmedi (CPU Çıkarımı)';
+                document.getElementById('spec-gpu-vram-total').textContent = 'RAM Paylaşımlı';
+                document.getElementById('spec-gpu-vram-free').textContent = `${ram.available_gb} GB`;
+                document.getElementById('spec-gpu-driver-ver').textContent = 'CPU Native';
+                document.getElementById('spec-gpu-hw-type').textContent = 'Host CPU';
+                document.getElementById('spec-gpu-driver').textContent = 'CPU Modu';
+            }
+
+            // RAM
+            document.getElementById('spec-ram-percent').textContent = `%${ram.percent}`;
+            document.getElementById('spec-ram-main').textContent = `${ram.total_gb} GB Toplam Fiziksel RAM`;
+            document.getElementById('spec-ram-used').textContent = `${ram.used_gb} GB`;
+            document.getElementById('spec-ram-free').textContent = `${ram.available_gb} GB`;
+            document.getElementById('spec-ram-cached').textContent = `${ram.cached_gb || 0} GB`;
+            document.getElementById('spec-ram-swap').textContent = `${ram.swap_total_gb} GB (Kullanılan: ${ram.swap_used_gb} GB)`;
+
+            // Motherboard
+            document.getElementById('spec-board-name').textContent = board.board_name || board.product_name || 'Özel Sunucu Anakartı';
+            document.getElementById('spec-board-vendor').textContent = board.board_vendor || board.sys_vendor || 'Üretici';
+            document.getElementById('spec-sys-vendor').textContent = board.sys_vendor || 'Bilinmiyor';
+            document.getElementById('spec-product-name').textContent = board.product_name || board.product_version || 'Özel Yapılandırma';
+            document.getElementById('spec-bios-ver').textContent = board.bios_version || 'N/A';
+            document.getElementById('spec-bios-vendor').textContent = board.bios_vendor || 'Standart BIOS';
+
+            // Disk
+            document.getElementById('spec-disk-percent').textContent = `%${disk.percent}`;
+            document.getElementById('spec-disk-main').textContent = `${disk.total_gb} GB NVMe/SSD Depolama`;
+            document.getElementById('spec-disk-used').textContent = `${disk.used_gb} GB`;
+            document.getElementById('spec-disk-free').textContent = `${disk.free_gb} GB`;
+
+            // OS
+            document.getElementById('spec-os-title').textContent = `${os.pretty_name} (${os.arch})`;
+            document.getElementById('spec-os-kernel').textContent = `Linux ${os.kernel}`;
+            document.getElementById('spec-os-host').textContent = os.hostname;
+            document.getElementById('spec-os-py').textContent = `Python ${os.python_version}`;
+
+            if (showToastAlert) {
+                alert('✅ Tüm donanım ve sunucu özellikleri başarıyla tarandı ve güncellendi!');
+            }
+        }
+    } catch (e) {
+        console.error('Error fetching specs:', e);
+    }
+}

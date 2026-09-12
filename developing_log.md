@@ -275,6 +275,25 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
   5. **İki Yönlü Sağlayıcı Anahtarı Eşitlemesi:**
      * Tarayıcıda önceden girilmiş anahtarların sunucu tarafındaki `data/settings.json` alanına anında ve sessizce aktarılması sağlandı, böylece dış tünelden girildiğinde tüm anahtarlar hazır bulundu.
 
+---
+
+#### 🕒 17:46:40 — [Commit: `91c4e7b`] • 🖥️ Derin Donanım & Sistem Analiz Paneli (Full Hardware Specs Suite)
+* **Modül:** `Hardware Inspection & System Telemetry Suite`
+* **Yapılan İşlemler:**
+  1. **Backend Derin Donanım Analiz Motoru (`backend/app/api/admin.py`):**
+     * `get_detailed_hardware_specs()` ve `/api/admin/specs` uç noktası geliştirildi:
+       * **İşlemci (CPU):** Gerçek model adı (`12th Gen Intel(R) Core(TM) i5-12400F` / `AMD Ryzen`), mimari (`x86_64`), fiziksel çekirdek sayısı, mantıksal iş parçacıkları (Threads), anlık/min/turbo frekanslar.
+       * **Ekran Kartı (GPU & VRAM):** `nvidia-smi` entegrasyonu ile model adı (`NVIDIA GeForce RTX 3060`), toplam VRAM (`12 GB`), boş VRAM, sürücü sürümü (`595.84`) ve CUDA yapay zeka hızlandırma desteği.
+       * **RAM & Bellek Mimarisi:** Toplam fiziksel RAM, kullanılan, boş, önbellek (cached/buffers) ve swap bellek kullanım dökümü.
+       * **Anakart, Model & BIOS (DMI):** Üretici marka (`MSI`), anakart modeli (`PRO H610M-B DDR4`), BIOS sağlayıcısı & sürümü (`American Megatrends 1.F0`).
+       * **Depolama (SSD/NVMe):** Kök disk boyutu, kullanılan ve boş depolama kapasitesi.
+       * **İşletim Sistemi & Çekirdek:** Dağıtım tam adı (`Ubuntu 24.04 LTS`), Linux çekirdek sürümü (`Linux 6.8.0-generic`), sunucu adı (`topcubuntu`) ve Python sürümü.
+  2. **Kontrol Paneli Arayüzü (`frontend/src/admin.html` & `frontend/src/js/admin.js`):**
+     * Sol menüye **"🖥️ Donanım & Sistem Detayları"** sekmesi eklendi.
+     * 6 kartlı lüks cam (glassmorphism) panel ve tek tıkla "Donanımı Yeniden Tara" butonu entegre edildi.
+  3. **Hepsi Bir Arada Otomatik Kurulumcu (`install.sh`):**
+     * Docker, Docker Compose, Ollama (GPU/CPU), Cloudflared, Git, Curl ve başlangıç modellerini tek komutla sıfırdan kuran evrensel kurulum betiği tamamlandı.
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.

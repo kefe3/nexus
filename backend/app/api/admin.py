@@ -56,6 +56,129 @@ class TestProviderRequest(BaseModel):
     api_key: Optional[str] = ""
     base_url: Optional[str] = ""
 
+
+def get_detailed_hardware_specs():
+    # 1. CPU Inspection
+    cpu_model = platform.processor() or "Bilinmeyen İşlemci"
+    if os.path.exists("/proc/cpuinfo"):
+        try:
+            with open("/proc/cpuinfo") as f:
+                for line in f:
+                    if "model name" in line:
+                        cpu_model = line.split(":", 1)[1].strip()
+                        break
+        except Exception:
+            pass
+    elif platform.system() == "Darwin":
+        try:
+            cpu_model = subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"], stderr=subprocess.DEVNULL).decode().strip()
+        except Exception:
+            pass
+
+    freq = psutil.cpu_freq()
+    phys_cores = psutil.cpu_count(logical=False) or psutil.cpu_count() or 1
+    logical_cores = psutil.cpu_count(logical=True) or phys_cores
+
+    cpu_info = {
+        "model": cpu_model,
+        "arch": platform.machine(),
+        "physical_cores": phys_cores,
+        "logical_threads": logical_cores,
+        "current_freq_mhz": round(freq.current, 1) if freq else 0,
+        "min_freq_mhz": round(freq.min, 1) if freq and freq.min else 0,
+        "max_freq_mhz": round(freq.max, 1) if freq and freq.max else 0,
+        "usage_percent": psutil.cpu_percent(interval=None)
+    }
+
+    # 2. RAM & Swap Inspection
+    mem = psutil.virtual_memory()
+    swap = psutil.swap_memory()
+    ram_info = {
+        "total_gb": round(mem.total / (1024**3), 2),
+        "used_gb": round(mem.used / (1024**3), 2),
+        "available_gb": round(mem.available / (1024**3), 2),
+        "percent": mem.percent,
+        "cached_gb": round(getattr(mem, "cached", 0) / (1024**3), 2),
+        "buffers_gb": round(getattr(mem, "buffers", 0) / (1024**3), 2),
+        "swap_total_gb": round(swap.total / (1024**3), 2),
+        "swap_used_gb": round(swap.used / (1024**3), 2),
+        "swap_percent": swap.percent
+    }
+
+    # 3. Motherboard & BIOS DMI Inspection
+    board_info = {}
+    for k in ["sys_vendor", "product_name", "product_version", "board_vendor", "board_name", "bios_vendor", "bios_version", "bios_date"]:
+        p = f"/sys/class/dmi/id/{k}"
+        if os.path.exists(p):
+            try:
+                with open(p) as f:
+                    val = f.read().strip()
+                    if val and val != "None":
+                        board_info[k] = val
+            except Exception:
+                pass
+
+    # 4. GPU & VRAM Inspection
+    gpu_list = []
+    # Test nvidia-smi
+    try:
+        nv_out = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=name,memory.total,memory.free,memory.used,driver_version", "--format=csv,noheader,nounits"],
+            stderr=subprocess.DEVNULL
+        ).decode()
+        for line in nv_out.strip().split("\n"):
+            if line.strip():
+                parts = [p.strip() for p in line.split(",")]
+                if len(parts) >= 5:
+                    gpu_list.append({
+                        "name": parts[0],
+                        "memory_total_gb": round(float(parts[1]) / 1024, 2),
+                        "memory_free_gb": round(float(parts[2]) / 1024, 2),
+                        "memory_used_gb": round(float(parts[3]) / 1024, 2),
+                        "driver_version": parts[4],
+                        "type": "NVIDIA CUDA GPU"
+                    })
+    except Exception:
+        pass
+
+    # 5. OS & Kernel Pretty Name
+    pretty_os = f"{platform.system()} {platform.release()}"
+    if os.path.exists("/etc/os-release"):
+        try:
+            with open("/etc/os-release") as f:
+                for line in f:
+                    if line.startswith("PRETTY_NAME="):
+                        pretty_os = line.split("=", 1)[1].strip().strip('"')
+                        break
+        except Exception:
+            pass
+
+    # 6. Disk details
+    du = psutil.disk_usage("/")
+    disk_info = {
+        "total_gb": round(du.total / (1024**3), 2),
+        "used_gb": round(du.used / (1024**3), 2),
+        "free_gb": round(du.free / (1024**3), 2),
+        "percent": du.percent,
+        "mount": "/"
+    }
+
+    return {
+        "cpu": cpu_info,
+        "ram": ram_info,
+        "board": board_info,
+        "gpu": gpu_list,
+        "disk": disk_info,
+        "os": {
+            "pretty_name": pretty_os,
+            "kernel": platform.release(),
+            "arch": platform.machine(),
+            "hostname": platform.node(),
+            "python_version": platform.python_version()
+        }
+    }
+
+
 @router.get("/overview")
 async def get_admin_overview():
     uptime_sec = int(time.time() - _START_TIME)
@@ -105,6 +228,7 @@ async def get_admin_overview():
             "uptime_seconds": uptime_sec,
             "uptime_formatted": f"{uptime_sec // 86400}g {(uptime_sec % 86400) // 3600}s {(uptime_sec % 3600) // 60}d {uptime_sec % 60}sn",
         },
+        "specs": get_detailed_hardware_specs(),
         "hardware": {
             "cpu_percent": cpu_percent,
             "cpu_cores": cpu_count,
@@ -354,3 +478,8 @@ async def test_provider(req: TestProviderRequest):
 @router.get("/logs")
 async def get_request_logs():
     return {"status": "ok", "logs": REQUEST_LOGS}
+
+
+@router.get("/specs")
+async def get_system_specs():
+    return {"status": "ok", "specs": get_detailed_hardware_specs()}

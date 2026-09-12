@@ -603,6 +603,10 @@
                 <div class="cp-nav-left"><i class="fa-solid fa-gauge-high" style="color: var(--accent-cyan);"></i><span>Genel Bakış</span></div>
                 <span class="nav-badge" id="badge-cpu-load">-%</span>
             </div>
+            <div class="cp-nav-item" onclick="switchSection('specs')">
+                <div class="cp-nav-left"><i class="fa-solid fa-server" style="color: #38bdf8;"></i><span>Donanım & Sistem Detayları</span></div>
+                <span class="nav-badge" style="color: #38bdf8; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3);">FULL SPECS</span>
+            </div>
             <div class="cp-nav-item" onclick="switchSection('vram')">
                 <div class="cp-nav-left"><i class="fa-solid fa-microchip" style="color: var(--accent-green);"></i><span>VRAM & Bellek</span></div>
                 <span class="nav-badge" id="badge-vram-count">0 Aktif</span>
@@ -1080,6 +1084,236 @@
                             <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+        
+            <!-- 9. HARDWARE & SYSTEM SPECS SECTION -->
+            <section id="sec-specs" class="cp-section">
+                <div class="cp-section-header">
+                    <div>
+                        <h2 class="cp-section-title">🖥️ Sunucu & Donanım Derin Analiz Paneli</h2>
+                        <p class="cp-section-desc">İşlemci, ekran kartı (GPU/VRAM), anakart modeli, BIOS, RAM önbelleği ve işletim sistemi mimarisi.</p>
+                    </div>
+                    <button class="btn-action" onclick="fetchSpecs(true)" style="background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color: #04060c; font-weight: 800;">
+                        <i class="fa-solid fa-rotate"></i> Donanımı Yeniden Tara
+                    </button>
+                </div>
+
+                <!-- Hardware Hero Banner -->
+                <div class="glass-panel" style="background: linear-gradient(135deg, rgba(0, 242, 254, 0.08), rgba(138, 43, 226, 0.08)); border-color: rgba(0, 242, 254, 0.25); margin-bottom: 1.5rem;">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #00f2fe, #4facfe); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; color: #04060c; box-shadow: 0 0 25px rgba(0, 242, 254, 0.4);">
+                                <i class="fa-solid fa-server"></i>
+                            </div>
+                            <div>
+                                <h3 id="spec-hero-machine" style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 4px;">Donanım Taranıyor...</h3>
+                                <p id="spec-hero-sub" style="font-size: 0.85rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">-</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <span class="status-pill" id="spec-pill-os" style="background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">
+                                <i class="fa-brands fa-linux"></i> <span id="spec-os-badge">İşletim Sistemi</span>
+                            </span>
+                            <span class="status-pill" id="spec-pill-gpu" style="background: rgba(0, 245, 160, 0.12); border-color: rgba(0, 245, 160, 0.3); color: var(--accent-green);">
+                                <i class="fa-solid fa-gamepad"></i> <span id="spec-gpu-badge">GPU Taranıyor</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6-Grid Detailed Specs Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 1.75rem;">
+                    
+                    <!-- 1. CPU (İşlemci Mimarisi) -->
+                    <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(0, 242, 254, 0.12); display: flex; align-items: center; justify-content: center; color: var(--accent-cyan);">
+                                        <i class="fa-solid fa-microchip"></i>
+                                    </div>
+                                    <h4 style="font-weight: 800; font-size: 1rem; color: #fff;">İşlemci (CPU)</h4>
+                                </div>
+                                <span class="badge-size" id="spec-cpu-arch">x86_64</span>
+                            </div>
+                            <div style="font-size: 1.05rem; font-weight: 700; color: #f1f5f9; margin-bottom: 1rem; line-height: 1.4;" id="spec-cpu-model">İşlemci Taranıyor...</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem;">
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">ÇEKİRDEK YAPISI</div>
+                                    <div style="font-weight: 700; color: #fff; margin-top: 2px;" id="spec-cpu-cores">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">İŞ PARÇACIĞI (THREADS)</div>
+                                    <div style="font-weight: 700; color: var(--accent-cyan); margin-top: 2px;" id="spec-cpu-threads">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">ANLIK FREKANS</div>
+                                    <div style="font-weight: 700; color: #fff; margin-top: 2px;" id="spec-cpu-freq">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">TURBO / MAX FREKANS</div>
+                                    <div style="font-weight: 700; color: var(--accent-amber); margin-top: 2px;" id="spec-cpu-max-freq">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. GPU & VRAM (Ekran Kartı) -->
+                    <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(0, 245, 160, 0.12); display: flex; align-items: center; justify-content: center; color: var(--accent-green);">
+                                        <i class="fa-solid fa-vr-cardboard"></i>
+                                    </div>
+                                    <h4 style="font-weight: 800; font-size: 1rem; color: #fff;">Ekran Kartı (GPU & VRAM)</h4>
+                                </div>
+                                <span class="badge-size" style="background: rgba(0,245,160,0.15); color: var(--accent-green);" id="spec-gpu-driver">CUDA Ready</span>
+                            </div>
+                            <div style="font-size: 1.05rem; font-weight: 700; color: #f1f5f9; margin-bottom: 1rem; line-height: 1.4;" id="spec-gpu-name">GPU Taranıyor...</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem;">
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">TOPLAM VRAM</div>
+                                    <div style="font-weight: 700; color: var(--accent-green); margin-top: 2px;" id="spec-gpu-vram-total">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">BOŞ VRAM</div>
+                                    <div style="font-weight: 700; color: #fff; margin-top: 2px;" id="spec-gpu-vram-free">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">SÜRÜCÜ SÜRÜMÜ</div>
+                                    <div style="font-weight: 700; color: #fff; margin-top: 2px;" id="spec-gpu-driver-ver">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">YAPAY ZEKA DONANIMI</div>
+                                    <div style="font-weight: 700; color: #38bdf8; margin-top: 2px;" id="spec-gpu-hw-type">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. RAM & Bellek Dağılımı -->
+                    <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(138, 43, 226, 0.12); display: flex; align-items: center; justify-content: center; color: var(--accent-purple);">
+                                        <i class="fa-solid fa-memory"></i>
+                                    </div>
+                                    <h4 style="font-weight: 800; font-size: 1rem; color: #fff;">RAM & Önbellek Mimarisi</h4>
+                                </div>
+                                <span class="badge-size" id="spec-ram-percent">-%</span>
+                            </div>
+                            <div style="font-size: 1.05rem; font-weight: 700; color: #f1f5f9; margin-bottom: 1rem;" id="spec-ram-main">- GB Toplam Fiziksel Bellek</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem;">
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">KULLANILAN RAM</div>
+                                    <div style="font-weight: 700; color: #fff; margin-top: 2px;" id="spec-ram-used">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">KULLANILABİLİR (BOŞ)</div>
+                                    <div style="font-weight: 700; color: var(--accent-green); margin-top: 2px;" id="spec-ram-free">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">ÖNBELLEK (CACHED)</div>
+                                    <div style="font-weight: 700; color: #38bdf8; margin-top: 2px;" id="spec-ram-cached">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">SWAP ALANI</div>
+                                    <div style="font-weight: 700; color: #cbd5e1; margin-top: 2px;" id="spec-ram-swap">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Anakart & BIOS & Sistem Üreticisi -->
+                    <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255, 179, 0, 0.12); display: flex; align-items: center; justify-content: center; color: var(--accent-amber);">
+                                        <i class="fa-solid fa-chess-board"></i>
+                                    </div>
+                                    <h4 style="font-weight: 800; font-size: 1rem; color: #fff;">Anakart, Model & BIOS</h4>
+                                </div>
+                                <span class="badge-size" id="spec-board-vendor">-</span>
+                            </div>
+                            <div style="font-size: 1.05rem; font-weight: 700; color: #f1f5f9; margin-bottom: 1rem;" id="spec-board-name">-</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem;">
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">SİSTEM ÜRETİCİSİ</div>
+                                    <div style="font-weight: 700; color: #fff; margin-top: 2px;" id="spec-sys-vendor">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">ÜRÜN / MODEL</div>
+                                    <div style="font-weight: 700; color: #fff; margin-top: 2px;" id="spec-product-name">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">BIOS SÜRÜMÜ</div>
+                                    <div style="font-weight: 700; color: var(--accent-amber); margin-top: 2px;" id="spec-bios-ver">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">BIOS SAĞLAYICI</div>
+                                    <div style="font-weight: 700; color: #cbd5e1; margin-top: 2px;" id="spec-bios-vendor">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Depolama (SSD / NVMe) -->
+                    <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(0, 242, 254, 0.12); display: flex; align-items: center; justify-content: center; color: var(--accent-cyan);">
+                                        <i class="fa-solid fa-hard-drive"></i>
+                                    </div>
+                                    <h4 style="font-weight: 800; font-size: 1rem; color: #fff;">Depolama (SSD & Disk)</h4>
+                                </div>
+                                <span class="badge-size" id="spec-disk-percent">-%</span>
+                            </div>
+                            <div style="font-size: 1.05rem; font-weight: 700; color: #f1f5f9; margin-bottom: 1rem;" id="spec-disk-main">- GB Depolama Alanı</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem;">
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">KULLANILAN ALAN</div>
+                                    <div style="font-weight: 700; color: #fff; margin-top: 2px;" id="spec-disk-used">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">BOŞ KALAN ALAN</div>
+                                    <div style="font-weight: 700; color: var(--accent-green); margin-top: 2px;" id="spec-disk-free">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. İşletim Sistemi & Çekirdek (OS / Kernel) -->
+                    <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(56, 189, 248, 0.12); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                                        <i class="fa-solid fa-cube"></i>
+                                    </div>
+                                    <h4 style="font-weight: 800; font-size: 1rem; color: #fff;">İşletim Sistemi & Çekirdek</h4>
+                                </div>
+                                <span class="badge-size" id="spec-os-py">Python 3.11</span>
+                            </div>
+                            <div style="font-size: 1.05rem; font-weight: 700; color: #f1f5f9; margin-bottom: 1rem;" id="spec-os-title">-</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.82rem;">
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">LINUX KERNEL</div>
+                                    <div style="font-weight: 700; color: #fff; margin-top: 2px;" id="spec-os-kernel">-</div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px;">
+                                    <div style="color: #64748b; font-size: 0.72rem;">SUNUCU HOSTNAME</div>
+                                    <div style="font-weight: 700; color: var(--accent-cyan); margin-top: 2px;" id="spec-os-host">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
 
