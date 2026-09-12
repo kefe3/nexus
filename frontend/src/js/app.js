@@ -12,9 +12,20 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchModelsForActiveProvider();
 });
 
+function getSessionId() {
+    let sid = localStorage.getItem("nexus_session_id");
+    if (!sid) {
+        sid = "sess_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+        localStorage.setItem("nexus_session_id", sid);
+    }
+    return sid;
+}
+
 async function syncChatsWithServer() {
     try {
-        const res = await fetch("/api/chats");
+        const res = await fetch("/api/chats", {
+            headers: { "X-Session-ID": getSessionId() }
+        });
         const data = await res.json();
         if (data.status === "ok" && data.chats && data.chats.length > 0) {
             chatsHistory = data.chats;
@@ -34,7 +45,10 @@ async function persistChatToServer(chatObj) {
     try {
         await fetch("/api/chats", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "X-Session-ID": getSessionId()
+            },
             body: JSON.stringify(chatObj)
         });
     } catch (e) {}
@@ -117,7 +131,10 @@ async function deleteChat(id, e) {
     chatsHistory = chatsHistory.filter(c => c.id !== id);
     localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
     try {
-        await fetch(`/api/chats/${id}`, { method: "DELETE" });
+        await fetch(`/api/chats/${id}`, {
+            method: "DELETE",
+            headers: { "X-Session-ID": getSessionId() }
+        });
     } catch (e) {}
     if (currentChatId === id) {
         if (chatsHistory.length > 0) loadChat(chatsHistory[0].id);

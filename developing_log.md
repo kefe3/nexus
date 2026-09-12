@@ -397,6 +397,21 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
   * Modern TailwindCSS ve Glassmorphism arayüzüyle **Gourmet Omlet Atölyesi** web uygulaması geliştirildi (`/home/kagan/.gemini/antigravity/scratch/omlet-tarifi/index.html`).
   * 4 farklı stil (Fransız Baveuse, Kaşarlı-Mantarlı, Fit Avokadolu, Ege Usulü), dinamik porsiyon ve malzeme gramaj hesaplayıcısı, entegre şef pişirme kronometresi ve altın püf noktaları eklendi.
 
+#### 🕒 20:45:00 — [Commit: `7d29ae1`] • 🛡️ Çok Kullanıcılı & Çok Cihazlı Özel Oturum İzolasyonu (Multi-Session Privacy Isolation)
+* **Modül:** `Session-Based Privacy Isolation & Multi-Client Security`
+* **Sorun Analizi:**
+  * Sunucu tabanlı sohbet senkronizasyonu devredeyken, tüm cihazlar ortak bir `data/chats.json` dosyasına yazıp okuyordu.
+  * Bu durum, dış ağdan veya paylaşılan Cloudflare tüneli üzerinden bağlanan farklı kullanıcıların veya arkadaşların aynı sohbet listesini ve mesajlarını görmesine (veri sızıntısı/privacy leak) neden oluyordu.
+* **Çözüm & Geliştirilen Mimari:**
+  1. **İstemci Tarafı Benzersiz Oturum Kimliği (`getSessionId()`):**
+     * `frontend/src/js/app.js` içerisine her tarayıcı/cihaz için benzersiz, kriptografik bir `nexus_session_id` üreten ve bunu yalnızca ilgili tarayıcının yerel hafızasında (`localStorage`) saklayan mekanizma eklendi.
+  2. **`X-Session-ID` Başlık İletişimi:**
+     * Tüm `/api/chats` (GET, POST, DELETE) isteklerine `X-Session-ID` HTTP başlığı entegre edildi.
+  3. **Backend Oturum Bazlı Dosya İzolasyonu (`backend/app/api/chats.py`):**
+     * Global `data/chats.json` dosyası tamamen yürürlükten kaldırıldı.
+     * Sohbetler oturum bazında `data/sessions/{sanitized_session_id}.json` olarak birbirinden %100 izole dosyalarda saklanmaya başlandı.
+     * Artık her kullanıcı, her arkadaş ve her farklı tarayıcı yalnızca kendi oluşturduğu sohbetleri görebilir; diğer kullanıcıların sohbetlerine erişemez.
+
 ---
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
