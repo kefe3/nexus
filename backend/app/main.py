@@ -7,6 +7,7 @@ from app.api.models import router as models_router
 from app.api.presets import router as presets_router
 from app.api.stats import router as stats_router
 from app.api.admin import router as admin_router
+from app.api.deploy import router as deploy_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -28,6 +29,7 @@ app.include_router(models_router, prefix=settings.API_PREFIX)
 app.include_router(presets_router, prefix=settings.API_PREFIX)
 app.include_router(stats_router, prefix=settings.API_PREFIX)
 app.include_router(admin_router, prefix=settings.API_PREFIX)
+app.include_router(deploy_router)
 
 @app.get("/health")
 async def health_check():

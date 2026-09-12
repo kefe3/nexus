@@ -619,6 +619,10 @@
             </div>
 
             <div class="cp-sidebar-label">YÖNETİM & LOGLAR</div>
+            <div class="cp-nav-item" onclick="switchSection('deployments')">
+                <div class="cp-nav-left"><i class="fa-solid fa-globe" style="color: var(--accent-cyan);"></i><span>Canlı Yayınlar & Tünel</span></div>
+                <span class="nav-badge" id="badge-deployments-count">0</span>
+            </div>
             <div class="cp-nav-item" onclick="switchSection('providers')">
                 <div class="cp-nav-left"><i class="fa-solid fa-network-wired" style="color: var(--accent-purple);"></i><span>Sağlayıcılar & API</span></div>
             </div>
@@ -959,6 +963,67 @@
                                 <td>Yerel RTX GPU Model Çıkarım Sunucusu</td>
                                 <td><span class="status-pill"><span class="pulse-dot"></span> Aktif</span></td>
                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 8. LIVE DEPLOYMENTS & CLOUDFLARE TUNNEL SECTION -->
+            <section id="sec-deployments" class="cp-section">
+                <div class="cp-section-header">
+                    <div>
+                        <h2 class="cp-section-title">🌍 Canlı Yayınlar & Cloudflare Tüneli</h2>
+                        <p class="cp-section-desc">Nexus AI Studio tarafından üretilen ve dünyaya canlı yayınlanan web projeleri ve genel HTTPS erişim tüneli.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-action" style="padding: 8px 14px; font-size: 0.82rem; background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 242, 254, 0.3);" onclick="restartTunnel()"><i class="fa-solid fa-rotate-right"></i> Tüneli Yenile</button>
+                        <button class="btn-action" style="padding: 8px 14px; font-size: 0.82rem;" onclick="fetchDeployments()"><i class="fa-solid fa-rotate"></i> Yenile</button>
+                    </div>
+                </div>
+
+                <!-- Tunnel Status Box -->
+                <div class="glass-panel" style="border-color: rgba(0, 245, 160, 0.3);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(0, 245, 160, 0.15); border: 1px solid rgba(0, 245, 160, 0.3); display: flex; align-items: center; justify-content: center; color: var(--accent-green); font-size: 1.2rem;">
+                                <i class="fa-solid fa-tower-broadcast"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+                                    <span>Cloudflare Quick Tunnel Durumu</span>
+                                    <span class="status-pill" id="tunnel-status-pill"><span class="pulse-dot"></span> Kontrol Ediliyor</span>
+                                </div>
+                                <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">Dünya çapında ücretsiz, otomatik SSL/HTTPS tünelleme köprüsü.</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="text" id="admin-tunnel-url" readonly style="background: #04060c; border: 1px solid var(--card-border); color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; padding: 8px 14px; border-radius: 8px; width: 320px;" value="Tünel başlatılıyor...">
+                            <a id="admin-tunnel-link" href="#" target="_blank" class="btn-action" style="padding: 8px 14px; font-size: 0.82rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Aç</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Published Apps Table -->
+                <div class="glass-panel">
+                    <h3 class="glass-panel-title">
+                        <span><i class="fa-solid fa-globe" style="color: var(--accent-cyan); margin-right: 8px;"></i> Canlı Yayınlanan AI Web Uygulamaları</span>
+                        <span class="badge-size" id="deploy-table-count-badge">0 Proje</span>
+                    </h3>
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Proje Başlığı / ID</th>
+                                <th>Genel İnternet URL (Dünya)</th>
+                                <th>Yerel LAN URL</th>
+                                <th>Boyut</th>
+                                <th>Yayınlanma Tarihi</th>
+                                <th>Görüntülenme</th>
+                                <th style="text-align: right;">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deployments-tbody">
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
                         </tbody>
                     </table>
                 </div>

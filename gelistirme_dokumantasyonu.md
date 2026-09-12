@@ -159,8 +159,37 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
 
 ---
 
+#### 🕒 17:18:45 — [Commit: `9e81bc2`] • 🌍 1-Click Dünyaya Aç / Canlı Yayın (Cloudflare Quick Tunnel & Live Share Engine)
+* **Modül:** `Public Deployment & Cloudflare Tunnel Suite`
+* **Yapılan İşlemler:**
+  * Yapay zekanın ürettiği HTML/CSS/JS kodlarını tek bir tıkla dünyanın her yerinden erişilebilir hale getiren canlı yayın motoru geliştirildi:
+    * **Backend Cloudflare Tunnel Motoru (`backend/app/api/deploy.py`):**
+      * `TunnelManager`: Sıfır yapılandırma ile anında Cloudflare Quick Tunnel (`cloudflared tunnel --url http://127.0.0.1:8500 --no-autoupdate`) çalıştırıp genel `https://*.trycloudflare.com` SSL/HTTPS bağlantısını dinamik olarak yakalar.
+      * `/api/deploy/publish`: Gönderilen web uygulamasını UUID ile `data/deployments/{id}.html` dosyasına kaydeder ve anında hem dünya genel internet bağlantısını hem de yerel ağ LAN bağlantısını üretir.
+      * `/share/{id}` & `/p/{id}`: Yayınlanan projeleri doğrudan tarayıcıya sunar, görüntülenme (views) sayaçlarını dinamik olarak artırır.
+      * `/api/deploy/list`: Tüm aktif yayınları, ziyaretçi sayılarını ve genel/yerel bağlantıları listeler.
+      * `/api/deploy/{id}` [DELETE]: İstenen yayını sunucudan ve diskten anında siler.
+      * `/api/deploy/tunnel` & `/api/deploy/tunnel/restart`: Canlı tünel durumunu denetler ve gerekirse tüneli yeniden başlatır.
+    * **Frontend Sandbox & Chat Entegrasyonu (`frontend/src/js/sandbox.js` & `frontend/src/js/app.js`):**
+      * Sohbet alanında üretilen tüm web kod bloklarının sağ üst köşesine ve Canlı Sandbox araç çubuğuna parlak zümrüt yeşili **"🌍 Dünyaya Aç / Paylaş"** butonu eklendi.
+      * Proje yayınlandığında açılan şık karanlık cam modal penceresi:
+        * Dünya Geneli Canlı URL (`https://*.trycloudflare.com/share/{id}`) + Tek tıkla kopyalama.
+        * Yerel Ağ (LAN) Bağlantısı (`http://192.168.0.188:3050/share/{id}`) + Tek tıkla kopyalama.
+        * Canlı QR Kod Oluşturucu (Mobil telefonla anında kameradan tarayıp açabilme).
+        * Yeni sekmede anında açma butonu.
+    * **Kontrol Paneli Entegrasyonu (`frontend/src/admin.html` & `frontend/src/js/admin.js`):**
+      * Kontrol Paneline **"🌍 Canlı Yayınlar & Cloudflare Tüneli"** sekmesi eklendi.
+      * Anlık tünel durumu, aktif genel tünel URL'si, tek tıkla tünel yenileme butonu ve yayınlanan tüm projelerin silme/yönetim tablosu kuruldu.
+    * **Nginx ve Docker Yapılandırması (`frontend/nginx.conf` & `backend/Dockerfile`):**
+      * Nginx'e `/share/` ve `/p/` yönlendirmeleri eklendi.
+      * `backend/Dockerfile` içine bağımsız `cloudflared` debian paketi entegre edildi.
+
+---
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.
-2. **İzole Sandbox:** Yapay zekanın ürettiği JavaScript kodları ve web arayüzleri `sandbox="allow-scripts allow-modals"` yetkileriyle izole bir iframe içinde çalıştırılır, ana web paneline ve çerezlere erişemez.
-3. **SSE Performansı:** Server-Sent Events akışı `proxy_buffering off` ve `GZipMiddleware` ile tamponlama gecikmesi olmadan sıfır gecikmeyle istemciye aktarılır.
+2. **İzole Sandbox & Güvenli Yayın:** Yapay zekanın ürettiği JavaScript kodları ve web arayüzleri `sandbox="allow-scripts allow-modals"` yetkileriyle izole bir iframe içinde çalıştırılır, ana web paneline ve çerezlere erişemez.
+3. **Sıfır Yapılandırmalı Canlı Tünel (Cloudflare Quick Tunnel):** Kullanıcının port açmasına, statik IP almasına veya Cloudflare hesabı bağlamasına gerek kalmadan uçtan uca TLS şifreli `https://*.trycloudflare.com` alan adlarıyla canlı web paylaşımı sağlanır.
+4. **SSE Performansı:** Server-Sent Events akışı `proxy_buffering off` ve `GZipMiddleware` ile tamponlama gecikmesi olmadan sıfır gecikmeyle istemciye aktarılır.
+

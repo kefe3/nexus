@@ -306,13 +306,16 @@ function highlightCodeBlocks() {
             const header = document.createElement("div");
             header.className = "code-header flex items-center justify-between px-3 py-1.5 bg-slate-900/90 border-b border-white/10 text-slate-400 text-xs font-mono rounded-t-xl";
             
-            const isWeb = ["html", "javascript", "js", "svg"].includes(lang) || code.includes("<!DOCTYPE") || code.includes("<html");
+            const isWeb = ["html", "javascript", "js", "svg"].includes(lang) || code.includes("<!DOCTYPE") || code.includes("<html") || code.includes("<body");
             
             header.innerHTML = `
                 <span class="font-bold uppercase text-[11px] text-indigo-400">${lang || "CODE"}</span>
                 <div class="flex items-center gap-2">
                     ${isWeb ? `
-                        <button onclick="openSandbox(decodeURIComponent('${encodeURIComponent(code)}'))" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1 transition-all">
+                        <button onclick="publishDirectCode(decodeURIComponent('${encodeURIComponent(code)}'))" class="px-2 py-0.5 rounded bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1 transition-all" title="Tek tıkla internete ve canlı dünyaya aç">
+                            <i class="fa-solid fa-globe text-[9px]"></i> <span>Dünyaya Aç</span>
+                        </button>
+                        <button onclick="openSandbox(decodeURIComponent('${encodeURIComponent(code)}'))" class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/40 text-[11px] font-bold flex items-center gap-1 transition-all">
                             <i class="fa-solid fa-play text-[9px]"></i> <span>${t("live_preview")}</span>
                         </button>
                     ` : ""}

@@ -82,6 +82,7 @@ function switchSection(secId) {
     if (secId === 'vram') fetchRunningModels();
     if (secId === 'models') fetchInstalledModels();
     if (secId === 'benchmark') populateBenchmarkModels();
+    if (secId === 'deployments') fetchDeployments();
     if (secId === 'providers') testAllProviders();
     if (secId === 'logs') fetchLogs();
 }
@@ -428,6 +429,123 @@ async function fetchLogs() {
     } catch (e) {
         console.error('Error fetching logs:', e);
     }
+}
+
+// Live Deployments & Cloudflare Tunnel Management
+async function fetchDeployments() {
+    const tbody = document.getElementById('deployments-tbody');
+    const pill = document.getElementById('tunnel-status-pill');
+    const inputUrl = document.getElementById('admin-tunnel-url');
+    const linkBtn = document.getElementById('admin-tunnel-link');
+
+    try {
+        const res = await fetch(`${API_BASE}/deploy/list`);
+        const data = await res.json();
+
+        // Update tunnel status
+        if (data.tunnel_active && data.tunnel_url) {
+            pill.className = 'status-pill';
+            pill.style.background = 'rgba(0, 245, 160, 0.12)';
+            pill.style.borderColor = 'rgba(0, 245, 160, 0.3)';
+            pill.style.color = 'var(--accent-green)';
+            pill.innerHTML = '<span class="pulse-dot"></span> Canlı Tünel Yayında';
+
+            inputUrl.value = data.tunnel_url;
+            linkBtn.href = data.tunnel_url;
+            linkBtn.style.display = 'inline-flex';
+        } else {
+            pill.className = 'status-pill';
+            pill.style.background = 'rgba(255, 179, 0, 0.12)';
+            pill.style.borderColor = 'rgba(255, 179, 0, 0.3)';
+            pill.style.color = 'var(--accent-amber)';
+            pill.innerHTML = '<i class="fa-solid fa-clock"></i> Tünel Bekleniyor';
+
+            inputUrl.value = 'http://192.168.0.188:3050 (Yerel Ağ Aktif)';
+            linkBtn.href = 'http://192.168.0.188:3050';
+        }
+
+        // Render table
+        tbody.innerHTML = '';
+        if (data.deployments && data.deployments.length > 0) {
+            document.getElementById('deploy-table-count-badge').textContent = `${data.deployments.length} Proje`;
+            document.getElementById('badge-deployments-count').textContent = data.deployments.length;
+
+            data.deployments.forEach(d => {
+                const tr = document.createElement('tr');
+                const sizeKb = round((d.size_bytes || 0) / 1024, 1);
+                tr.innerHTML = `
+                    <td>
+                        <div style="font-weight: 700; color: #fff;">${escapeHtml(d.title || 'Nexus Web App')}</div>
+                        <div style="font-size: 0.75rem; color: #64748b; font-family: 'JetBrains Mono', monospace;">ID: ${d.id}</div>
+                    </td>
+                    <td>
+                        <a href="${d.public_url}" target="_blank" style="color: var(--accent-green); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-earth-americas text-xs"></i> <span>${d.public_url}</span>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="${d.local_url}" target="_blank" style="color: var(--accent-cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+                            ${d.local_url}
+                        </a>
+                    </td>
+                    <td><span class="badge-size">${sizeKb} KB</span></td>
+                    <td style="color: #94a3b8; font-size: 0.8rem;">${d.created_at || '-'}</td>
+                    <td><span class="badge-model" style="color: var(--accent-amber); border-color: rgba(255,179,0,0.3); background: rgba(255,179,0,0.1);"><i class="fa-regular fa-eye"></i> ${d.views || 0}</span></td>
+                    <td style="text-align: right;">
+                        <button class="btn-danger" onclick="deleteDeployment('${d.id}')">
+                            <i class="fa-solid fa-trash"></i> Sil
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Henüz yayınlanmış bir proje bulunmuyor. AI Studio üzerinden bir web kodu üretip "Dünyaya Aç" butonuna basarak ilk projenizi yayınlayın!</td></tr>`;
+            document.getElementById('badge-deployments-count').textContent = '0';
+        }
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--accent-red);">Yayınlar alınamadı: ${e.message}</td></tr>`;
+    }
+}
+
+async function restartTunnel() {
+    const pill = document.getElementById('tunnel-status-pill');
+    pill.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Tünel Yeniden Başlatılıyor...';
+
+    try {
+        const res = await fetch(`${API_BASE}/deploy/tunnel/restart`, { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            setTimeout(fetchDeployments, 2000);
+        }
+    } catch (e) {
+        alert(`Tünel yeniden başlatılamadı: ${e.message}`);
+    }
+}
+
+async function deleteDeployment(id) {
+    if (!confirm(`'${id}' ID'li yayını silmek istediğinize emin misiniz?`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/deploy/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            fetchDeployments();
+        } else {
+            alert(`Hata: ${data.message}`);
+        }
+    } catch (e) {
+        alert(`Silinemedi: ${e.message}`);
+    }
+}
+
+function round(val, precision) {
+    const factor = Math.pow(10, precision);
+    return Math.round(val * factor) / factor;
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 // Initial Load & Auto Refresh Interval
