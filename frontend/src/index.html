@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus AI Studio — Open Source Self-Hosted AI Platform</title>
+    <title>Nexus AI — Qwen 2.5 Coder (Topcubuntu GPU)</title>
     
     <!-- CDNs -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +14,7 @@
     
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="h-screen flex overflow-hidden antialiased select-none">
+<body class="h-screen flex overflow-hidden antialiased select-none bg-[#06090e]">
 
     <!-- 1. Collapsible Sidebar -->
     <aside id="sidebar" class="w-72 bg-[#0a0f19] border-r border-white/10 flex flex-col justify-between shrink-0 transition-all z-20">
@@ -22,12 +22,12 @@
             <!-- Brand & New Chat -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center text-white shadow-lg">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 flex items-center justify-center text-white shadow-lg">
                         <i class="fa-solid fa-bolt text-sm"></i>
                     </div>
                     <div>
-                        <div class="font-black text-sm tracking-wide text-white" data-i18n="app_title">Nexus AI Studio</div>
-                        <div class="text-[10px] text-indigo-400 font-mono font-bold">v1.0.0 Self-Hosted</div>
+                        <div class="font-black text-sm tracking-wide text-white">Nexus AI</div>
+                        <div class="text-[10px] text-emerald-400 font-mono font-bold">Qwen 2.5 Edition</div>
                     </div>
                 </div>
                 <button onclick="setLanguage(currentLang === 'tr' ? 'en' : 'tr')" id="langToggleBtn" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-white/10 flex items-center gap-1 transition-all">
@@ -35,36 +35,31 @@
                 </button>
             </div>
 
-            <button onclick="createNewChat()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-indigo-500/25 active:scale-95">
+            <button onclick="createNewChat()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-emerald-500/25 active:scale-95">
                 <i class="fa-solid fa-plus text-xs"></i>
-                <span data-i18n="new_chat">Yeni Sohbet</span>
+                <span>Yeni Sohbet</span>
             </button>
 
             <!-- Search Chats -->
             <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-                <input type="text" id="searchChatInput" data-i18n-placeholder="search_chats" placeholder="Sohbetlerde ara..." class="w-full pl-8 pr-3 py-1.5 bg-slate-900/80 border border-white/5 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                <input type="text" id="searchChatInput" placeholder="Sohbetlerde ara..." class="w-full pl-8 pr-3 py-1.5 bg-slate-900/80 border border-white/5 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
             </div>
 
             <!-- Chat History -->
             <div class="space-y-1">
-                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1" data-i18n="history_title">Geçmiş Sohbetler</div>
-                <div id="chatsHistoryList" class="space-y-1 max-h-[calc(100vh-320px)] overflow-y-auto pr-1"></div>
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1">Geçmiş Sohbetler</div>
+                <div id="chatsHistoryList" class="space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto pr-1"></div>
             </div>
         </div>
 
-        <!-- Sidebar Footer -->
-        <div class="p-4 border-t border-white/10 space-y-2">
-            <!-- Dedicated Control Panel Button -->
-            <a href="admin.html" class="w-full py-2.5 px-3 bg-gradient-to-r from-indigo-900/60 to-cyan-950/60 hover:from-indigo-800 hover:to-cyan-900 text-cyan-200 rounded-xl text-xs font-black flex items-center justify-between border border-cyan-500/40 shadow-lg shadow-cyan-950/30 transition-all group">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-gauge-high text-cyan-400 group-hover:scale-110 transition-transform"></i><span data-i18n="control_panel">⚡ Kontrol Paneli</span></span>
-                <span class="text-[9px] font-mono px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded font-bold border border-cyan-500/30">ADMIN</span>
-            </a>
-
-            <button onclick="openSettingsModal()" class="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-between border border-white/5 transition-all">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-gear text-indigo-400"></i><span data-i18n="settings">Ayarlar</span></span>
-                <span class="text-[10px] text-slate-500 font-mono">API Keys</span>
-            </button>
+        <!-- Clean Sidebar Footer (No admin/settings buttons) -->
+        <div class="p-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 font-mono">
+            <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Topcubuntu GPU</span>
+            </span>
+            <span class="text-[10px] text-slate-600">RTX 4060</span>
         </div>
     </aside>
 
@@ -74,25 +69,11 @@
         <!-- Top Navigation Bar -->
         <header class="h-14 border-b border-white/10 px-6 flex items-center justify-between glass-panel z-10 shrink-0">
             <div class="flex items-center gap-3">
-                <!-- Provider Selector -->
-                <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10 text-xs">
-                    <span class="text-slate-500 font-bold" data-i18n="provider">Sağlayıcı:</span>
-                    <select id="providerSelect" onchange="switchProvider(this.value)" class="bg-transparent font-bold text-indigo-300 focus:outline-none cursor-pointer">
-                        <option value="ollama" class="bg-slate-900 text-white">Ollama (Local GPU)</option>
-                        <option value="gemini" class="bg-slate-900 text-white">Google Gemini (Pro/Flash)</option>
-                        <option value="openai" class="bg-slate-900 text-white">OpenAI (GPT-4o)</option>
-                        <option value="groq" class="bg-slate-900 text-white">Groq (300+ tok/s)</option>
-                        <option value="anthropic" class="bg-slate-900 text-white">Anthropic (Claude)</option>
-                        <option value="custom" class="bg-slate-900 text-white">Custom Endpoint</option>
-                    </select>
-                </div>
-
-                <!-- Model Selector -->
-                <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10 text-xs">
-                    <span class="text-slate-500 font-bold" data-i18n="model">Model:</span>
-                    <select id="modelSelect" onchange="switchModel(this.value)" class="bg-transparent font-bold text-cyan-300 focus:outline-none cursor-pointer">
-                        <option value="">Yükleniyor...</option>
-                    </select>
+                <!-- Locked GPU Badge (No dropdowns) -->
+                <div class="flex items-center gap-2 bg-slate-900/90 px-3.5 py-1.5 rounded-xl border border-emerald-500/30 text-xs text-emerald-400 font-bold shadow-md">
+                    <i class="fa-solid fa-microchip text-emerald-400 animate-pulse"></i>
+                    <span>Qwen 2.5 Coder</span>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-mono border border-emerald-500/30">Topcubuntu GPU Offloaded (RTX 4060)</span>
                 </div>
 
                 <!-- Active Persona Badge -->
@@ -100,7 +81,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <button onclick="createNewChat()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all text-xs" data-i18n-title="clear_history">
+                <button onclick="createNewChat()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all text-xs" title="Sohbeti Temizle">
                     <i class="fa-solid fa-rotate-left"></i>
                 </button>
             </div>
@@ -111,38 +92,38 @@
 
         <!-- Welcome Hero View (When no messages) -->
         <div id="welcomeHero" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0 pointer-events-auto">
-            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center text-white text-3xl shadow-2xl mb-4 animate-bounce">
+            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 flex items-center justify-center text-white text-3xl shadow-2xl mb-4 animate-bounce">
                 <i class="fa-solid fa-bolt"></i>
             </div>
-            <h1 class="text-2xl font-black text-white tracking-tight" data-i18n="app_title">Nexus AI Studio</h1>
-            <p class="text-xs text-slate-400 mt-1 max-w-md" data-i18n="sandbox_desc">Açık kaynaklı, çoklu sağlayıcı destekli ve canlı kod çalıştırma yetenekli self-hosted yapay zeka stüdyosu.</p>
+            <h1 class="text-2xl font-black text-white tracking-tight">Qwen 2.5 Coder</h1>
+            <p class="text-xs text-slate-400 mt-1 max-w-md">Topcubuntu Ev Sunucusu (NVIDIA RTX 4060 GPU Offloading) donanım hızıyla çalışan akıllı kod & yanıt asistanı.</p>
 
             <!-- Featured Personas Carousel -->
             <div class="mt-8 max-w-2xl w-full text-left">
-                <div class="text-xs font-bold text-slate-400 mb-2 px-1" data-i18n="presets_title">Öne Çıkan Rol Şablonları</div>
+                <div class="text-xs font-bold text-slate-400 mb-2 px-1">Öne Çıkan Rol Şablonları</div>
                 <div id="presetsCarousel" class="flex gap-3 overflow-x-auto pb-2"></div>
             </div>
         </div>
 
         <!-- Sticky Floating Prompt Input Capsule -->
         <div class="p-4 max-w-4xl w-full mx-auto z-10">
-            <div class="glass-panel p-2.5 rounded-2xl border border-white/10 shadow-2xl focus-within:border-indigo-500 transition-all flex flex-col gap-2">
-                <textarea id="promptInput" rows="1" data-i18n-placeholder="input_placeholder" placeholder="Bir mesaj yazın veya web sitesi/uygulama isteyin... (Shift+Enter yeni satır)" class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none px-3 py-1.5 max-h-44"></textarea>
+            <div class="glass-panel p-2.5 rounded-2xl border border-white/10 shadow-2xl focus-within:border-emerald-500 transition-all flex flex-col gap-2">
+                <textarea id="promptInput" rows="1" placeholder="Bir mesaj yazın veya kod/web uygulaması isteyin... (Shift+Enter yeni satır)" class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none px-3 py-1.5 max-h-44"></textarea>
                 
                 <div class="flex items-center justify-between pt-1 border-t border-white/5">
                     <div class="flex items-center gap-2">
-                        <button onclick="toggleVoice()" id="voiceInputBtn" class="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-800/80 rounded-xl text-xs transition-all" data-i18n-title="voice_start">
+                        <button onclick="toggleVoice()" id="voiceInputBtn" class="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 rounded-xl text-xs transition-all" title="Sesli Konuşma">
                             <i class="fa-solid fa-microphone"></i>
                         </button>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button id="sendBtn" onclick="sendMessage()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-lg transition-all active:scale-95">
-                            <span data-i18n="send">Gönder</span>
+                        <button id="sendBtn" onclick="sendMessage()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-lg transition-all active:scale-95">
+                            <span>Gönder</span>
                             <i class="fa-solid fa-arrow-up text-[10px]"></i>
                         </button>
                         <button id="stopBtn" onclick="stopStreaming()" class="hidden px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-lg transition-all">
-                            <span data-i18n="stop">Durdur</span>
+                            <span>Durdur</span>
                             <i class="fa-solid fa-stop text-[10px]"></i>
                         </button>
                     </div>
@@ -161,16 +142,16 @@
                         <i class="fa-solid fa-play"></i>
                     </div>
                     <div>
-                        <div class="font-bold text-xs text-white" data-i18n="sandbox_title">⚡ Canlı Artifact Sandbox</div>
-                        <div class="text-[10px] text-slate-400" data-i18n="sandbox_desc">HTML/CSS/JS canlı render</div>
+                        <div class="font-bold text-xs text-white">⚡ Canlı Artifact Sandbox</div>
+                        <div class="text-[10px] text-slate-400">HTML/CSS/JS canlı render</div>
                     </div>
                 </div>
 
                 <!-- Responsive Device Switcher -->
                 <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-white/10 text-xs">
-                    <button id="deviceBtn-desktop" onclick="setDeviceMode('desktop')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs" data-i18n="device_desktop">Masaüstü</button>
-                    <button id="deviceBtn-tablet" onclick="setDeviceMode('tablet')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs" data-i18n="device_tablet">Tablet</button>
-                    <button id="deviceBtn-mobile" onclick="setDeviceMode('mobile')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs" data-i18n="device_mobile">Mobil</button>
+                    <button id="deviceBtn-desktop" onclick="setDeviceMode('desktop')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs">Masaüstü</button>
+                    <button id="deviceBtn-tablet" onclick="setDeviceMode('tablet')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs">Tablet</button>
+                    <button id="deviceBtn-mobile" onclick="setDeviceMode('mobile')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs">Mobil</button>
                 </div>
 
                 <!-- Action Controls -->
@@ -179,10 +160,10 @@
                         <i class="fa-solid fa-globe text-xs"></i> <span>Dünyaya Aç / Paylaş</span>
                     </button>
                     <button onclick="runSandboxCode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-rotate-right text-[10px]"></i> <span data-i18n="refresh">Yenile</span>
+                        <i class="fa-solid fa-rotate-right text-[10px]"></i> <span>Yenile</span>
                     </button>
-                    <button onclick="downloadSandboxHtml()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-download text-[10px]"></i> <span data-i18n="download_html">İndir</span>
+                    <button onclick="downloadSandboxHtml()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-download text-[10px]"></i> <span>İndir</span>
                     </button>
                     <button onclick="closeSandbox()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
                         <i class="fa-solid fa-xmark text-sm"></i>
@@ -199,184 +180,13 @@
         </div>
     </div>
 
-    <!-- 4. Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl hidden z-50 items-center justify-center p-4">
-        <div class="w-full max-w-lg bg-[#0c121e] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-gear text-indigo-400 text-sm"></i>
-                    <span class="font-black text-sm text-white" data-i18n="settings_title">Nexus AI Studio Ayarları</span>
-                </div>
-                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <p class="text-xs text-slate-400" data-i18n="api_keys_desc">API anahtarlarınız yalnızca yerel tarayıcınızda saklanır.</p>
-
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="gemini_key">Google Gemini API Key</label>
-                    <input type="password" id="input_key_gemini" placeholder="AIzaSy..." class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="openai_key">OpenAI API Key</label>
-                    <input type="password" id="input_key_openai" placeholder="sk-..." class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="groq_key">Groq API Key</label>
-                    <input type="password" id="input_key_groq" placeholder="gsk_..." class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="anthropic_key">Anthropic Claude API Key</label>
-                    <input type="password" id="input_key_anthropic" placeholder="sk-ant-..." class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="ollama_url">Ollama URL</label>
-                    <input type="text" id="input_url_ollama" placeholder="http://localhost:11434" class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-            </div>
-
-            <div class="pt-3 border-t border-white/10 flex justify-end gap-2">
-                <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold" data-i18n="close">Kapat</button>
-                <button onclick="saveSettings()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black" data-i18n="save_settings">Kaydet</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. Toast Notification -->
-    <div id="toastNotification" class="fixed bottom-6 right-6 px-4 py-3 bg-indigo-600 text-white rounded-2xl text-xs font-bold shadow-2xl border border-indigo-400/40 opacity-0 translate-y-4 pointer-events-none transition-all duration-300 flex items-center gap-2 z-50">
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 px-4 py-3 bg-emerald-600 text-white rounded-2xl text-xs font-bold shadow-2xl border border-emerald-400/40 opacity-0 translate-y-4 pointer-events-none transition-all duration-300 flex items-center gap-2 z-50">
         <i class="fa-solid fa-check-circle text-emerald-300 text-sm"></i>
         <span id="toastText">İşlem tamamlandı!</span>
     </div>
 
-    
-    <!-- 6. Control Panel / Admin Dashboard Modal -->
-    <div id="controlPanelModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-2xl hidden z-50 items-center justify-center p-4 select-text">
-        <div class="w-full max-w-5xl max-h-[92vh] bg-[#0c121e] border border-white/10 rounded-3xl flex flex-col shadow-2xl overflow-hidden">
-            <!-- Header -->
-            <div class="h-16 border-b border-white/10 px-6 flex items-center justify-between bg-slate-900/90 shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center text-white text-sm shadow-lg">
-                        <i class="fa-solid fa-chart-line"></i>
-                    </div>
-                    <div>
-                        <div class="font-black text-sm text-white" data-i18n="control_panel">Nexus AI Kontrol Paneli</div>
-                        <div class="text-[11px] text-indigo-400 font-mono">Sistem Metrikleri, Sağlayıcılar & Trafik Monitörü</div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button onclick="refreshControlPanel()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-rotate-right text-[10px]"></i> <span data-i18n="refresh">Yenile</span>
-                    </button>
-                    <button onclick="closeControlPanel()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
-                        <i class="fa-solid fa-xmark text-base"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Dashboard Content -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <!-- System Hardware Cards -->
-                <div>
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-microchip text-indigo-400"></i> <span data-i18n="system_metrics">Sistem & Donanım Metrikleri</span>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- CPU Card -->
-                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-400 font-bold" data-i18n="cpu_usage">İşlemci (CPU)</span>
-                                <span id="metricCpuText" class="text-white font-mono font-bold">-%</span>
-                            </div>
-                            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="metricCpuBar" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-
-                        <!-- RAM Card -->
-                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-400 font-bold" data-i18n="ram_usage">Bellek (RAM)</span>
-                                <span id="metricRamText" class="text-white font-mono font-bold">-%</span>
-                            </div>
-                            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="metricRamBar" class="bg-cyan-400 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-
-                        <!-- Disk Card -->
-                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-400 font-bold" data-i18n="disk_usage">Disk Alanı</span>
-                                <span id="metricDiskText" class="text-white font-mono font-bold">-%</span>
-                            </div>
-                            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="metricDiskBar" class="bg-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- System Info Bar -->
-                    <div class="mt-3 p-3 rounded-xl bg-slate-950/80 border border-white/5 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-2 font-mono">
-                        <div><span class="text-slate-500">İşletim Sistemi:</span> <strong id="metricOs" class="text-slate-200">-</strong></div>
-                        <div><span class="text-slate-500" data-i18n="server_uptime">Açık Kalma:</span> <strong id="metricUptime" class="text-emerald-300">-</strong></div>
-                    </div>
-                </div>
-
-                <!-- Providers Health Grid -->
-                <div>
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-network-wired text-cyan-400"></i> <span data-i18n="active_providers">Aktif Model Sağlayıcıları</span>
-                    </div>
-                    <div id="providersStatusGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <!-- Loaded dynamically -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
-    <script src="js/dashboard.js"></script>
-    <script src="js/i18n.js"></script>
-    <script src="js/providers.js"></script>
-    <script src="js/sandbox.js"></script>
-    <script src="js/voice.js"></script>
     <script src="js/app.js"></script>
-
-    <script>
-        function openSettingsModal() {
-            document.getElementById("input_key_gemini").value = localStorage.getItem("nexus_key_gemini") || "";
-            document.getElementById("input_key_openai").value = localStorage.getItem("nexus_key_openai") || "";
-            document.getElementById("input_key_groq").value = localStorage.getItem("nexus_key_groq") || "";
-            document.getElementById("input_key_anthropic").value = localStorage.getItem("nexus_key_anthropic") || "";
-            document.getElementById("input_url_ollama").value = localStorage.getItem("nexus_url_ollama") || "http://localhost:11434";
-            document.getElementById("settingsModal").classList.remove("hidden");
-            document.getElementById("settingsModal").classList.add("flex");
-        }
-        function closeSettingsModal() {
-            document.getElementById("settingsModal").classList.add("hidden");
-            document.getElementById("settingsModal").classList.remove("flex");
-        }
-        function saveSettings() {
-            localStorage.setItem("nexus_key_gemini", document.getElementById("input_key_gemini").value.trim());
-            localStorage.setItem("nexus_key_openai", document.getElementById("input_key_openai").value.trim());
-            localStorage.setItem("nexus_key_groq", document.getElementById("input_key_groq").value.trim());
-            localStorage.setItem("nexus_key_anthropic", document.getElementById("input_key_anthropic").value.trim());
-            localStorage.setItem("nexus_url_ollama", document.getElementById("input_url_ollama").value.trim());
-            closeSettingsModal();
-            showToast(t("saved_success"));
-            fetchModelsForActiveProvider();
-        }
-        function switchProvider(prov) {
-            activeProvider = prov;
-            localStorage.setItem("nexus_provider", prov);
-            fetchModelsForActiveProvider();
-        }
-        function switchModel(model) {
-            activeModel = model;
-            localStorage.setItem("nexus_model", model);
-        }
-    </script>
 </body>
 </html>

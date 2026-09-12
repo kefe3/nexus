@@ -4,9 +4,37 @@ let chatsHistory = JSON.parse(localStorage.getItem("nexus_chats") || "[]");
 let currentMessages = [];
 let activeAbortController = null;
 let currentPersonaPrompt = "";
+let activeProvider = "ollama";
+let activeModel = "qwen2.5-coder:7b";
+let currentLang = "tr";
+
+function getProviderHeaders() {
+    return {
+        "X-Provider": "ollama",
+        "X-Session-ID": getSessionId()
+    };
+}
+
+function fetchModelsForActiveProvider() {
+    activeModel = "qwen2.5-coder:7b";
+    activeProvider = "ollama";
+}
+
+function applyTranslations() {}
+function setLanguage(lang) {
+    currentLang = lang;
+}
+function t(key) {
+    const tr = {
+        thinking: "Düşünce Adımları",
+        live_preview: "Canlı Önizleme",
+        copy_code: "Kodu Kopyala",
+        copied: "Kopyalandı!"
+    };
+    return tr[key] || key;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-    applyTranslations();
     initChatInterface();
     loadPresets();
     fetchModelsForActiveProvider();
