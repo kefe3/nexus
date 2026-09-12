@@ -3,31 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Control Panel — Self-Hosted AI Management Suite</title>
+    <title>Nexus AI Control Panel — Cluster Management Suite</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <!-- Chart.js for real-time hardware telemetry -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-control: #07090e;
-            --card-bg: rgba(16, 22, 34, 0.75);
-            --card-border: rgba(255, 255, 255, 0.08);
+            --bg-control: #06080d;
+            --sidebar-bg: #090d15;
+            --card-bg: rgba(14, 20, 32, 0.75);
+            --card-border: rgba(255, 255, 255, 0.07);
             --accent-cyan: #00f2fe;
             --accent-blue: #4facfe;
             --accent-purple: #8a2be2;
             --accent-green: #00f5a0;
+            --accent-amber: #ffb300;
             --accent-red: #ff416c;
-            --text-main: #f0f4f8;
-            --text-muted: #8a99ad;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
         }
+
+        * { box-sizing: border-box; }
 
         body.control-panel-body {
             background-color: var(--bg-control);
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.04) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(138, 43, 226, 0.05) 0%, transparent 40%);
+                radial-gradient(circle at 5% 10%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 95% 90%, rgba(138, 43, 226, 0.06) 0%, transparent 40%),
+                linear-gradient(to bottom, rgba(255,255,255,0.01) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px;
             color: var(--text-main);
             font-family: 'Plus Jakarta Sans', sans-serif;
             margin: 0;
@@ -41,39 +48,43 @@
         /* Top Header */
         .cp-header {
             height: 64px;
-            background: rgba(10, 14, 23, 0.85);
-            backdrop-filter: blur(16px);
+            background: rgba(9, 13, 21, 0.9);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--card-border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 1.5rem;
+            padding: 0 1.75rem;
             z-index: 100;
         }
 
         .cp-logo-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .cp-logo-badge {
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            color: #050811;
-            font-weight: 800;
-            font-size: 0.85rem;
-            padding: 4px 10px;
-            border-radius: 6px;
-            letter-spacing: 0.5px;
+            color: #04060c;
+            font-weight: 900;
+            font-size: 0.82rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            letter-spacing: 0.8px;
             display: flex;
             align-items: center;
             gap: 6px;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
         }
 
         .cp-title {
             font-size: 1.15rem;
-            font-weight: 700;
-            letter-spacing: -0.3px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .cp-header-actions {
@@ -83,56 +94,56 @@
         }
 
         .btn-studio-switch {
-            background: rgba(0, 242, 254, 0.12);
-            border: 1px solid rgba(0, 242, 254, 0.3);
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(79, 172, 254, 0.08));
+            border: 1px solid rgba(0, 242, 254, 0.35);
             color: var(--accent-cyan);
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.85rem;
-            padding: 7px 14px;
-            border-radius: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: all 0.25s ease;
         }
 
         .btn-studio-switch:hover {
-            background: rgba(0, 242, 254, 0.22);
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(79, 172, 254, 0.15));
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
             transform: translateY(-1px);
         }
 
         .status-pill {
             display: flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(0, 245, 160, 0.1);
+            gap: 7px;
+            background: rgba(0, 245, 160, 0.08);
             border: 1px solid rgba(0, 245, 160, 0.25);
             color: var(--accent-green);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 5px 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 6px 12px;
             border-radius: 20px;
         }
 
         .pulse-dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: var(--accent-green);
-            box-shadow: 0 0 8px var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
             animation: pulse-animation 2s infinite;
         }
 
         @keyframes pulse-animation {
             0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 245, 160, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 245, 160, 0); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(0, 245, 160, 0); }
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 245, 160, 0); }
         }
 
-        /* Main Workspace */
+        /* Main Layout */
         .cp-workspace {
             display: flex;
             flex: 1;
@@ -142,24 +153,34 @@
 
         /* Sidebar Navigation */
         .cp-sidebar {
-            width: 240px;
-            background: rgba(12, 17, 27, 0.6);
+            width: 250px;
+            background: var(--sidebar-bg);
             border-right: 1px solid var(--card-border);
-            padding: 1.25rem 0.75rem;
+            padding: 1.25rem 0.85rem;
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
+        .cp-sidebar-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 8px 12px 4px 12px;
+            margin-top: 6px;
+        }
+
         .cp-nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: 8px;
+            justify-content: space-between;
+            padding: 11px 14px;
+            border-radius: 10px;
             color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.88rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             border: 1px solid transparent;
@@ -172,9 +193,14 @@
 
         .cp-nav-item.active {
             color: #fff;
-            background: linear-gradient(90deg, rgba(0, 242, 254, 0.15), rgba(79, 172, 254, 0.05));
-            border-color: rgba(0, 242, 254, 0.25);
-            font-weight: 600;
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.16), rgba(79, 172, 254, 0.05));
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+
+        .cp-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .cp-nav-item i {
@@ -183,18 +209,27 @@
             text-align: center;
         }
 
+        .nav-badge {
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 2px 7px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+        }
+
         /* Content Area */
         .cp-content {
             flex: 1;
             overflow-y: auto;
-            padding: 1.75rem 2rem;
+            padding: 2rem 2.5rem;
         }
 
         .cp-section {
             display: none;
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.25s ease;
         }
 
         .cp-section.active {
@@ -207,25 +242,29 @@
         }
 
         .cp-section-header {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.75rem;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
         }
 
         .cp-section-title {
-            font-size: 1.4rem;
-            font-weight: 700;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.4px;
             margin: 0 0 4px 0;
         }
 
         .cp-section-desc {
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             margin: 0;
         }
 
         /* Metric Grid */
         .metric-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.25rem;
             margin-bottom: 1.75rem;
         }
@@ -233,11 +272,11 @@
         .metric-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 1.25rem;
+            border-radius: 14px;
+            padding: 1.35rem;
             position: relative;
             overflow: hidden;
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(14px);
         }
 
         .metric-card::before {
@@ -248,22 +287,22 @@
             right: 0;
             height: 3px;
             background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
         .metric-label {
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
         .metric-value {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: 800;
             margin: 10px 0 4px 0;
             font-family: 'JetBrains Mono', monospace;
@@ -271,15 +310,15 @@
         }
 
         .metric-sub {
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
         }
 
         .progress-bar-bg {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.07);
             border-radius: 6px;
             height: 6px;
-            margin-top: 10px;
+            margin-top: 12px;
             overflow: hidden;
         }
 
@@ -290,20 +329,20 @@
             transition: width 0.4s ease;
         }
 
-        /* Glass Cards & Tables */
+        /* Glass Panels & Tables */
         .glass-panel {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            backdrop-filter: blur(12px);
+            margin-bottom: 1.75rem;
+            backdrop-filter: blur(14px);
         }
 
         .glass-panel-title {
             font-size: 1.1rem;
             font-weight: 700;
-            margin: 0 0 1rem 0;
+            margin: 0 0 1.25rem 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -317,17 +356,17 @@
 
         .custom-table th {
             text-align: left;
-            padding: 10px 14px;
+            padding: 12px 14px;
             color: var(--text-muted);
-            font-weight: 600;
+            font-weight: 700;
             border-bottom: 1px solid var(--card-border);
             text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
+            font-size: 0.74rem;
+            letter-spacing: 0.6px;
         }
 
         .custom-table td {
-            padding: 12px 14px;
+            padding: 14px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
@@ -336,9 +375,19 @@
         }
 
         .badge-model {
-            background: rgba(0, 242, 254, 0.1);
+            background: rgba(0, 242, 254, 0.12);
             color: var(--accent-cyan);
-            border: 1px solid rgba(0, 242, 254, 0.25);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            padding: 4px 9px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .badge-size {
+            background: rgba(255, 255, 255, 0.07);
+            color: #e2e8f0;
             padding: 3px 8px;
             border-radius: 6px;
             font-family: 'JetBrains Mono', monospace;
@@ -346,38 +395,29 @@
             font-weight: 600;
         }
 
-        .badge-size {
-            background: rgba(255, 255, 255, 0.06);
-            color: #d1d5db;
-            padding: 2px 7px;
-            border-radius: 4px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-        }
-
-        /* Form Inputs */
+        /* Inputs & Buttons */
         .form-row {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 1rem;
         }
 
         .custom-input {
             flex: 1;
-            background: rgba(0, 0, 0, 0.35);
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 10px 14px;
+            border-radius: 10px;
+            padding: 11px 16px;
             color: #fff;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 0.9rem;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
 
         .custom-input:focus {
             border-color: var(--accent-cyan);
-            box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
         }
 
         .btn-action {
@@ -385,8 +425,8 @@
             color: #050811;
             font-weight: 700;
             border: none;
-            border-radius: 8px;
-            padding: 10px 18px;
+            border-radius: 10px;
+            padding: 11px 20px;
             cursor: pointer;
             font-size: 0.88rem;
             display: flex;
@@ -396,44 +436,106 @@
         }
 
         .btn-action:hover {
-            opacity: 0.92;
+            opacity: 0.94;
             transform: translateY(-1px);
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+            box-shadow: 0 0 18px rgba(0, 242, 254, 0.45);
         }
 
         .btn-danger {
             background: rgba(255, 65, 108, 0.15);
             color: #ff4b2b;
-            border: 1px solid rgba(255, 65, 108, 0.3);
-            border-radius: 6px;
-            padding: 5px 10px;
+            border: 1px solid rgba(255, 65, 108, 0.35);
+            border-radius: 8px;
+            padding: 6px 12px;
             cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: 700;
             transition: all 0.2s;
         }
 
         .btn-danger:hover {
-            background: rgba(255, 65, 108, 0.3);
+            background: rgba(255, 65, 108, 0.35);
+            box-shadow: 0 0 10px rgba(255, 65, 108, 0.4);
         }
 
         .quick-tag {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-muted);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.78rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
             font-family: 'JetBrains Mono', monospace;
         }
 
         .quick-tag:hover {
-            background: rgba(0, 242, 254, 0.1);
+            background: rgba(0, 242, 254, 0.12);
             color: var(--accent-cyan);
-            border-color: rgba(0, 242, 254, 0.3);
+            border-color: rgba(0, 242, 254, 0.35);
+            transform: translateY(-1px);
         }
+
+        /* Benchmark Arena Box */
+        .benchmark-card {
+            background: rgba(10, 15, 25, 0.9);
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .bench-stat-badge {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--card-border);
+            padding: 10px 14px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .bench-stat-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-cyan);
+        }
+
+        .bench-stat-lbl {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        .log-terminal {
+            background: #04060b;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.84rem;
+            height: 420px;
+            overflow-y: auto;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .log-line {
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .log-time { color: #475569; }
+        .log-tag { font-weight: 700; padding: 2px 7px; border-radius: 5px; font-size: 0.74rem; }
+        .log-tag.success { background: rgba(0, 245, 160, 0.15); color: var(--accent-green); border: 1px solid rgba(0, 245, 160, 0.3); }
+        .log-tag.error { background: rgba(255, 65, 108, 0.15); color: var(--accent-red); border: 1px solid rgba(255, 65, 108, 0.3); }
 
         /* Provider Cards */
         .provider-cards-grid {
@@ -445,16 +547,16 @@
         .provider-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 1.25rem;
-            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            padding: 1.35rem;
+            backdrop-filter: blur(14px);
         }
 
         .provider-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .provider-icon-title {
@@ -464,30 +566,6 @@
             font-weight: 700;
             font-size: 1rem;
         }
-
-        .log-terminal {
-            background: #04060a;
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-            height: 380px;
-            overflow-y: auto;
-            color: #a0aec0;
-            line-height: 1.6;
-        }
-
-        .log-line {
-            margin-bottom: 6px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            padding-bottom: 4px;
-        }
-
-        .log-time { color: #4a5568; margin-right: 8px; }
-        .log-tag { font-weight: 600; padding: 1px 5px; border-radius: 4px; font-size: 0.75rem; margin-right: 8px; }
-        .log-tag.success { background: rgba(0, 245, 160, 0.15); color: var(--accent-green); }
-        .log-tag.error { background: rgba(255, 65, 108, 0.15); color: var(--accent-red); }
     </style>
 </head>
 <body class="control-panel-body">
@@ -496,7 +574,7 @@
     <header class="cp-header">
         <div class="cp-logo-group">
             <span class="cp-logo-badge"><i class="fa-solid fa-bolt"></i> NEXUS CP</span>
-            <span class="cp-title">AI Cluster Control Panel</span>
+            <span class="cp-title">AI Cluster Control Panel <span style="font-size: 0.75rem; color: #64748b; font-family: 'JetBrains Mono', monospace;">v2.0</span></span>
         </div>
 
         <div class="cp-header-actions">
@@ -505,13 +583,13 @@
                 <span id="server-ping-text">Server Online (2ms)</span>
             </div>
 
-            <button class="btn-action" style="padding: 7px 14px; font-size: 0.82rem; background: rgba(255,255,255,0.06); color:#fff; border: 1px solid var(--card-border);" onclick="fetchOverview()">
-                <i class="fa-solid fa-rotate"></i> <span data-i18n="refresh">Yenile</span>
+            <button class="btn-action" style="padding: 8px 14px; font-size: 0.82rem; background: rgba(255,255,255,0.06); color:#fff; border: 1px solid var(--card-border);" onclick="fetchOverview()">
+                <i class="fa-solid fa-rotate"></i> <span>Yenile</span>
             </button>
 
             <a href="index.html" class="btn-studio-switch">
                 <i class="fa-solid fa-comments"></i>
-                <span data-i18n="switch_studio">💬 AI Studio'ya Geç</span>
+                <span>💬 AI Studio'ya Geç</span>
             </a>
         </div>
     </header>
@@ -520,25 +598,35 @@
     <div class="cp-workspace">
         <!-- Sidebar Navigation -->
         <aside class="cp-sidebar">
+            <div class="cp-sidebar-label">MONİTÖR & TELEMETRİ</div>
             <div class="cp-nav-item active" onclick="switchSection('overview')">
-                <i class="fa-solid fa-gauge-high"></i>
-                <span data-i18n="nav_overview">Genel Bakış</span>
+                <div class="cp-nav-left"><i class="fa-solid fa-gauge-high" style="color: var(--accent-cyan);"></i><span>Genel Bakış</span></div>
+                <span class="nav-badge" id="badge-cpu-load">-%</span>
             </div>
+            <div class="cp-nav-item" onclick="switchSection('vram')">
+                <div class="cp-nav-left"><i class="fa-solid fa-microchip" style="color: var(--accent-green);"></i><span>VRAM & Bellek</span></div>
+                <span class="nav-badge" id="badge-vram-count">0 Aktif</span>
+            </div>
+
+            <div class="cp-sidebar-label">MODEL & BENCHMARK</div>
             <div class="cp-nav-item" onclick="switchSection('models')">
-                <i class="fa-solid fa-cubes-stacked"></i>
-                <span data-i18n="nav_models">Model Merkezi</span>
+                <div class="cp-nav-left"><i class="fa-solid fa-cubes-stacked" style="color: var(--accent-blue);"></i><span>Model Merkezi</span></div>
+                <span class="nav-badge" id="badge-models-count">-</span>
             </div>
+            <div class="cp-nav-item" onclick="switchSection('benchmark')">
+                <div class="cp-nav-left"><i class="fa-solid fa-stopwatch-20" style="color: var(--accent-amber);"></i><span>Hız & Benchmark</span></div>
+                <span class="nav-badge" style="color: var(--accent-amber);">ARENA</span>
+            </div>
+
+            <div class="cp-sidebar-label">YÖNETİM & LOGLAR</div>
             <div class="cp-nav-item" onclick="switchSection('providers')">
-                <i class="fa-solid fa-network-wired"></i>
-                <span data-i18n="nav_providers">Sağlayıcılar & API</span>
+                <div class="cp-nav-left"><i class="fa-solid fa-network-wired" style="color: var(--accent-purple);"></i><span>Sağlayıcılar & API</span></div>
             </div>
             <div class="cp-nav-item" onclick="switchSection('logs')">
-                <i class="fa-solid fa-terminal"></i>
-                <span data-i18n="nav_logs">İstek Günlükleri</span>
+                <div class="cp-nav-left"><i class="fa-solid fa-terminal" style="color: var(--accent-red);"></i><span>Canlı Loglar</span></div>
             </div>
             <div class="cp-nav-item" onclick="switchSection('system')">
-                <i class="fa-solid fa-server"></i>
-                <span data-i18n="nav_system">Sistem & Docker</span>
+                <div class="cp-nav-left"><i class="fa-brands fa-docker" style="color: #0db7ed;"></i><span>Konteyner Mimarisi</span></div>
             </div>
         </aside>
 
@@ -548,8 +636,10 @@
             <!-- 1. OVERVIEW SECTION -->
             <section id="sec-overview" class="cp-section active">
                 <div class="cp-section-header">
-                    <h2 class="cp-section-title" data-i18n="overview_title">Sistem & AI Kümesi Genel Bakış</h2>
-                    <p class="cp-section-desc" data-i18n="overview_desc">Sunucu donanım kaynakları, yapay zeka çıkarım motoru ve anlık yük durumu.</p>
+                    <div>
+                        <h2 class="cp-section-title">Sistem & AI Kümesi Genel Bakış</h2>
+                        <p class="cp-section-desc">Sunucu donanım kaynakları, yapay zeka çıkarım motoru ve anlık yük durumu.</p>
+                    </div>
                 </div>
 
                 <!-- Hardware Metrics Grid -->
@@ -603,13 +693,24 @@
                     </div>
                 </div>
 
+                <!-- Real-Time Telemetry Graph -->
+                <div class="glass-panel">
+                    <h3 class="glass-panel-title">
+                        <span><i class="fa-solid fa-chart-area" style="color: var(--accent-cyan); margin-right: 8px;"></i> Canlı Donanım Telemetrisi (CPU & RAM Trendi)</span>
+                        <span style="font-size: 0.78rem; color: #64748b; font-family: 'JetBrains Mono', monospace;">5s Polling Rate</span>
+                    </h3>
+                    <div style="height: 220px; position: relative;">
+                        <canvas id="telemetryChart"></canvas>
+                    </div>
+                </div>
+
                 <!-- Server Info Panel -->
                 <div class="glass-panel">
                     <h3 class="glass-panel-title">
                         <span><i class="fa-solid fa-circle-info" style="color: var(--accent-cyan); margin-right: 8px;"></i> Sunucu & Çalışma Bilgisi</span>
                         <span class="badge-model" id="val-uptime">Çalışma Süresi: -</span>
                     </h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; font-size: 0.9rem; color: #cbd5e1;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; font-size: 0.9rem; color: #cbd5e1;">
                         <div><strong>İşletim Sistemi:</strong> <span id="val-os" style="color: #94a3b8;">-</span></div>
                         <div><strong>Sunucu Adı:</strong> <span id="val-hostname" style="color: #94a3b8;">-</span></div>
                         <div><strong>Python Runtime:</strong> <span id="val-python" style="color: #94a3b8;">-</span></div>
@@ -618,11 +719,44 @@
                 </div>
             </section>
 
-            <!-- 2. MODELS SECTION -->
+            <!-- 2. VRAM & RUNNING MODELS SECTION -->
+            <section id="sec-vram" class="cp-section">
+                <div class="cp-section-header">
+                    <div>
+                        <h2 class="cp-section-title">VRAM & Bellekte Yüklü Modeller</h2>
+                        <p class="cp-section-desc">Şu anda GPU/RAM belleğinde yüklü ve anında yanıt vermeye hazır olan modeller.</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel">
+                    <h3 class="glass-panel-title">
+                        <span><i class="fa-solid fa-microchip" style="color: var(--accent-green); margin-right: 8px;"></i> Aktif VRAM Bellek Tahsisi</span>
+                        <button class="btn-danger" onclick="fetchRunningModels()"><i class="fa-solid fa-rotate"></i> Yenile</button>
+                    </h3>
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Model Adı</th>
+                                <th>VRAM Kullanımı</th>
+                                <th>Toplam Bellek</th>
+                                <th>Bitiş Zamanı</th>
+                                <th style="text-align: right;">Bellekten Boşalt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vram-models-tbody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Kontrol ediliyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 3. MODELS SECTION -->
             <section id="sec-models" class="cp-section">
                 <div class="cp-section-header">
-                    <h2 class="cp-section-title">Ollama Model Merkezi</h2>
-                    <p class="cp-section-desc">Sunucunuzdaki yerel modelleri yönetin, yeni modeller indirin veya kaldırın.</p>
+                    <div>
+                        <h2 class="cp-section-title">Ollama Model Merkezi</h2>
+                        <p class="cp-section-desc">Sunucunuzdaki yerel modelleri yönetin, yeni modeller indirin veya kaldırın.</p>
+                    </div>
                 </div>
 
                 <!-- Pull Model Form -->
@@ -633,15 +767,15 @@
                         <button class="btn-action" id="btn-pull-submit" onclick="pullModel()"><i class="fa-solid fa-download"></i> İndir</button>
                     </div>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-                        <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Hızlı Seçim:</span>
-                        <span class="quick-tag" onclick="setPullName('deepseek-r1:8b')">deepseek-r1:8b</span>
-                        <span class="quick-tag" onclick="setPullName('qwen2.5-coder:7b')">qwen2.5-coder:7b</span>
-                        <span class="quick-tag" onclick="setPullName('qwen2.5:7b')">qwen2.5:7b</span>
-                        <span class="quick-tag" onclick="setPullName('deepseek-coder-v2:16b')">deepseek-coder-v2:16b</span>
-                        <span class="quick-tag" onclick="setPullName('llama3.2:3b')">llama3.2:3b</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Önerilen Modeller:</span>
+                        <span class="quick-tag" onclick="setPullName('deepseek-r1:8b')">deepseek-r1:8b (Akıl Yürütme)</span>
+                        <span class="quick-tag" onclick="setPullName('qwen2.5-coder:7b')">qwen2.5-coder:7b (Kodlama)</span>
+                        <span class="quick-tag" onclick="setPullName('qwen2.5:7b')">qwen2.5:7b (Genel Chat)</span>
+                        <span class="quick-tag" onclick="setPullName('deepseek-coder-v2:16b')">deepseek-coder-v2:16b (Uzman)</span>
+                        <span class="quick-tag" onclick="setPullName('llama3.2:3b')">llama3.2:3b (Hafif)</span>
                         <span class="quick-tag" onclick="setPullName('codellama:7b')">codellama:7b</span>
                     </div>
-                    <div id="pull-status-box" style="display: none; margin-top: 12px; padding: 10px; border-radius: 8px; font-size: 0.85rem;"></div>
+                    <div id="pull-status-box" style="display: none; margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 0.85rem;"></div>
                 </div>
 
                 <!-- Installed Models Table -->
@@ -654,9 +788,9 @@
                         <thead>
                             <tr>
                                 <th>Model Adı</th>
-                                <th>Boyut</th>
-                                <th>Format / Digest</th>
-                                <th>Son Güncelleme</th>
+                                <th>Parametre / Boyut</th>
+                                <th>Kuantizasyon</th>
+                                <th>Format</th>
                                 <th style="text-align: right;">İşlem</th>
                             </tr>
                         </thead>
@@ -667,11 +801,53 @@
                 </div>
             </section>
 
-            <!-- 3. PROVIDERS SECTION -->
+            <!-- 4. BENCHMARK SECTION -->
+            <section id="sec-benchmark" class="cp-section">
+                <div class="cp-section-header">
+                    <div>
+                        <h2 class="cp-section-title">⚡ Model Hız & Benchmark Arenası</h2>
+                        <p class="cp-section-desc">Sunucudaki yerel modellerin saniyede ürettiği token (tok/s) hızını ve gecikmesini test edin.</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel">
+                    <div class="form-row">
+                        <select id="bench-model-select" class="custom-input" style="flex: 0.4;">
+                            <option value="">Model Seçin...</option>
+                        </select>
+                        <input type="text" id="bench-prompt-input" class="custom-input" value="Python ile binary search algoritmasını yaz ve karmaşıklığını açıkla." placeholder="Test istemi girin...">
+                        <button class="btn-action" id="btn-bench-run" onclick="runBenchmark()"><i class="fa-solid fa-play"></i> Hız Testini Başlat</button>
+                    </div>
+
+                    <div id="bench-result-container" style="display: none;" class="benchmark-card">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                            <div class="bench-stat-badge">
+                                <div class="bench-stat-val" id="bench-tok-sec">-</div>
+                                <div class="bench-stat-lbl">Token / Saniye</div>
+                            </div>
+                            <div class="bench-stat-badge">
+                                <div class="bench-stat-val" id="bench-total-time">-</div>
+                                <div class="bench-stat-lbl">Toplam Süre (ms)</div>
+                            </div>
+                            <div class="bench-stat-badge">
+                                <div class="bench-stat-val" id="bench-total-tokens">-</div>
+                                <div class="bench-stat-lbl">Üretilen Token</div>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 6px; font-weight: 700;">ÇIKTI ÖNİZLEMESİ:</div>
+                        <div id="bench-preview-text" style="background: #000; padding: 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #cbd5e1; max-height: 180px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. PROVIDERS SECTION -->
             <section id="sec-providers" class="cp-section">
                 <div class="cp-section-header">
-                    <h2 class="cp-section-title">Yapay Zeka Sağlayıcıları & API Ayarları</h2>
-                    <p class="cp-section-desc">Yerel Ollama, Google Gemini 2.0, OpenAI GPT-4o ve Groq bağlantılarını test edin ve yapılandırın.</p>
+                    <div>
+                        <h2 class="cp-section-title">Yapay Zeka Sağlayıcıları & API Ayarları</h2>
+                        <p class="cp-section-desc">Yerel Ollama, Google Gemini 2.0, OpenAI GPT-4o ve Groq bağlantılarını test edin ve yapılandırın.</p>
+                    </div>
                 </div>
 
                 <div class="provider-cards-grid">
@@ -682,7 +858,7 @@
                                 <i class="fa-solid fa-hard-drive" style="color: var(--accent-green);"></i>
                                 <span>Ollama (Yerel GPU)</span>
                             </div>
-                            <button class="btn-action" style="padding: 4px 10px; font-size: 0.78rem;" onclick="testProvider('ollama')">Test Et</button>
+                            <button class="btn-action" style="padding: 5px 12px; font-size: 0.78rem;" onclick="testProvider('ollama')">Ping Test</button>
                         </div>
                         <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Sunucu yerel GPU hızlandırmalı açık kaynak model motoru.</p>
                         <div id="test-result-ollama" style="font-size: 0.82rem; color: #a0aec0;">Durum: Kontrol ediliyor...</div>
@@ -695,9 +871,9 @@
                                 <i class="fa-brands fa-google" style="color: var(--accent-cyan);"></i>
                                 <span>Google Gemini 2.0</span>
                             </div>
-                            <button class="btn-action" style="padding: 4px 10px; font-size: 0.78rem;" onclick="testProvider('gemini')">Test Et</button>
+                            <button class="btn-action" style="padding: 5px 12px; font-size: 0.78rem;" onclick="testProvider('gemini')">Ping Test</button>
                         </div>
-                        <input type="password" id="input-api-gemini" class="custom-input" style="font-size: 0.8rem; padding: 6px 10px; margin-bottom: 8px;" placeholder="AI Studio Gemini API Key" onchange="saveKey('gemini', this.value)">
+                        <input type="password" id="input-api-gemini" class="custom-input" style="font-size: 0.8rem; padding: 8px 12px; margin-bottom: 8px;" placeholder="AI Studio Gemini API Key" onchange="saveKey('gemini', this.value)">
                         <div id="test-result-gemini" style="font-size: 0.82rem; color: #a0aec0;">Durum: API Key bekleniyor</div>
                     </div>
 
@@ -708,9 +884,9 @@
                                 <i class="fa-solid fa-brain" style="color: var(--accent-purple);"></i>
                                 <span>OpenAI (GPT-4o)</span>
                             </div>
-                            <button class="btn-action" style="padding: 4px 10px; font-size: 0.78rem;" onclick="testProvider('openai')">Test Et</button>
+                            <button class="btn-action" style="padding: 5px 12px; font-size: 0.78rem;" onclick="testProvider('openai')">Ping Test</button>
                         </div>
-                        <input type="password" id="input-api-openai" class="custom-input" style="font-size: 0.8rem; padding: 6px 10px; margin-bottom: 8px;" placeholder="OpenAI API Key (sk-...)" onchange="saveKey('openai', this.value)">
+                        <input type="password" id="input-api-openai" class="custom-input" style="font-size: 0.8rem; padding: 8px 12px; margin-bottom: 8px;" placeholder="OpenAI API Key (sk-...)" onchange="saveKey('openai', this.value)">
                         <div id="test-result-openai" style="font-size: 0.82rem; color: #a0aec0;">Durum: API Key bekleniyor</div>
                     </div>
 
@@ -718,22 +894,25 @@
                     <div class="provider-card">
                         <div class="provider-header">
                             <div class="provider-icon-title">
-                                <i class="fa-solid fa-bolt-lightning" style="color: #ff9900;"></i>
+                                <i class="fa-solid fa-bolt-lightning" style="color: var(--accent-amber);"></i>
                                 <span>Groq (Ultra Hızlı LPU)</span>
                             </div>
-                            <button class="btn-action" style="padding: 4px 10px; font-size: 0.78rem;" onclick="testProvider('groq')">Test Et</button>
+                            <button class="btn-action" style="padding: 5px 12px; font-size: 0.78rem;" onclick="testProvider('groq')">Ping Test</button>
                         </div>
-                        <input type="password" id="input-api-groq" class="custom-input" style="font-size: 0.8rem; padding: 6px 10px; margin-bottom: 8px;" placeholder="Groq API Key (gsk-...)" onchange="saveKey('groq', this.value)">
+                        <input type="password" id="input-api-groq" class="custom-input" style="font-size: 0.8rem; padding: 8px 12px; margin-bottom: 8px;" placeholder="Groq API Key (gsk-...)" onchange="saveKey('groq', this.value)">
                         <div id="test-result-groq" style="font-size: 0.82rem; color: #a0aec0;">Durum: API Key bekleniyor</div>
                     </div>
                 </div>
             </section>
 
-            <!-- 4. LOGS SECTION -->
+            <!-- 6. LOGS SECTION -->
             <section id="sec-logs" class="cp-section">
                 <div class="cp-section-header">
-                    <h2 class="cp-section-title">Canlı İstek & Çıkarım Günlükleri</h2>
-                    <p class="cp-section-desc">Nexus AI Studio üzerinden yapılan API istekleri, model gecikme süreleri ve işlem günlükleri.</p>
+                    <div>
+                        <h2 class="cp-section-title">Canlı İstek & Çıkarım Günlükleri</h2>
+                        <p class="cp-section-desc">Nexus AI Studio üzerinden yapılan API istekleri, model gecikme süreleri ve işlem günlükleri.</p>
+                    </div>
+                    <button class="btn-action" style="padding: 8px 14px; font-size: 0.82rem;" onclick="fetchLogs()"><i class="fa-solid fa-rotate"></i> Yenile</button>
                 </div>
 
                 <div class="log-terminal" id="log-terminal-output">
@@ -741,11 +920,13 @@
                 </div>
             </section>
 
-            <!-- 5. SYSTEM & DOCKER SECTION -->
+            <!-- 7. SYSTEM & DOCKER SECTION -->
             <section id="sec-system" class="cp-section">
                 <div class="cp-section-header">
-                    <h2 class="cp-section-title">Sistem & Docker Container Durumu</h2>
-                    <p class="cp-section-desc">Konteyner mimarisi, port yönlendirmeleri ve servis bilgileri.</p>
+                    <div>
+                        <h2 class="cp-section-title">Konteyner Mimarisi & Servisler</h2>
+                        <p class="cp-section-desc">Konteyner mimarisi, port yönlendirmeleri ve servis durumları.</p>
+                    </div>
                 </div>
 
                 <div class="glass-panel">

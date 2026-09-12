@@ -1,6 +1,69 @@
-// Nexus AI Studio — Admin Control Panel Logic
+// Nexus AI Studio — Admin Control Panel v2.0 Engine
 
 const API_BASE = '/api';
+let telemetryChart = null;
+let chartLabels = [];
+let cpuData = [];
+let ramData = [];
+
+// Initialize Telemetry Chart
+function initTelemetryChart() {
+    const ctx = document.getElementById('telemetryChart');
+    if (!ctx) return;
+
+    telemetryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [
+                {
+                    label: 'CPU Kullanımı (%)',
+                    data: cpuData,
+                    borderColor: '#00f2fe',
+                    backgroundColor: 'rgba(0, 242, 254, 0.08)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 2,
+                    pointBackgroundColor: '#00f2fe'
+                },
+                {
+                    label: 'RAM Kullanımı (%)',
+                    data: ramData,
+                    borderColor: '#8a2be2',
+                    backgroundColor: 'rgba(138, 43, 226, 0.06)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 2,
+                    pointBackgroundColor: '#8a2be2'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 300 },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                    ticks: { color: '#64748b', font: { size: 10, family: 'JetBrains Mono' } }
+                },
+                y: {
+                    min: 0,
+                    max: 100,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { size: 10, family: 'JetBrains Mono' } }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#cbd5e1', font: { size: 11, family: 'Plus Jakarta Sans', weight: 'bold' } }
+                }
+            }
+        }
+    });
+}
 
 // Switch Navigation Section
 function switchSection(secId) {
@@ -16,7 +79,9 @@ function switchSection(secId) {
     if (targetSec) targetSec.classList.add('active');
 
     if (secId === 'overview') fetchOverview();
+    if (secId === 'vram') fetchRunningModels();
     if (secId === 'models') fetchInstalledModels();
+    if (secId === 'benchmark') populateBenchmarkModels();
     if (secId === 'providers') testAllProviders();
     if (secId === 'logs') fetchLogs();
 }
@@ -37,6 +102,7 @@ async function fetchOverview() {
             document.getElementById('val-cpu').textContent = `${h.cpu_percent}%`;
             document.getElementById('val-cpu-cores').textContent = `${h.cpu_cores} Çekirdek (${h.cpu_freq_mhz} MHz)`;
             document.getElementById('bar-cpu').style.width = `${Math.min(100, h.cpu_percent)}%`;
+            document.getElementById('badge-cpu-load').textContent = `${h.cpu_percent}%`;
 
             // RAM
             document.getElementById('val-ram').textContent = `${h.ram_percent}%`;
@@ -50,6 +116,8 @@ async function fetchOverview() {
 
             // AI Cluster
             document.getElementById('val-models-count').textContent = a.ollama_models_count;
+            document.getElementById('badge-models-count').textContent = a.ollama_models_count;
+            document.getElementById('badge-vram-count').textContent = `${a.ollama_active_vram_models || 0} Aktif`;
             document.getElementById('val-ollama-status').textContent = a.ollama_status === 'online' ? 'Ollama GPU Aktif (2ms)' : 'Ollama Bağlantısı Yok';
 
             // Server details
@@ -60,10 +128,74 @@ async function fetchOverview() {
             document.getElementById('val-net').textContent = `⬇ ${h.net_recv_mb} MB | ⬆ ${h.net_sent_mb} MB`;
             
             document.getElementById('server-ping-text').textContent = `Server Online (${data.timestamp.split(' ')[1]})`;
+
+            // Update Chart
+            if (data.telemetry_history && telemetryChart) {
+                chartLabels.length = 0;
+                cpuData.length = 0;
+                ramData.length = 0;
+                data.telemetry_history.forEach(pt => {
+                    chartLabels.push(pt.time);
+                    cpuData.push(pt.cpu);
+                    ramData.push(pt.ram);
+                });
+                telemetryChart.update();
+            }
         }
     } catch (e) {
         console.error('Error fetching overview:', e);
         document.getElementById('server-ping-text').textContent = 'Server Bağlantı Hatası';
+    }
+}
+
+// Fetch Running VRAM Models
+async function fetchRunningModels() {
+    const tbody = document.getElementById('vram-models-tbody');
+    try {
+        const res = await fetch(`${API_BASE}/admin/models/running`);
+        const data = await res.json();
+        tbody.innerHTML = '';
+
+        if (data.running_models && data.running_models.length > 0) {
+            document.getElementById('badge-vram-count').textContent = `${data.running_models.length} Aktif`;
+            data.running_models.forEach(m => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="badge-model"><i class="fa-solid fa-cube"></i> ${m.name}</span></td>
+                    <td><span class="badge-size" style="background: rgba(0,245,160,0.15); color: var(--accent-green);">${m.size_vram_gb} GB VRAM</span></td>
+                    <td><span class="badge-size">${m.size_total_gb} GB</span></td>
+                    <td style="color: #94a3b8; font-size: 0.8rem;">${m.expires_at ? m.expires_at.split('T')[1].slice(0,8) : 'Süresiz'}</td>
+                    <td style="text-align: right;">
+                        <button class="btn-danger" onclick="unloadModel('${m.name}')">
+                            <i class="fa-solid fa-eject"></i> VRAM'den Çıkar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Şu an VRAM'e yüklü model yok (İlk istekte otomatik yüklenir).</td></tr>`;
+            document.getElementById('badge-vram-count').textContent = '0 Aktif';
+        }
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--accent-red);">VRAM modelleri alınamadı: ${e.message}</td></tr>`;
+    }
+}
+
+// Unload Model from VRAM
+async function unloadModel(name) {
+    try {
+        const res = await fetch(`${API_BASE}/admin/models/unload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            fetchRunningModels();
+        }
+    } catch (e) {
+        alert(`Hata: ${e.message}`);
     }
 }
 
@@ -82,9 +214,9 @@ async function fetchInstalledModels() {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><span class="badge-model"><i class="fa-solid fa-cube"></i> ${m.name}</span></td>
-                    <td><span class="badge-size">${m.size_gb} GB</span></td>
-                    <td><code style="font-size: 0.75rem; color: #94a3b8;">${m.digest || 'SHA256'}</code></td>
-                    <td style="color: #94a3b8; font-size: 0.8rem;">${m.modified_at ? m.modified_at.split('T')[0] : 'Güncel'}</td>
+                    <td><span class="badge-size">${m.parameter_size !== 'N/A' ? m.parameter_size : ''} (${m.size_gb} GB)</span></td>
+                    <td><code style="font-size: 0.78rem; color: #a5b4fc;">${m.quantization_level}</code></td>
+                    <td style="color: #94a3b8; font-size: 0.8rem;">${m.format.toUpperCase()}</td>
                     <td style="text-align: right;">
                         <button class="btn-danger" onclick="deleteModel('${m.name}')">
                             <i class="fa-solid fa-trash"></i> Sil
@@ -167,6 +299,62 @@ async function deleteModel(name) {
     }
 }
 
+// Populate Benchmark Dropdown
+async function populateBenchmarkModels() {
+    const select = document.getElementById('bench-model-select');
+    try {
+        const res = await fetch(`${API_BASE}/admin/models`);
+        const data = await res.json();
+        select.innerHTML = '<option value="">Model Seçin...</option>';
+        if (data.models) {
+            data.models.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.name;
+                opt.textContent = `${m.name} (${m.size_gb} GB)`;
+                select.appendChild(opt);
+            });
+        }
+    } catch (e) {}
+}
+
+// Run Benchmark
+async function runBenchmark() {
+    const model = document.getElementById('bench-model-select').value;
+    const prompt = document.getElementById('bench-prompt-input').value.trim();
+    if (!model) {
+        alert('Lütfen test edilecek bir model seçin');
+        return;
+    }
+
+    const btn = document.getElementById('btn-bench-run');
+    const container = document.getElementById('bench-result-container');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Test Ediliyor...';
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/benchmark`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider: 'ollama', model, prompt })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            container.style.display = 'block';
+            document.getElementById('bench-tok-sec').textContent = `${data.tokens_per_second} tok/s`;
+            document.getElementById('bench-total-time').textContent = `${data.total_time_ms} ms`;
+            document.getElementById('bench-total-tokens').textContent = data.tokens_generated;
+            document.getElementById('bench-preview-text').textContent = data.output_preview;
+        } else {
+            alert(`Benchmark Hatası: ${data.message}`);
+        }
+    } catch (e) {
+        alert(`Hata: ${e.message}`);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> Hız Testini Başlat';
+    }
+}
+
 // Test Provider
 async function testProvider(prov) {
     const resBox = document.getElementById(`test-result-${prov}`);
@@ -220,7 +408,7 @@ async function fetchLogs() {
                 line.innerHTML = `
                     <span class="log-time">[${l.timestamp}]</span>
                     <span class="log-tag ${l.status}">${l.status.toUpperCase()}</span>
-                    <span>Sağlayıcı: <strong>${l.provider}</strong> | Model: <code>${l.model}</code> | Gecikme: ${l.latency_ms}ms</span>
+                    <span>Sağlayıcı: <strong>${l.provider}</strong> | Model: <code>${l.model}</code> | Gecikme: <strong>${l.latency_ms}ms</strong> | Hız: <strong>${l.tok_per_sec || 0} tok/s</strong></span>
                     ${l.error ? `<span style="color: var(--accent-red); margin-left: 8px;">(${l.error})</span>` : ''}
                 `;
                 term.appendChild(line);
@@ -233,6 +421,7 @@ async function fetchLogs() {
 
 // Initial Load & Auto Refresh Interval
 document.addEventListener('DOMContentLoaded', () => {
+    initTelemetryChart();
     fetchOverview();
-    setInterval(fetchOverview, 5000); // 5 saniyede bir donanım metriklerini güncelle
+    setInterval(fetchOverview, 4000); // 4 saniyede bir donanım metriklerini güncelle
 });
