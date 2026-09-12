@@ -785,7 +785,7 @@ async function checkUpdates(showToast = false) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/admin/updates/check`);
+        const res = await fetch(`${API_BASE}/admin/updates/check?_cb=${Date.now()}`);
         const data = await res.json();
         
         if (data.status === 'ok') {
@@ -820,35 +820,36 @@ async function checkUpdates(showToast = false) {
                     if (topText) topText.textContent = `🚀 Yeni Güncelleme: ${rem.sha}`;
                 }
                 if (statusBadge) {
-                    statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-amber);"></i> <span style="color: var(--accent-amber);">Yeni Güncelleme Mevcut!</span>';
+                    statusBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-amber);"></i> <span style="color: var(--accent-amber); font-weight: 800;">Yeni Güncelleme Mevcut!</span>';
                 }
                 if (statusSub) {
-                    statusSub.textContent = `GitHub'da yeni commit (${rem.sha}) yayınlandı.`;
+                    statusSub.textContent = `GitHub'da yeni sürüm (${rem.sha}: ${rem.message}) yayınlandı.`;
                 }
                 if (btnApply) {
                     btnApply.style.background = 'linear-gradient(135deg, #ff9a44, #fc6076)';
                     btnApply.style.color = '#fff';
-                    btnApply.innerHTML = '<i class="fa-solid fa-cloud-arrow-down fa-bounce"></i> <span>Şimdi Güncelle</span>';
+                    btnApply.innerHTML = `<i class="fa-solid fa-cloud-arrow-down fa-bounce"></i> <span>Şimdi Güncelle (${rem.sha})</span>`;
+                    btnApply.disabled = false;
                 }
                 if (showToast) {
-                    alert(`🚀 Yeni bir güncelleme mevcut! (${rem.sha}: ${rem.message})`);
+                    alert(`🚀 Yeni bir güncelleme mevcut! (${rem.sha}: ${rem.message})\n\n'Şimdi Güncelle' butonuna basarak sistemi anında yükseltebilirsiniz.`);
                 }
             } else {
                 if (topBanner) topBanner.style.display = 'none';
                 if (statusBadge) {
-                    statusBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Sisteminiz En Güncel Sürümde';
-                    statusBadge.style.color = 'var(--accent-green)';
+                    statusBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span style="color: var(--accent-green); font-weight: 800;">Sisteminiz En Güncel Sürümde</span>';
                 }
                 if (statusSub) {
-                    statusSub.textContent = 'Resmi GitHub deposu (kefe3/nexus) ile senkronize.';
+                    statusSub.textContent = `Resmi GitHub deposu (kefe3/nexus: ${loc.sha || rem.sha}) ile senkronize.`;
                 }
                 if (btnApply) {
                     btnApply.style.background = 'rgba(255,255,255,0.08)';
                     btnApply.style.color = '#94a3b8';
-                    btnApply.innerHTML = '<i class="fa-solid fa-check"></i> <span>Sistem Güncel</span>';
+                    btnApply.innerHTML = '<i class="fa-solid fa-rotate"></i> <span>Sistemi Yeniden Eşitle</span>';
+                    btnApply.disabled = false;
                 }
                 if (showToast) {
-                    alert('✅ Tebrikler! Nexus AI Studio en son kararlı sürümde çalışıyor.');
+                    alert(`✅ Sistem en güncel sürümde (${loc.sha}).`);
                 }
             }
         }
