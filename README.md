@@ -12,7 +12,7 @@
 
 ---
 
-[🇹🇷 Türkçe Dokümantasyona Git](#-türkçe-dokümantasyon) • [🇬🇧 Jump to English Documentation](#-english-documentation)
+[🇹🇷 Türkçe Dokümantasyona Git](#-türkçe-dokümantasyon) • [🇬🇧 Jump to English Documentation](#-english-documentation) • [📜 Development Log](developing_log.md)
 
 </div>
 
@@ -24,12 +24,17 @@
 ## 🌟 Key Features
 
 * 🚀 **1-Command Deployment:** Launch the entire platform in seconds using `docker compose up -d`.
+* 🌍 **1-Click Live Public Web Publishing & Cloudflare Quick Tunnel:**
+  * Instantly publish any AI-generated single-file HTML/JS/CSS web application to the public internet using zero-config **Cloudflare Quick Tunnels** (`https://*.trycloudflare.com/share/{id}`).
+  * Dynamic **Mobile QR Code Generator** for instant smartphone testing and sharing.
+  * Local LAN network URL generation (`http://host:3050/share/{id}`).
 * ⚡ **Cluster Control Panel 2.0 (`/admin.html`):**
   * 📈 **Real-Time Telemetry:** Live dual-axis Chart.js CPU & RAM hardware monitoring graphs.
   * ⏱️ **Model Speed Benchmark Arena:** Measure real-time tokens-per-second (tok/s), TTFT, and latency across models.
   * 🧠 **VRAM & Memory Manager:** Inspect loaded GPU models, memory footprints, and 1-click VRAM flush.
   * 📦 **Ollama Model Hub:** Dynamic 1-click model puller and manager (`deepseek-r1`, `qwen2.5-coder`, `llama3.2`, etc.).
   * 🔑 **Provider Speed Radar:** Real-time ping & health benchmarks for Ollama, Gemini 3.6, OpenAI, Groq.
+  * 🌐 **Live Deployments Manager:** View all published apps, visitor view counts, and 1-click tunnel restarts.
 * 🔌 **Universal Multi-Provider Support:**
   * **Ollama (Local GPU/CPU):** Connect to local models (`qwen2.5-coder`, `deepseek-r1`, `llama3`, `mistral`, etc.).
   * **Google Gemini:** Full support for Gemini 3.6 Flash / Pro (Google AI Studio key with 1M+ context).
@@ -41,6 +46,7 @@
 * 🎙️ **Voice Mode:** Integrated speech-to-text with real-time waveform input.
 * 🌐 **Dual Language Engine:** Instant 1-click switch between **Turkish 🇹🇷** and **English 🇬🇧**.
 * 🛡️ **Privacy First & Zero Telemetry:** Your API keys and chats reside locally in your browser/server.
+* 📜 **Full Audit Timeline:** View the second-by-second development changelog at [`developing_log.md`](developing_log.md).
 
 ---
 
@@ -102,12 +108,17 @@ graph TD
 ## 🌟 Öne Çıkan Özellikler
 
 * 🚀 **Tek Komutla Kurulum:** `docker compose up -d` ile tüm sistemi 5 saniyede ayağa kaldırın.
+* 🌍 **1-Click Dünyaya Aç / Canlı Yayın (Cloudflare Quick Tunnel):**
+  * Yapay zekanın ürettiği tek dosyalık HTML/JS/CSS uygulamalarını sıfır yapılandırma ile Cloudflare tüneli üzerinden anında tüm dünyaya açın (`https://*.trycloudflare.com/share/{id}`).
+  * Telefon kamerasıyla anında test için dinamik **Mobil QR Kod Oluşturucu**.
+  * Yerel ağ (LAN) linki oluşturma ve tek tıkla yeni sekmede açma / paylaşma.
 * ⚡ **Gelişmiş Kontrol Paneli 2.0 (`/admin.html`):**
   * 📈 **Canlı Donanım Telemetrisi:** Chart.js destekli anlık CPU ve RAM yük grafikleri.
   * ⏱️ **Model Hız & Benchmark Arenası:** Modellerin saniyede ürettiği token (tok/s), TTFT ve gecikme sürelerini anında test etme.
   * 🧠 **VRAM & Bellek Monitörü:** GPU'ya yüklenmiş aktif modelleri görme ve tek tıkla VRAM boşaltma.
   * 📦 **Ollama Model Merkezi:** Tek tıkla model indirme (`deepseek-r1`, `qwen2.5-coder`, `llama3.2` vb.) ve sunucudan silme.
   * 🔑 **Sağlayıcı Hız Radarı:** Ollama, Gemini 3.6, OpenAI ve Groq için canlı gecikme (ping) testleri.
+  * 🌐 **Canlı Yayınlanan Projeler & Tünel Yönetimi:** Yayınlanmış projeleri listeleme, ziyaretçi sayılarını görme ve tüneli yeniden başlatma.
 * 🔌 **Sınırsız Çoklu Sağlayıcı (Multi-Provider):**
   * **Ollama (Yerel GPU/CPU):** Kendi ekran kartınızdaki yerel modeller (`qwen2.5-coder`, `deepseek-r1`, `llama3`, vb.).
   * **Google Gemini:** Gemini 3.6 Flash / Pro (Google AI Studio anahtarıyla 1M+ token context).
@@ -119,6 +130,7 @@ graph TD
 * 🎙️ **Sesli Mod:** Gerçek zamanlı konuşarak yazdırma (Speech-to-Text).
 * 🌐 **Çift Dil Desteği:** Tek tıkla anında **Türkçe 🇹🇷** ve **İngilizce 🇬🇧** arayüz.
 * 🛡️ **Gizlilik Odaklı:** Sohbetleriniz ve API anahtarlarınız tamamen kendi cihazınızda saklanır, dışarıya sızdırılmaz.
+* 📜 **Detaylı Geliştirme Günlüğü (Saniye Saniye):** Tüm mimari kararlar ve zaman çizelgesi için [`developing_log.md`](developing_log.md) dosyasına göz atın.
 
 ---
 

@@ -186,10 +186,30 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
 
 ---
 
+#### 🕒 17:21:03 — [Commit: `046b4ae`] • Kod Blok Butonları İyileştirmesi & `srcdoc` Standartı
+* **Modül:** `Frontend DOM & Sandbox Engine`
+* **Sorun Analizi:**
+  * Kod bloklarındaki `onclick="publishDirectCode(...)"` inline HTML özelliklerinde büyük HTML/JS kodları tırnak ve karakter kaçış hatasına yol açabiliyordu.
+* **Çözüm:**
+  * Tüm butonlar saf JavaScript DOM Event Listener (`btn.onclick = (e) => publishDirectCode(block.textContent)`) yapısına geçirildi, sıfır kaçış hatası garantilendi.
+  * Sandbox iframe yazma mekanizması modern HTML5 `iframe.srcdoc = html` standardına geçirildi, yükleme süresi sıfıra indirildi.
+  * Docker derleme hızı için `backend/Dockerfile` optimize edildi.
+
+---
+
+#### 🕒 17:22:39 — [Commit: `52a8e5f`] • HTTP HEAD Desteği & Tünel Sağlamlaştırma
+* **Modül:** `Deploy Engine & HTTP Methods`
+* **Yapılan İşlemler:**
+  * `/share/{id}` ve `/p/{id}` uç noktalarına HTTP `HEAD` metot desteği eklendi, web botlarının ve tarayıcı ön-sorgularının 405 hatası alması engellendi.
+  * Cloudflare tünelinin arka planda otomatik yeniden bağlanma ve URL yakalama döngüsü güçlendirildi.
+
+---
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.
 2. **İzole Sandbox & Güvenli Yayın:** Yapay zekanın ürettiği JavaScript kodları ve web arayüzleri `sandbox="allow-scripts allow-modals"` yetkileriyle izole bir iframe içinde çalıştırılır, ana web paneline ve çerezlere erişemez.
 3. **Sıfır Yapılandırmalı Canlı Tünel (Cloudflare Quick Tunnel):** Kullanıcının port açmasına, statik IP almasına veya Cloudflare hesabı bağlamasına gerek kalmadan uçtan uca TLS şifreli `https://*.trycloudflare.com` alan adlarıyla canlı web paylaşımı sağlanır.
 4. **SSE Performansı:** Server-Sent Events akışı `proxy_buffering off` ve `GZipMiddleware` ile tamponlama gecikmesi olmadan sıfır gecikmeyle istemciye aktarılır.
+
 
