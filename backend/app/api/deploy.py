@@ -188,19 +188,6 @@ async def list_deployments():
         "deployments": sorted(items, key=lambda x: x.get("created_at", ""), reverse=True)
     }
 
-@router.delete("/api/deploy/{deploy_id}")
-async def delete_deployment(deploy_id: str):
-    file_path = os.path.join(DEPLOYMENTS_DIR, f"{deploy_id}.html")
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
-    meta = load_metadata()
-    if deploy_id in meta:
-        del meta[deploy_id]
-        save_metadata(meta)
-
-    return {"status": "ok", "message": f"Deployment '{deploy_id}' deleted."}
-
 @router.get("/api/deploy/tunnel")
 @router.get("/api/deploy/studio-tunnel")
 async def get_tunnel_status():
@@ -233,4 +220,17 @@ async def restart_tunnel():
 async def stop_tunnel():
     tunnel_manager.stop_tunnel()
     return {"status": "ok", "message": "Tunnel stopped"}
+
+@router.delete("/api/deploy/{deploy_id}")
+async def delete_deployment(deploy_id: str):
+    file_path = os.path.join(DEPLOYMENTS_DIR, f"{deploy_id}.html")
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    meta = load_metadata()
+    if deploy_id in meta:
+        del meta[deploy_id]
+        save_metadata(meta)
+
+    return {"status": "ok", "message": f"Deployment '{deploy_id}' deleted."}
 
