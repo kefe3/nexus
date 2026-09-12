@@ -254,6 +254,7 @@ async def stop_tunnel():
     return {"status": "ok", "active": False, "message": "Tunnel stopped"}
 
 @router.delete("/api/deploy/{deploy_id}")
+@router.post("/api/deploy/{deploy_id}/delete")
 async def delete_deployment(deploy_id: str):
     file_path = os.path.join(DEPLOYMENTS_DIR, f"{deploy_id}.html")
     if os.path.exists(file_path):

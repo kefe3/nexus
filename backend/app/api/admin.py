@@ -371,20 +371,22 @@ async def pull_ollama_model(req: PullModelRequest, x_ollama_url: str = Header(de
         return {"status": "error", "message": str(e)}
 
 @router.delete("/models/delete")
-async def delete_ollama_model(req: DeleteModelRequest, x_ollama_url: str = Header(default="")):
+@router.post("/models/delete")
+async def delete_ollama_model(req: Optional[DeleteModelRequest] = None, name: Optional[str] = None, x_ollama_url: str = Header(default="")):
     ollama_url = x_ollama_url or settings.OLLAMA_BASE_URL
-    model_name = req.name.strip()
+    model_name = (req.name if req else "") or (name or "")
+    model_name = model_name.strip()
     if not model_name:
         raise HTTPException(status_code=400, detail="Model name is required")
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=15.0) as client:
             req_obj = client.build_request("DELETE", f"{ollama_url}/api/delete", json={"name": model_name})
             res = await client.send(req_obj)
             if res.status_code in [200, 204]:
                 return {"status": "ok", "message": f"'{model_name}' modeli başarıyla silindi."}
             else:
-                return {"status": "error", "message": f"Ollama hatası: HTTP {res.status_code}"}
+                return {"status": "error", "message": f"Ollama hatası: HTTP {res.status_code} - {res.text}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 

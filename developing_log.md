@@ -359,13 +359,14 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
      * Sistemde Nexus AI kurulu değilken kaldırma betiği çalıştırılırsa `⚠️ Nexus AI Studio sisteminizde yüklü bulunamadı (Zaten kurulu değil).` uyarısı verilir.
      * Kullanıcıya doğrudan `Nexus AI Studio'yu şimdi sıfırdan kurmak ister misiniz? [E/h]` teklifinde bulunulur; `Evet` seçilirse otomatik olarak resmi kurulum başlatılır.
 
-#### 🕒 18:26:40 — [Commit: `c6b1f12`] • 🔄 Güncelleme Kontrolcüsü & 1-Tık Canlı Güncelleyici Baştan Sona Yenilendi
-* **Modül:** `Update Check & 1-Click Live Updater Engine Overhaul`
+#### 🕒 18:44:15 — [Commit: `b824ef0`] • 🗑️ Kaldırma Betiği (`uninstall.sh` & `uninstall.ps1`) Baştan Sona Yenilendi & Silme Uç Noktaları Sağlamlaştırıldı
+* **Modül:** `Uninstaller Engine Overhaul & HTTP Delete Fallbacks`
 * **Tespit Edilen Sorunlar & Çözümler:**
-  1. **GitHub REST API İstek Sınırı (Rate Limit) Bypass:** GitHub API'si kimliksiz isteklerde 60 req/saat sınırına ulaştığında sürüm denetimi yapılamıyordu. Sisteme sıfır istek sınırı olan doğrudan `git ls-remote https://github.com/kefe3/nexus.git refs/heads/main` sorgulama motoru katman olarak entegre edildi.
-  2. **Yerel Commit SHA Tutarsızlığı:** Arşiv (tarball) üzerinden yapılan güncellemelerde `.git` dizini güncellenmediğinde `git rev-parse HEAD` komutunun eski sürümü göstermesi engellendi. `version.json`, `.git/refs/heads/main` ve `git rev-parse` çoklu okuyucusu ile yerel sürüm kesin ve anlık olarak doğrulanır.
-  3. **Konteyner ve Ana Makine Yetki (Permission Denied) Düzeltmesi:** Güncelleme sırasında `/repo` ve `/app` altındaki tüm dosyalara özyinelemeli (recursive) `0o777` (dizinler) ve `0o666` (dosyalar) izinleri uygulanarak ana makine kullanıcısının ve git süreçlerinin yetki hatası alması kalıcı olarak engellendi.
-  4. **Frontend Canlı Durum ve Önbellek Kırıcı:** `checkUpdates()` fonksiyonundaki hata yakalama geliştirildi, `admin.js?v=2.5` önbellek kırıcı ve güncelleme tamamlandığında sayfayı `?_t=<timestamp>` ile önbelleksiz tazeleyen otomatik geçiş eklendi.
+  1. **Curl Pipe / Farklı Çalışma Dizini Tespiti:** `uninstall.sh` curl üzerinden pipe edildiğinde `BASH_SOURCE` üzerinden dizin bulma hatası giderildi; sistem `$NEXUS_DIR`, `$PWD`, `$HOME/nexus`, `/opt/nexus` adaylarını tarayarak gerçek kurulum dizinini otomatik keşfeder.
+  2. **Docker Sudo / Yetki Düzeltmesi:** Kullanıcı `docker` grubunda olmasa bile `sudo docker` sarmalayıcısı devreye girerek konteynerlerin ve imajların yetki hatası almadan kesin olarak silinmesi sağlandı.
+  3. **Ters Soru Tuzağı Kaldırıldı:** Sistemde konteyner veya dizin bulunmadığında kullanıcıya "Nexus AI kurmak ister misiniz?" sorusu sorulup döngüye sokulması engellendi; "Sisteminiz zaten tamamen temiz" denilerek temiz çıkış yapılması sağlandı.
+  4. **Kaynak Kod ve Dizin Temizliği:** Kullanıcı onayına bağlı olarak `$FOUND_INSTALL_DIR` klasörünün tamamının diskten silinmesi veya `data/` klasörünün güvenle korunması sağlandı.
+  5. **HTTP DELETE / POST Çift Yönlü Destek:** Model silme (`/api/admin/models/delete`), yayın silme (`/api/deploy/{id}`) ve sohbet silme (`/api/chats/{id}`) uç noktalarına hem `DELETE` hem `POST` metot desteği eklendi.
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 

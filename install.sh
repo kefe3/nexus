@@ -25,7 +25,19 @@ echo "  ██║ ╚████║███████╗██╔╝ ██�
 echo "  ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝"
 echo -e "      ${PURPLE}⚡ Self-Hosted AI Studio & Cluster Control Platform${NC}\n"
 
-# 1. Önceden Kurulu Olma Durumu Kontrolü (Smart Detection)
+# 1. Root / Sudo Yetki Kontrolü & TTY Bağlantısı
+SUDO=""
+if [ "$EUID" -ne 0 ]; then
+    if command -v sudo >/dev/null 2>&1; then
+        SUDO="sudo"
+        # Terminal TTY varsa sudo yetkisini al
+        if [ -c /dev/tty ]; then
+            sudo -v </dev/tty 2>/dev/null || sudo -v 2>/dev/null || true
+        fi
+    fi
+fi
+
+# 2. Önceden Kurulu Olma Durumu Kontrolü (Smart Detection)
 INSTALL_DIR="${NEXUS_DIR:-$HOME/nexus}"
 IS_ALREADY_INSTALLED=false
 IS_RUNNING=false
@@ -34,8 +46,12 @@ if [ -d "$INSTALL_DIR" ] && [ -f "$INSTALL_DIR/docker-compose.yml" ]; then
     IS_ALREADY_INSTALLED=true
 fi
 
+DOCKER_CMD="docker"
 if command -v docker >/dev/null 2>&1; then
-    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q 'nexus-frontend'; then
+    if ! docker info >/dev/null 2>&1 && [ -n "$SUDO" ]; then
+        DOCKER_CMD="$SUDO docker"
+    fi
+    if $DOCKER_CMD ps --format '{{.Names}}' 2>/dev/null | grep -q 'nexus-frontend'; then
         IS_RUNNING=true
         IS_ALREADY_INSTALLED=true
     fi
@@ -56,21 +72,6 @@ if [ "$IS_ALREADY_INSTALLED" = true ]; then
         exit 0
     fi
     echo -e "${CYAN}🔄 Mevcut kurulum güncelleniyor ve servisler yenileniyor...${NC}\n"
-fi
-
-# 2. Root / Sudo Yetki Kontrolü & TTY Bağlantısı
-SUDO=""
-if [ "$EUID" -ne 0 ]; then
-    if command -v sudo >/dev/null 2>&1; then
-        SUDO="sudo"
-        # Terminal TTY varsa sudo yetkisini al
-        if [ -c /dev/tty ]; then
-            sudo -v </dev/tty 2>/dev/null || sudo -v 2>/dev/null || true
-        fi
-    else
-        echo -e "${RED}❌ Hata: Kurulum yapabilmek için root veya sudo yetkisi gereklidir.${NC}"
-        exit 1
-    fi
 fi
 
 # 3. İşletim Sistemi ve Dağıtım Tespiti

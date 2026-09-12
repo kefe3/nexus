@@ -65,6 +65,7 @@ async def save_or_update_chat(req: SaveChatRequest):
     return {"status": "ok", "id": req.id}
 
 @router.delete("/{chat_id}")
+@router.post("/{chat_id}/delete")
 async def delete_single_chat(chat_id: str):
     chats = load_chats()
     filtered = [c for c in chats if c.get("id") != chat_id]
@@ -72,6 +73,7 @@ async def delete_single_chat(chat_id: str):
     return {"status": "ok", "message": f"Chat {chat_id} deleted."}
 
 @router.delete("")
+@router.post("/delete-all")
 async def delete_all_chats():
     save_chats([])
     return {"status": "ok", "message": "All chats deleted."}
