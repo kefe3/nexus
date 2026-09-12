@@ -6,6 +6,13 @@ const TRANSLATIONS = {
         search_chats: "Sohbetlerde ara...",
         history_title: "Geçmiş Sohbetler",
         settings: "Ayarlar",
+        control_panel: "Kontrol Paneli",
+        dashboard: "Dashboard",
+        system_metrics: "Sistem & Donanım Metrikleri",
+        cpu_usage: "İşlemci (CPU)",
+        ram_usage: "Bellek (RAM)",
+        disk_usage: "Disk Kullanımı",
+        server_uptime: "Sunucu Açık Kalma Süresi",
         provider: "Sağlayıcı",
         model: "Model",
         system_prompt: "Sistem Promptu / Persona",
@@ -30,7 +37,7 @@ const TRANSLATIONS = {
         fullscreen: "Tam Ekran",
         close: "Kapat",
         settings_title: "Nexus AI Studio Ayarları",
-        api_keys_desc: "API anahtarlarınız yalnızca yerel tarayıcınızda (LocalStorage) saklanır, üçüncü taraflara iletilmez.",
+        api_keys_desc: "API anahtarlarınız yalnızca yerel tarayıcınızda (LocalStorage) saklanır.",
         ollama_url: "Ollama URL (Yerel GPU)",
         gemini_key: "Google Gemini API Key (Pro / Flash)",
         openai_key: "OpenAI API Key (GPT-4o)",
@@ -43,7 +50,11 @@ const TRANSLATIONS = {
         tokens: "Token",
         speed: "Hız",
         latency: "Gecikme",
-        presets_title: "Öne Çıkan Rol Şablonları"
+        presets_title: "Öne Çıkan Rol Şablonları",
+        active_providers: "Aktif Model Sağlayıcıları",
+        installed_local_models: "Yüklü Yerel Modeller",
+        benchmark_test: "Hızlı Çıkarım Testi",
+        traffic_logs: "Sistem ve İstek Logları"
     },
     en: {
         app_title: "Nexus AI Studio",
@@ -51,6 +62,13 @@ const TRANSLATIONS = {
         search_chats: "Search chats...",
         history_title: "Recent Chats",
         settings: "Settings",
+        control_panel: "Control Panel",
+        dashboard: "Dashboard",
+        system_metrics: "System & Hardware Metrics",
+        cpu_usage: "Processor (CPU)",
+        ram_usage: "Memory (RAM)",
+        disk_usage: "Disk Usage",
+        server_uptime: "Server Uptime",
         provider: "Provider",
         model: "Model",
         system_prompt: "System Prompt / Persona",
@@ -75,7 +93,7 @@ const TRANSLATIONS = {
         fullscreen: "Fullscreen",
         close: "Close",
         settings_title: "Nexus AI Studio Settings",
-        api_keys_desc: "Your API keys are stored locally in your browser (LocalStorage) and never sent to 3rd parties.",
+        api_keys_desc: "Your API keys are stored locally in your browser (LocalStorage).",
         ollama_url: "Ollama URL (Local GPU)",
         gemini_key: "Google Gemini API Key (Pro / Flash)",
         openai_key: "OpenAI API Key (GPT-4o)",
@@ -88,7 +106,11 @@ const TRANSLATIONS = {
         tokens: "Tokens",
         speed: "Speed",
         latency: "Latency",
-        presets_title: "Featured Personas & Prompts"
+        presets_title: "Featured Personas & Prompts",
+        active_providers: "Active Model Providers",
+        installed_local_models: "Installed Local Models",
+        benchmark_test: "Quick Inference Benchmark",
+        traffic_logs: "System & Request Logs"
     }
 };
 
