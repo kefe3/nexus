@@ -2,13 +2,14 @@
 
 <div align="center">
 
-![Nexus AI Studio](https://img.shields.io/badge/Nexus-AI_Studio_v1.0-6366f1?style=for-the-badge&logo=probot&logoColor=white)
+![Nexus AI Studio](https://img.shields.io/badge/Nexus-AI_Studio_v2.0-6366f1?style=for-the-badge&logo=probot&logoColor=white)
 ![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Multi Platform](https://img.shields.io/badge/OS-Linux_|_Windows_|_macOS-3b82f6?style=for-the-badge)
 ![Multi Provider](https://img.shields.io/badge/Providers-Ollama_|_Gemini_|_OpenAI_|_Groq_|_Claude-ff6b6b?style=for-the-badge)
 
-**The modern, ultra-lightweight, open-source Self-Hosted AI Platform with Live Code Sandboxing, Multi-Provider Streaming, and zero setup complexity.**
+**The modern, ultra-lightweight, open-source Self-Hosted AI Platform with Live Code Sandboxing, 1-Click Cloudflare Public Tunnel, Multi-Provider Streaming, and Centralized Persistent Sync.**
 
 ---
 
@@ -23,82 +24,58 @@
 
 ## 🌟 Key Features
 
-* 🚀 **1-Command Deployment:** Launch the entire platform in seconds using `docker compose up -d`.
-* 🌍 **1-Click Live Public Web Publishing & Cloudflare Quick Tunnel:**
-  * Instantly publish any AI-generated single-file HTML/JS/CSS web application to the public internet using zero-config **Cloudflare Quick Tunnels** (`https://*.trycloudflare.com/share/{id}`).
-  * Dynamic **Mobile QR Code Generator** for instant smartphone testing and sharing.
-  * Local LAN network URL generation (`http://host:3050/share/{id}`).
+* 🚀 **1-Command Zero-Config Installer:** Automatically installs Docker, Git, and starts the entire platform with zero manual intervention.
+* 🌍 **1-Click Live Public Web Publishing & Remote Control Suite:**
+  * Instantly publish AI-generated HTML/JS/CSS web applications to the public internet using zero-config **Cloudflare Quick Tunnels** (`https://*.trycloudflare.com/share/{id}`).
+  * Expose both **Nexus AI Studio** (`/`) and **Control Panel** (`/admin.html`) to the world with an interactive **ON/OFF Toggle Switch**.
+  * Dynamic **Mobile QR Code Generator** for instant smartphone testing and remote management.
+* 🔄 **Centralized Server-Side State & Persistent Chat History:**
+  * API keys (Gemini, OpenAI, Groq, Anthropic) and conversation histories are synced and persisted server-side.
+  * Seamlessly switch between Local LAN (`http://localhost:3050`) and Public Tunnels without losing chat history or configured keys.
 * ⚡ **Cluster Control Panel 2.0 (`/admin.html`):**
   * 📈 **Real-Time Telemetry:** Live dual-axis Chart.js CPU & RAM hardware monitoring graphs.
   * ⏱️ **Model Speed Benchmark Arena:** Measure real-time tokens-per-second (tok/s), TTFT, and latency across models.
   * 🧠 **VRAM & Memory Manager:** Inspect loaded GPU models, memory footprints, and 1-click VRAM flush.
   * 📦 **Ollama Model Hub:** Dynamic 1-click model puller and manager (`deepseek-r1`, `qwen2.5-coder`, `llama3.2`, etc.).
   * 🔑 **Provider Speed Radar:** Real-time ping & health benchmarks for Ollama, Gemini 3.6, OpenAI, Groq.
-  * 🌐 **Live Deployments Manager:** View all published apps, visitor view counts, and 1-click tunnel restarts.
 * 🔌 **Universal Multi-Provider Support:**
   * **Ollama (Local GPU/CPU):** Connect to local models (`qwen2.5-coder`, `deepseek-r1`, `llama3`, `mistral`, etc.).
   * **Google Gemini:** Full support for Gemini 3.6 Flash / Pro (Google AI Studio key with 1M+ context).
   * **OpenAI & Anthropic:** GPT-4o, o3-mini, Claude 3.5 Sonnet.
   * **Groq:** Ultra-fast inference at 300+ tokens/second.
   * **Custom Endpoints:** Connect to any OpenAI-compatible API reverse proxy.
-* ⚡ **Live Artifact Execution Sandbox:** Live preview, test, and interact with generated single-file HTML/JS/CSS applications, landing pages, and interactive widgets inside an isolated responsive sandbox (Desktop, Tablet, Mobile).
+* 🖥️ **Cross-Platform Compatibility:**
+  * 🐧 **Linux:** Native Docker & GPU acceleration (Ubuntu, Debian, Fedora, Arch, CentOS).
+  * 🪟 **Windows:** Docker Desktop + WSL2 or PowerShell installer (`install.ps1`).
+  * 🍏 **macOS:** Apple Silicon (M1/M2/M3/M4) & Intel via Docker Desktop or OrbStack.
+* ⚡ **Live Artifact Execution Sandbox:** Live preview, test, and interact with generated single-file HTML/JS/CSS applications inside an isolated responsive sandbox (Desktop, Tablet, Mobile).
 * 🧠 **DeepSeek-Style Reasoning Accordion:** Automatically parses and gracefully renders `<think>...</think>` thought chains in collapsible containers.
 * 🎙️ **Voice Mode:** Integrated speech-to-text with real-time waveform input.
 * 🌐 **Dual Language Engine:** Instant 1-click switch between **Turkish 🇹🇷** and **English 🇬🇧**.
-* 🛡️ **Privacy First & Zero Telemetry:** Your API keys and chats reside locally in your browser/server.
 * 📜 **Full Audit Timeline:** View the second-by-second development changelog at [`developing_log.md`](developing_log.md).
 
 ---
 
-## 🚀 Quickstart (Docker Compose)
+## 🚀 Quickstart (1-Line Universal Install)
 
-### 1. Clone & Run
+### 🐧 Linux & macOS (Auto-Installs Docker & All Dependencies)
+```bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
+```
+
+### 🪟 Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex
+```
+
+### 🐳 Or via Docker Compose Manually
 ```bash
 git clone https://github.com/kefe3/nexus.git
 cd nexus
-
-# Start Frontend (Port 3000) and Backend (Port 8000)
 docker compose up -d
 ```
 
-Open **`http://localhost:3000`** in your browser!
-
-### 2. Optional: Run Local Ollama with Docker
-```bash
-docker compose --profile local-ai up -d
-```
-
----
-
-## 💻 Manual Setup (Development Mode)
-
-### 1. Backend Setup
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### 2. Frontend Setup
-Open `frontend/src/index.html` directly in your browser or serve via any static HTTP server.
-
----
-
-## 🏗️ Architecture
-
-```mermaid
-graph TD
-    Client[Browser / Nexus UI :3000] -->|SSE Stream / REST| Backend[FastAPI Gateway :8000]
-    
-    Backend -->|Local Inference| Ollama[Ollama Server :11434]
-    Backend -->|API Stream| Gemini[Google Gemini 2.0 API]
-    Backend -->|API Stream| OpenAI[OpenAI / Groq API]
-    Backend -->|API Stream| Claude[Anthropic API]
-    
-    Client -->|Live Execution| Sandbox[Isolated Iframe Sandbox]
-```
+Open **`http://localhost:3050`** for AI Studio or **`http://localhost:3050/admin.html`** for Control Panel!
 
 ---
 
@@ -107,88 +84,70 @@ graph TD
 
 ## 🌟 Öne Çıkan Özellikler
 
-* 🚀 **Tek Komutla Kurulum:** `docker compose up -d` ile tüm sistemi 5 saniyede ayağa kaldırın.
-* 🌍 **1-Click Dünyaya Aç / Canlı Yayın (Cloudflare Quick Tunnel):**
-  * Yapay zekanın ürettiği tek dosyalık HTML/JS/CSS uygulamalarını sıfır yapılandırma ile Cloudflare tüneli üzerinden anında tüm dünyaya açın (`https://*.trycloudflare.com/share/{id}`).
-  * Telefon kamerasıyla anında test için dinamik **Mobil QR Kod Oluşturucu**.
-  * Yerel ağ (LAN) linki oluşturma ve tek tıkla yeni sekmede açma / paylaşma.
+* 🚀 **Tek Satırda Tam Otomatik Kurulum:** Sisteminizde Docker veya Git kurulu olmasa bile betik her şeyi otomatik indirir, kurar ve sistemi çalıştırır.
+* 🌍 **1-Click Dünyaya Aç / Canlı Yayın ve Uzaktan Kontrol:**
+  * Yapay zekanın yazdığı HTML/JS/CSS uygulamalarını sıfır yapılandırma ile Cloudflare tüneli üzerinden anında tüm dünyaya açın (`https://*.trycloudflare.com/share/{id}`).
+  * **Nexus AI Studio** (`/`) ve **Kontrol Paneli**'ni (`/admin.html`) tek bir **Aç/Kapat (ON/OFF) Switch** ile internete açıp kapatabilme.
+  * Telefon kamerasıyla anında tarayıp bağlanmak için dinamik **Mobil QR Kod Oluşturucu**.
+* 🔄 **Merkezi Sunucu Senkronizasyonu & Kalıcı Sohbet Geçmişi:**
+  * Girilen tüm API anahtarları (Gemini, OpenAI, Groq vb.) ve sohbet geçmişiniz sunucu tarafında (`data/`) kalıcı olarak saklanır.
+  * Hem yerel ağdan (`http://192.168.0.188:3050`) hem dış tünelden bağlandığınızda **birebir aynı sohbetler ve hazır modeller** anında yüklenir.
 * ⚡ **Gelişmiş Kontrol Paneli 2.0 (`/admin.html`):**
   * 📈 **Canlı Donanım Telemetrisi:** Chart.js destekli anlık CPU ve RAM yük grafikleri.
   * ⏱️ **Model Hız & Benchmark Arenası:** Modellerin saniyede ürettiği token (tok/s), TTFT ve gecikme sürelerini anında test etme.
   * 🧠 **VRAM & Bellek Monitörü:** GPU'ya yüklenmiş aktif modelleri görme ve tek tıkla VRAM boşaltma.
   * 📦 **Ollama Model Merkezi:** Tek tıkla model indirme (`deepseek-r1`, `qwen2.5-coder`, `llama3.2` vb.) ve sunucudan silme.
   * 🔑 **Sağlayıcı Hız Radarı:** Ollama, Gemini 3.6, OpenAI ve Groq için canlı gecikme (ping) testleri.
-  * 🌐 **Canlı Yayınlanan Projeler & Tünel Yönetimi:** Yayınlanmış projeleri listeleme, ziyaretçi sayılarını görme ve tüneli yeniden başlatma.
 * 🔌 **Sınırsız Çoklu Sağlayıcı (Multi-Provider):**
   * **Ollama (Yerel GPU/CPU):** Kendi ekran kartınızdaki yerel modeller (`qwen2.5-coder`, `deepseek-r1`, `llama3`, vb.).
   * **Google Gemini:** Gemini 3.6 Flash / Pro (Google AI Studio anahtarıyla 1M+ token context).
   * **OpenAI & Anthropic:** GPT-4o, o3-mini, Claude 3.5 Sonnet.
   * **Groq:** 300+ token/saniye hızında yıldırım hızında çıkarım.
   * **Özel Uç Noktalar:** Herhangi bir OpenAI-uyumlu API köprüsüne bağlanabilme.
-* ⚡ **Canlı Artifact Sandbox (Kod Çalıştırıcı):** Yapay zekanın yazdığı web sitelerini, panelleri ve JavaScript uygulamalarını tarayıcı içinde anında canlı test edin, mobil/tablet/masaüstü boyutlarında inceleyin ve tek tıkla `.html` olarak indirin.
+* 🖥️ **Tüm İşletim Sistemleriyle Uyumlu (Cross-Platform):**
+  * 🐧 **Linux:** Ubuntu, Debian, Fedora, Arch, CentOS (Tam GPU donanım hızlandırma).
+  * 🪟 **Windows:** Windows 10/11 WSL2 ve Docker Desktop veya PowerShell kurulum betiği.
+  * 🍏 **macOS:** Apple Silicon M1/M2/M3/M4 & Intel işlemciler (Docker Desktop / OrbStack).
+* ⚡ **Canlı Artifact Sandbox (Kod Çalıştırıcı):** Yapay zekanın yazdığı web sitelerini tarayıcı içinde canlı test edin, mobil/tablet boyutlarında inceleyin ve `.html` olarak indirin.
 * 🧠 **Düşünce Süreci (DeepSeek Akordeonu):** Modelin `<think>...</think>` akıl yürütme adımlarını şık açılır-kapanır bloklarda düzenli gösterir.
 * 🎙️ **Sesli Mod:** Gerçek zamanlı konuşarak yazdırma (Speech-to-Text).
 * 🌐 **Çift Dil Desteği:** Tek tıkla anında **Türkçe 🇹🇷** ve **İngilizce 🇬🇧** arayüz.
-* 🛡️ **Gizlilik Odaklı:** Sohbetleriniz ve API anahtarlarınız tamamen kendi cihazınızda saklanır, dışarıya sızdırılmaz.
-* 📜 **Detaylı Geliştirme Günlüğü (Saniye Saniye):** Tüm mimari kararlar ve zaman çizelgesi için [`developing_log.md`](developing_log.md) dosyasına göz atın.
+* 📜 **Detaylı Geliştirme Günlüğü:** Tüm mimari kararlar ve zaman çizelgesi için [`developing_log.md`](developing_log.md) dosyasına göz atın.
 
 ---
 
-## 🚀 Hızlı Başlangıç (Docker ile)
+## 🚀 Hızlı Başlangıç (Tek Komutla Otomatik Kurulum)
 
-### 1. Depoyu İndirin ve Çalıştırın
+### 🐧 Linux & macOS (Docker Dahil Her Şeyi Otomatik Kurar)
+Terminalinizi açın ve aşağıdaki komutu yapıştırın:
+```bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
+```
+
+### 🪟 Windows (PowerShell ile Otomatik Kurulum)
+PowerShell'i açın ve çalıştırın:
+```powershell
+irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex
+```
+
+### 🐳 Veya Manuel Docker Compose İle
 ```bash
 git clone https://github.com/kefe3/nexus.git
 cd nexus
-
-# Frontend (Port 3000) ve Backend (Port 8000) başlatılır
 docker compose up -d
 ```
 
-Tarayıcınızdan **`http://localhost:3000`** adresine gidin!
-
-### 2. İsteğe Bağlı: Docker İçinde Yerel Ollama Çalıştırma
-```bash
-docker compose --profile local-ai up -d
-```
+Tarayıcınızdan **`http://localhost:3050`** (AI Studio) veya **`http://localhost:3050/admin.html`** (Kontrol Paneli) adresine gidin!
 
 ---
 
-## 💻 Geliştirici Kurulumu (Manuel)
+## ⚙️ Port ve Servis Haritası
 
-### 1. Backend
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### 2. Frontend
-`frontend/src/index.html` dosyasını doğrudan tarayıcınızda açabilir veya herhangi bir statik sunucu ile yayınlayabilirsiniz.
-
----
-
-## ⚙️ Çevresel Değişkenler (.env)
-
-| Değişken | Varsayılan | Açıklama |
+| Port | Servis | Açıklama |
 |---|---|---|
-| `PORT` | `8000` | Backend API Portu |
-| `DEFAULT_PROVIDER` | `ollama` | Varsayılan model sağlayıcısı |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama sunucu adresi |
-| `GEMINI_API_KEY` | - | (İsteğe bağlı) Sunucu tarafı Gemini anahtarı |
-| `OPENAI_API_KEY` | - | (İsteğe bağlı) Sunucu tarafı OpenAI anahtarı |
-
----
-
-## 🤝 Katkıda Bulunma
-
-1. Depoyu Fork'layın (`Fork`).
-2. Yeni bir özellik dalı oluşturun: `git checkout -b ozellik/yeni-ozellik`.
-3. Değişikliklerinizi commit'leyin: `git commit -m 'Yeni özellik eklendi'`.
-4. Dalınıza push'layın: `git push origin ozellik/yeni-ozellik`.
-5. Bir Pull Request (PR) açın.
+| `3050` | Nginx Frontend & Reverse Proxy | AI Studio, Kontrol Paneli ve Canlı Paylaşımlar |
+| `8500` | FastAPI Asenkron Backend | Model Yönlendirme, SSE Akışları ve Telemetri |
+| `11434` | Ollama Yerel LLM Motoru | Ekran Kartı / CPU Yerel Yapay Zeka Çıkarımı |
 
 ---
 

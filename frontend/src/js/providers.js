@@ -1,4 +1,4 @@
-// Nexus AI Studio — Multi-Provider API Connector with Server-Side Key Sync
+// Nexus AI Studio — Multi-Provider API Connector with Dynamic Server Sync
 
 const PROVIDERS = {
     ollama: { name: "Ollama (Yerel GPU)", icon: "fa-solid fa-server", requiresKey: false },
@@ -19,6 +19,22 @@ async function fetchServerSettingsForProviders() {
         const data = await res.json();
         if (data.status === "ok" && data.providers) {
             serverProvidersConfig = data.providers;
+
+            // Two-way sync: If local browser has a key that server doesn't, sync it to server
+            const keyProviders = ['gemini', 'openai', 'groq', 'anthropic'];
+            for (const p of keyProviders) {
+                const localKey = (localStorage.getItem(`nexus_key_${p}`) || localStorage.getItem(`nexus_${p}_key`) || "").trim();
+                if (localKey && (!serverProvidersConfig[p] || !serverProvidersConfig[p].configured)) {
+                    await fetch("/api/settings", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ provider: p, api_key: localKey })
+                    }).catch(() => {});
+                    if (serverProvidersConfig[p]) {
+                        serverProvidersConfig[p].configured = true;
+                    }
+                }
+            }
         }
     } catch (e) {
         console.warn("Failed to fetch server settings for providers:", e);
@@ -159,6 +175,6 @@ function switchModel(model) {
     localStorage.setItem("nexus_model", model);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    initProviderSelector();
+document.addEventListener("DOMContentLoaded", async () => {
+    await initProviderSelector();
 });

@@ -258,6 +258,23 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
      * `frontend/src/js/admin.js`: Kontrol Paneli'nde girilen veya test edilen anahtarlar sunucuya kalıcı kaydedilir ve maskeli önizleme (`AIzaSy...4xQ`) ile gösterilir.
      * `frontend/src/js/app.js`: Studio içerisindeki Ayarlar modalı üzerinden girilen anahtarlar da sunucuya otomatik senkronize edilir.
 
+---
+
+#### 🕒 17:41:30 — [Commit: `8a719bf`] • ⚡ Evrensel Tek Satır Kurulumcu (`install.sh` & `install.ps1`), Docker Otomasyonu ve Çapraz Platform Mimarisi
+* **Modül:** `Universal Installer, Cross-Platform Architecture & Two-Way Key Sync`
+* **Yapılan İşlemler:**
+  1. **Evrensel Otomatik Kurulum Betiği (`install.sh`):**
+     * Sistemde Docker, Docker Compose, Git veya Curl kurulu olmasa dahi işletim sistemini (Ubuntu, Debian, Fedora, Arch, CentOS, macOS, WSL2) otomatik algılayıp eksik tüm bağımlılıkları resmi kaynaklardan kuran akıllı kurulum betiği yazıldı.
+     * `curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash` tek komutuyla sıfırdan çalışan bir yapay zeka istasyonuna dönüşüm sağlandı.
+  2. **Windows PowerShell Kurulum Betiği (`install.ps1`):**
+     * Windows 10/11 kullanıcıları için `irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex` desteği eklendi.
+  3. **Dokümantasyon Sadeleştirmesi:**
+     * Eski ve karmaşık "Geliştirici Kurulumu (Manuel Python/Node)" bölümleri `README.md` dosyasından tamamen kaldırıldı, yerine tek satırlık modern kurulum yerleştirildi.
+  4. **Çapraz Platform (Cross-Platform) Netleştirmesi:**
+     * Linux (Native GPU/CPU Docker), Windows (WSL2 / Docker Desktop) ve macOS (Apple Silicon M1-M4 & Intel) destekleri belgelendi.
+  5. **İki Yönlü Sağlayıcı Anahtarı Eşitlemesi:**
+     * Tarayıcıda önceden girilmiş anahtarların sunucu tarafındaki `data/settings.json` alanına anında ve sessizce aktarılması sağlandı, böylece dış tünelden girildiğinde tüm anahtarlar hazır bulundu.
+
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
 
 1. **Sıfır Telemetri & Yerel Depolama:** Kullanıcının API anahtarları sunucu üzerinde kalıcı olarak saklanmaz, yalnızca kullanıcının kendi tarayıcısının `localStorage` alanında tutulur ve istek anında HTTP başlığı ile güvenli bir şekilde aktarılır.
