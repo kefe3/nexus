@@ -175,6 +175,22 @@ function switchModel(model) {
     localStorage.setItem("nexus_model", model);
 }
 
+let activeTemperature = parseFloat(localStorage.getItem("nexus_temperature") || "0.7");
+
+function updateTemperature(val) {
+    activeTemperature = parseFloat(val);
+    localStorage.setItem("nexus_temperature", val);
+    const el = document.getElementById("tempVal");
+    if (el) el.textContent = val;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     await initProviderSelector();
+    const tempSlider = document.getElementById("tempSlider");
+    if (tempSlider) {
+        tempSlider.value = activeTemperature;
+        const el = document.getElementById("tempVal");
+        if (el) el.textContent = activeTemperature;
+    }
 });
+

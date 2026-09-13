@@ -102,6 +102,14 @@
                     </select>
                 </div>
 
+                <!-- Temperature Control Slider -->
+                <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10 text-xs" title="Yaratıcılık / Sıcaklık Ayarı (0.0: Kesin, 1.0: Yaratıcı)">
+                    <i class="fa-solid fa-sliders text-amber-400"></i>
+                    <span class="text-slate-400 font-bold hidden sm:inline">Sıcaklık:</span>
+                    <input type="range" id="tempSlider" min="0.0" max="1.0" step="0.05" value="0.7" oninput="updateTemperature(this.value)" class="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                    <span id="tempVal" class="font-mono text-amber-300 font-bold w-6 text-right">0.7</span>
+                </div>
+
                 <!-- Active Persona Badge -->
                 <span id="activePersonaBadge" class="hidden text-[11px] font-bold px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full"></span>
             </div>
@@ -182,6 +190,9 @@
 
                 <!-- Action Controls -->
                 <div class="flex items-center gap-2">
+                    <button onclick="openSandboxInNewTab()" class="px-3 py-1.5 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold border border-indigo-400/30 flex items-center gap-1.5 transition-all" title="Yeni sekmede tam ekran çalıştır">
+                        <i class="fa-solid fa-up-right-from-square text-[10px]"></i> <span>Tam Ekran Aç</span>
+                    </button>
                     <button onclick="runSandboxCode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
                         <i class="fa-solid fa-rotate-right text-[10px]"></i> <span data-i18n="refresh">Yenile</span>
                     </button>

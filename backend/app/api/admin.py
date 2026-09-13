@@ -946,3 +946,13 @@ async def apply_update():
     except Exception as e:
         return {"status": "error", "message": f"Güncelleme Hatası: {str(e)}", "steps": steps}
 
+
+@router.get("/logs")
+async def get_system_logs(lines: int = 50):
+    try:
+        logs_list = list(REQUEST_LOGS)[-lines:]
+        return {"status": "ok", "logs": logs_list, "total": len(REQUEST_LOGS)}
+    except Exception as e:
+        return {"status": "error", "logs": [], "message": str(e)}
+
+

@@ -196,6 +196,7 @@ async function sendMessage() {
             body: JSON.stringify({
                 model: activeModel,
                 messages: historyPayload,
+                temperature: parseFloat(localStorage.getItem("nexus_temperature") || "0.7"),
                 stream: true
             }),
             signal: activeAbortController.signal
