@@ -14,6 +14,7 @@ services:
       - ./backend:/app
       - ./:/repo
       - ./data:/app/data
+      - /sys:/sys:ro
 
   frontend:
     build:

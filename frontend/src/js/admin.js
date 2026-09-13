@@ -738,12 +738,13 @@ async function fetchSpecs(showToastAlert = false) {
 
             // GPU
             if (gpu) {
+                const isAmd = gpu.type && (gpu.type.includes('AMD') || gpu.type.includes('ROCm'));
                 document.getElementById('spec-gpu-name').textContent = gpu.name;
-                document.getElementById('spec-gpu-vram-total').textContent = `${gpu.memory_total_gb} GB GDDR VRAM`;
+                document.getElementById('spec-gpu-vram-total').textContent = `${gpu.memory_total_gb} GB GDDR/HBM VRAM`;
                 document.getElementById('spec-gpu-vram-free').textContent = `${gpu.memory_free_gb} GB Boş`;
-                document.getElementById('spec-gpu-driver-ver').textContent = gpu.driver_version || 'NVIDIA Driver';
-                document.getElementById('spec-gpu-hw-type').textContent = gpu.type || 'CUDA Hızlandırıcı';
-                document.getElementById('spec-gpu-driver').textContent = 'CUDA Hızlandırma Aktif';
+                document.getElementById('spec-gpu-driver-ver').textContent = gpu.driver_version || (isAmd ? 'ROCm / amdgpu' : 'NVIDIA Driver');
+                document.getElementById('spec-gpu-hw-type').textContent = gpu.type || (isAmd ? 'AMD ROCm Hardware' : 'NVIDIA CUDA Hardware');
+                document.getElementById('spec-gpu-driver').textContent = isAmd ? 'AMD ROCm / HIP Hızlandırma Aktif' : 'CUDA Hızlandırma Aktif';
             } else {
                 document.getElementById('spec-gpu-name').textContent = 'Ayrık GPU Tespit Edilmedi (CPU Çıkarımı)';
                 document.getElementById('spec-gpu-vram-total').textContent = 'RAM Paylaşımlı';

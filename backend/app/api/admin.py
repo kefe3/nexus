@@ -241,6 +241,75 @@ def get_detailed_hardware_specs():
         except Exception:
             pass
 
+    # 4b. AMD ROCm / Radeon GPU Check via rocm-smi
+    try:
+        rocm_out = subprocess.check_output(
+            ["rocm-smi", "--showid", "--showuse", "--showmeminfo", "vram", "--json"],
+            stderr=subprocess.DEVNULL
+        ).decode()
+        rocm_data = json.loads(rocm_out)
+        for card_id, card_info in rocm_data.items():
+            if isinstance(card_info, dict) and card_id.startswith("card"):
+                vram_total_b = float(card_info.get("VRAM Total Memory (B)", 0))
+                vram_used_b = float(card_info.get("VRAM Total Used Memory (B)", 0))
+                vram_total_gb = round(vram_total_b / (1024**3), 2) if vram_total_b > 0 else 8.0
+                vram_used_gb = round(vram_used_b / (1024**3), 2)
+                vram_free_gb = round(max(0.0, vram_total_gb - vram_used_gb), 2)
+                gpu_name = card_info.get("Card series", card_info.get("Card model", f"AMD Radeon ({card_id})"))
+                
+                gpu_list.append({
+                    "name": f"AMD {gpu_name}" if not str(gpu_name).startswith("AMD") else str(gpu_name),
+                    "memory_total_gb": vram_total_gb,
+                    "memory_free_gb": vram_free_gb,
+                    "memory_used_gb": vram_used_gb,
+                    "driver_version": "ROCm / HIP Driver",
+                    "type": "AMD ROCm GPU"
+                })
+    except Exception:
+        pass
+
+    # 4c. AMD GPU sysfs fallback (/sys/class/drm/card*/device)
+    if not any(g.get("type", "").startswith("AMD") for g in gpu_list):
+        try:
+            import glob
+            for card_dev in glob.glob("/sys/class/drm/card[0-9]/device"):
+                vendor_file = os.path.join(card_dev, "vendor")
+                if os.path.exists(vendor_file):
+                    with open(vendor_file) as f:
+                        vendor_id = f.read().strip().lower()
+                    if vendor_id == "0x1002":  # AMD Vendor ID
+                        gpu_name = "AMD Radeon GPU (ROCm / HIP)"
+                        prod_name_file = os.path.join(card_dev, "product_name")
+                        if os.path.exists(prod_name_file):
+                            with open(prod_name_file) as f:
+                                gpu_name = f.read().strip()
+                        
+                        vram_tot_file = os.path.join(card_dev, "mem_info_vram_total")
+                        vram_used_file = os.path.join(card_dev, "mem_info_vram_used")
+                        v_total_gb = 8.0
+                        v_used_gb = 0.5
+                        if os.path.exists(vram_tot_file):
+                            with open(vram_tot_file) as f:
+                                val = int(f.read().strip())
+                                if val > 0:
+                                    v_total_gb = round(val / (1024**3), 2)
+                        if os.path.exists(vram_used_file):
+                            with open(vram_used_file) as f:
+                                val = int(f.read().strip())
+                                v_used_gb = round(val / (1024**3), 2)
+                        v_free_gb = round(max(0.0, v_total_gb - v_used_gb), 2)
+
+                        gpu_list.append({
+                            "name": gpu_name if str(gpu_name).startswith("AMD") else f"AMD {gpu_name}",
+                            "memory_total_gb": v_total_gb,
+                            "memory_free_gb": v_free_gb,
+                            "memory_used_gb": v_used_gb,
+                            "driver_version": "AMD ROCm / amdgpu",
+                            "type": "AMD ROCm GPU"
+                        })
+        except Exception:
+            pass
+
     # 5. OS & Kernel Pretty Name
     pretty_os = f"{platform.system()} {platform.release()}"
     if platform.system() == "Windows":
