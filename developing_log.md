@@ -441,6 +441,32 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
      * `Nexus-Windows-Update.bat`: Git ve bağımlılıkları güncelleyen araç.
      * `install.ps1` v3.0: Hem Native (No-Docker) hem de Docker profillerini destekleyen evrensel PowerShell kurulumcusu.
 
+#### 🕒 12:15:00 — [Commit: `61ec3e1`] • 🎁 İşletim Sistemine Özel Paketler & Tanıtım Ekranı (OS Installer Packages & Showcase)
+* **Modül:** `Platform Installer Bundles & Showcase Landing System`
+* **Yapılan İşlemler:**
+  1. **İşletim Sistemine Özel Kurulum Paketleri:**
+     * **Windows x64:** `nexus-v3.1.0-windows-x64.zip` ve `nexus-installer-windows.bat` (Docker Desktop + WSL2 otomatik kurulum otomasyonu).
+     * **macOS Universal:** `nexus-v3.1.0-macos-universal.tar.gz` ve `nexus-installer-macos.sh` (Apple Silicon M1/M2/M3/M4 Metal GPU desteği).
+     * **Linux x64:** `nexus-v3.1.0-linux-x64.tar.gz` ve `nexus-installer-linux.sh` (NVIDIA CUDA & AMD ROCm HIP donanım kalkanı).
+  2. **GitHub Releases Varlık Yüklemesi:** Tüm 6 platform paketi `gh` ve Python GitHub API ile `v3.1.0` sürümüne canlı olarak yüklendi.
+  3. **Arayüz Modalı (`packagesModal` & `showcaseModal`):** `index.html` üzerinde doğrudan işletim sistemine göre indirilebilir ve tek tıkla kopyalanabilir `curl -fsSL ... | bash` kurulum komutu entegre edildi.
+
+#### 🕒 12:20:00 — [Commit: `c29b29d`] • 📦 GitHub Packages (GHCR — GitHub Container Registry) İmaj Yayını
+* **Modül:** `GitHub Packages (GHCR) Container Integration`
+* **Yapılan İşlemler:**
+  1. **OCI Açık Kaynak Etiketleri (`backend/Dockerfile` & `frontend/Dockerfile`):**
+     * Dockerfile dosyalarına `LABEL org.opencontainers.image.source="https://github.com/kefe3/nexus"` eklendi.
+  2. **GHCR İmaj Yayınları:**
+     * `ghcr.io/kefe3/nexus-backend:v3.1.0` ve `latest`
+     * `ghcr.io/kefe3/nexus-frontend:v3.1.0` ve `latest` imajları GitHub Container Registry üzerine push edildi.
+  3. **`docker-compose.yml` Güncellemesi:** GitHub Packages üzerinden doğrudan `docker pull` ve `docker compose up` yapılması sağlandı.
+
+#### 🕒 12:32:00 — [Commit: `f379b0e`] • 🐧 EdgeOS 1.0 LTS (Aether AI Edition) Entegrasyonu
+* **Modül:** `EdgeOS Linux Distribution AI Engine Entegrasyonu`
+* **Yapılan İşlemler:**
+  * Nexus AI Studio v3.1.0 motoru, Ubuntu/Linux tabanlı **EdgeOS 1.0 LTS** işletim sisteminin dahili varsayılan yapay zeka çekirdeği olarak entegre edildi.
+  * `edgeos` CLI aracı (`edgeos doctor`, `edgeos info`, `edgeos ai`) ile tam uyumluluk sağlandı.
+
 ---
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
