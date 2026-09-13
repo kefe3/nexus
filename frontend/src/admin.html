@@ -1040,8 +1040,32 @@
             <section id="sec-system" class="cp-section">
                 <div class="cp-section-header">
                     <div>
-                        <h2 class="cp-section-title">Konteyner Mimarisi & Servisler</h2>
-                        <p class="cp-section-desc">Konteyner mimarisi, port yönlendirmeleri ve servis durumları.</p>
+                        <h2 class="cp-section-title">Konteyner Mimarisi & Masaüstü Uygulaması</h2>
+                        <p class="cp-section-desc">Konteyner mimarisi, masaüstü uygulaması kurulumu ve servis durumları.</p>
+                    </div>
+                </div>
+
+                <!-- Desktop App Installer Card -->
+                <div class="glass-panel" style="margin-bottom: 1.5rem; border: 1px solid rgba(0, 245, 160, 0.35); background: linear-gradient(135deg, rgba(14, 20, 32, 0.9), rgba(6, 12, 24, 0.95));">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div style="width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, rgba(0, 245, 160, 0.2), rgba(0, 242, 254, 0.2)); border: 1px solid rgba(0, 245, 160, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--accent-green);">
+                                <i class="fa-solid fa-desktop"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 3px;">🖥️ Yerel Masaüstü Uygulaması (Nexus Desktop Client)</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Tek tıkla sisteminize yerel pencere, başlık çubuğu ve sistem tepsi (system tray) simgesini kurun.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button class="btn-action" style="padding: 8px 16px; font-size: 0.82rem; background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan)); color: #04060c; font-weight: 800; border: none;" onclick="installDesktopAppFromCP()" id="btn-install-desktop">
+                                <i class="fa-solid fa-download"></i> <span>Masaüstü Kısayolunu Kur</span>
+                            </button>
+                            <button class="btn-action" style="padding: 8px 14px; font-size: 0.82rem;" onclick="launchDesktopAppFromCP()" id="btn-launch-desktop">
+                                <i class="fa-solid fa-play"></i> <span>Masaüstü Uygulamasını Başlat</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

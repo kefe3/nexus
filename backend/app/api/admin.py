@@ -1127,4 +1127,58 @@ async def get_system_logs(lines: int = 50):
     except Exception as e:
         return {"status": "error", "logs": [], "message": str(e)}
 
+@router.get("/desktop/status")
+async def get_desktop_app_status():
+    repo_dir = get_repo_dir()
+    home_dir = os.path.expanduser("~")
+    desktop_shortcut = os.path.join(home_dir, ".local", "share", "applications", "nexus.desktop")
+    installed = os.path.isfile(desktop_shortcut)
+    
+    script_exists = os.path.isfile(os.path.join(repo_dir, "desktop", "run_desktop.sh"))
+    return {
+        "status": "ok",
+        "installed": installed,
+        "shortcut_path": desktop_shortcut if installed else "",
+        "script_exists": script_exists,
+        "os": platform.system()
+    }
+
+@router.post("/desktop/install")
+async def install_desktop_app():
+    repo_dir = get_repo_dir()
+    desktop_dir = os.path.join(repo_dir, "desktop")
+    if not os.path.isdir(desktop_dir):
+        raise HTTPException(status_code=400, detail="Desktop dizini bulunamadı.")
+
+    install_script = os.path.join(desktop_dir, "install_desktop_shortcut.sh")
+    try:
+        if os.path.isfile(install_script):
+            os.chmod(install_script, 0o777)
+            out = subprocess.check_output([install_script], stderr=subprocess.STDOUT, timeout=15).decode().strip()
+            return {"status": "ok", "message": "Masaüstü kısayolu başarıyla yüklendi!", "output": out}
+        else:
+            return {"status": "error", "message": "install_desktop_shortcut.sh bulunamadı."}
+    except Exception as e:
+        return {"status": "error", "message": f"Kurulum hatası: {str(e)}"}
+
+@router.post("/desktop/launch")
+async def launch_desktop_app():
+    repo_dir = get_repo_dir()
+    desktop_dir = os.path.join(repo_dir, "desktop")
+    run_script = os.path.join(desktop_dir, "run_desktop.sh")
+
+    try:
+        if os.path.isfile(run_script):
+            os.chmod(run_script, 0o777)
+            env = os.environ.copy()
+            if "DISPLAY" not in env:
+                env["DISPLAY"] = ":0"
+            subprocess.Popen([run_script], cwd=desktop_dir, env=env)
+            return {"status": "ok", "message": "Masaüstü uygulaması başlatıldı!"}
+        else:
+            return {"status": "error", "message": "run_desktop.sh bulunamadı."}
+    except Exception as e:
+        return {"status": "error", "message": f"Başlatma hatası: {str(e)}"}
+
+
 
