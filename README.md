@@ -7,7 +7,6 @@
 ![GitHub Packages](https://img.shields.io/badge/GHCR-ghcr.io%2Fkefe3%2Fnexus--backend-purple?style=for-the-badge&logo=github)
 ![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![EdgeOS AI Engine](https://img.shields.io/badge/EdgeOS-Native_AI_Engine-emerald?style=for-the-badge)
 
 **The ultra-lightweight, high-performance, open-source Self-Hosted AI Platform with Live Code Sandboxing, 1-Click Cloudflare Public Tunnel, Multi-Provider Streaming, HuggingFace GGUF Store, Hardware OOM Shield, and Cluster Control Panel.**
 

@@ -461,12 +461,6 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
      * `ghcr.io/kefe3/nexus-frontend:v3.1.0` ve `latest` imajları GitHub Container Registry üzerine push edildi.
   3. **`docker-compose.yml` Güncellemesi:** GitHub Packages üzerinden doğrudan `docker pull` ve `docker compose up` yapılması sağlandı.
 
-#### 🕒 12:32:00 — [Commit: `f379b0e`] • 🐧 EdgeOS 1.0 LTS (Aether AI Edition) Entegrasyonu
-* **Modül:** `EdgeOS Linux Distribution AI Engine Entegrasyonu`
-* **Yapılan İşlemler:**
-  * Nexus AI Studio v3.1.0 motoru, Ubuntu/Linux tabanlı **EdgeOS 1.0 LTS** işletim sisteminin dahili varsayılan yapay zeka çekirdeği olarak entegre edildi.
-  * `edgeos` CLI aracı (`edgeos doctor`, `edgeos info`, `edgeos ai`) ile tam uyumluluk sağlandı.
-
 ---
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
