@@ -1,0 +1,8 @@
+{
+  "tool_web_search": true,
+  "tool_code_interpreter": true,
+  "tool_doc_converter": true,
+  "tool_image_gen": true,
+  "tool_db_explorer": true,
+  "tool_http_webhook": true
+}

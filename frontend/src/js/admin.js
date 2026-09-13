@@ -212,6 +212,7 @@ async function unloadModel(name) {
 // Fetch Installed Models from Ollama
 async function fetchInstalledModels() {
     const tbody = document.getElementById('installed-models-tbody');
+    if (!tbody) return;
     try {
         const res = await fetch(`${API_BASE}/admin/models`, {
             headers: getOllamaHeaders()
@@ -221,16 +222,17 @@ async function fetchInstalledModels() {
 
         tbody.innerHTML = '';
         if (data.models && data.models.length > 0) {
-            document.getElementById('installed-count-badge').textContent = `${data.models.length} Model`;
+            const badge = document.getElementById('store-models-installed-badge') || document.getElementById('installed-count-badge');
+            if (badge) badge.textContent = `${data.models.length} Model`;
             data.models.forEach(m => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><span class="badge-model"><i class="fa-solid fa-cube"></i> ${m.name}</span></td>
+                    <td><span class="badge-model"><i class="fa-solid fa-cube"></i> ${escapeHtml(m.name)}</span></td>
                     <td><span class="badge-size">${m.parameter_size !== 'N/A' ? m.parameter_size : ''} (${m.size_gb} GB)</span></td>
-                    <td><code style="font-size: 0.78rem; color: #a5b4fc;">${m.quantization_level}</code></td>
-                    <td style="color: #94a3b8; font-size: 0.8rem;">${m.format.toUpperCase()}</td>
+                    <td><code style="font-size: 0.78rem; color: #a5b4fc;">${escapeHtml(m.quantization_level || 'N/A')}</code></td>
+                    <td style="color: #94a3b8; font-size: 0.8rem;">${m.format ? escapeHtml(m.format.toUpperCase()) : 'GGUF'}</td>
                     <td style="text-align: right;">
-                        <button class="btn-danger" onclick="deleteModel('${m.name}')">
+                        <button class="btn-danger" onclick="deleteModel('${escapeHtml(m.name)}')">
                             <i class="fa-solid fa-trash"></i> Sil
                         </button>
                     </td>
