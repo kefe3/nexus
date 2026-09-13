@@ -1382,40 +1382,6 @@ async function submitCustomStoreUpload() {
     }
 }
 
-async function installDesktopAppFromCP() {
-    const btn = document.getElementById('btn-install-desktop');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kuruluyor...';
-    }
-    try {
-        const res = await fetch(`${API_BASE}/admin/desktop/install`, { method: 'POST' });
-        const data = await res.json();
-        if (data.status === 'ok') {
-            alert(`✅ ${data.message}\n\nNexus AI Studio masaüstü kısayolu sisteminize eklendi! (Uygulama Menüsünden veya butondan başlatabilirsiniz).`);
-        } else {
-            alert(`⚠️ Kurulum uyarısı: ${data.message}`);
-        }
-    } catch (e) {
-        alert(`Kurulum hatası: ${e.message}`);
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-download"></i> <span>Masaüstü Kısayolunu Kur</span>';
-        }
-    }
-}
-
-async function launchDesktopAppFromCP() {
-    try {
-        const res = await fetch(`${API_BASE}/admin/desktop/launch`, { method: 'POST' });
-        const data = await res.json();
-        alert(data.message || 'Masaüstü uygulaması başlatıldı!');
-    } catch (e) {
-        alert(`Masaüstü uygulaması başlatılamadı: ${e.message}`);
-    }
-}
-
 // Auto-check updates & store on startup
 document.addEventListener('DOMContentLoaded', () => {
     checkUpdates();
