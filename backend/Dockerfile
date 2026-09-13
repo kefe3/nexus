@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+LABEL org.opencontainers.image.source="https://github.com/kefe3/nexus"
+LABEL org.opencontainers.image.description="Nexus AI Studio Backend API Container"
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
