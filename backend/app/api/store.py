@@ -316,6 +316,55 @@ async def toggle_store_skill(req: InstallItemRequest):
     return {"status": "ok", "id": req.id, "installed": skills[req.id]}
 
 
+@router.get("/huggingface/search")
+async def search_huggingface_hub(q: str = "gguf", limit: int = 24):
+    """
+    Search Hugging Face Hub for GGUF format open-weights models.
+    """
+    query = q.strip() if q else "gguf"
+    params = {
+        "search": query,
+        "filter": "gguf",
+        "sort": "downloads",
+        "direction": "-1",
+        "limit": min(limit, 50)
+    }
+    headers = {"User-Agent": "Nexus-AI-Studio/1.0"}
+    
+    try:
+        async with httpx.AsyncClient(timeout=15.0, headers=headers) as client:
+            resp = await client.get("https://huggingface.co/api/models", params=params)
+            if resp.status_code != 200:
+                raise HTTPException(status_code=resp.status_code, detail="Hugging Face API error")
+            
+            raw_models = resp.json()
+            results = []
+            for item in raw_models:
+                model_id = item.get("id", "")
+                if not model_id:
+                    continue
+                parts = model_id.split("/")
+                author = parts[0] if len(parts) > 1 else ""
+                name = parts[1] if len(parts) > 1 else model_id
+                
+                tags = [t for t in item.get("tags", []) if t not in ["gguf", "endpoints_compatible", "region:us", "license:other"] and not t.startswith("base_model:")]
+                
+                results.append({
+                    "id": model_id,
+                    "ollama_tag": f"hf.co/{model_id}",
+                    "author": author,
+                    "name": name,
+                    "downloads": item.get("downloads", 0),
+                    "likes": item.get("likes", 0),
+                    "tags": tags[:5],
+                    "pipeline_tag": item.get("pipeline_tag", "text-generation"),
+                    "created_at": item.get("createdAt", "")
+                })
+            return {"status": "ok", "query": query, "total": len(results), "models": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Hugging Face search failed: {str(e)}")
+
+
 @router.get("/pull-stream")
 async def stream_ollama_model_pull(model: str, x_ollama_url: str = Header(default="")):
     model_name = model.strip()

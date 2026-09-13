@@ -1067,6 +1067,13 @@ function switchStoreTab(tabId) {
     if (targetContent) {
         targetContent.style.display = 'block';
     }
+
+    if (tabId === 'huggingface') {
+        const grid = document.getElementById('hf-models-grid');
+        if (grid && (grid.children.length === 0 || grid.innerText.includes('Arama yapılıyor'))) {
+            searchHuggingFaceHub('gguf');
+        }
+    }
 }
 
 async function fetchStoreItems() {
@@ -1246,6 +1253,81 @@ function triggerCustomModelPull() {
     }
     startStreamingModelPull(name);
     if (input) input.value = '';
+}
+
+async function searchHuggingFaceHub(query) {
+    const input = document.getElementById('input-hf-search');
+    const searchQuery = (query !== undefined ? query : (input ? input.value : '')).trim() || 'gguf';
+    
+    const grid = document.getElementById('hf-models-grid');
+    const badge = document.getElementById('hf-search-count-badge');
+    const titleEl = document.getElementById('hf-search-results-title');
+
+    if (grid) {
+        grid.innerHTML = `<div style="text-align: center; color: var(--text-muted); grid-column: 1/-1; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--accent-cyan); margin-bottom: 10px;"></i><br>Hugging Face Hub aranıyor...</div>`;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/store/huggingface/search?q=${encodeURIComponent(searchQuery)}`);
+        const data = await res.json();
+        
+        if (data.status === 'ok') {
+            if (badge) badge.textContent = `${data.total || 0} Sonuç`;
+            if (titleEl) titleEl.textContent = `🤗 HuggingFace GGUF Modelleri (${escapeHtml(data.query)})`;
+            renderHuggingFaceResults(data.models || []);
+        } else {
+            if (grid) grid.innerHTML = `<div style="text-align: center; color: #ef4444; grid-column: 1/-1; padding: 2rem;">Arama hatası: ${escapeHtml(data.detail || 'Bilinmeyen hata')}</div>`;
+        }
+    } catch (e) {
+        console.error('HF Search error:', e);
+        if (grid) grid.innerHTML = `<div style="text-align: center; color: #ef4444; grid-column: 1/-1; padding: 2rem;">HuggingFace API bağlantı hatası</div>`;
+    }
+}
+
+function renderHuggingFaceResults(models) {
+    const grid = document.getElementById('hf-models-grid');
+    if (!grid) return;
+
+    if (!models || models.length === 0) {
+        grid.innerHTML = `<div style="text-align: center; color: var(--text-muted); grid-column: 1/-1; padding: 2rem;">Eşleşen HuggingFace GGUF modeli bulunamadı.</div>`;
+        return;
+    }
+
+    grid.innerHTML = '';
+    models.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'glass-panel';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.justifyContent = 'space-between';
+        card.style.marginBottom = '0';
+
+        const tagsHtml = (m.tags || []).map(t => `<span class="quick-tag" style="font-size: 0.72rem; padding: 2px 7px;">${escapeHtml(t)}</span>`).join(' ');
+
+        card.innerHTML = `
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <span class="badge-model" style="background: rgba(255, 184, 0, 0.15); color: #ffb800; border: 1px solid rgba(255, 184, 0, 0.3);"><i class="fa-solid fa-cube"></i> GGUF</span>
+                    <span style="font-size: 0.75rem; color: #64748b; font-family: 'JetBrains Mono', monospace;"><i class="fa-solid fa-user" style="margin-right: 4px;"></i> ${escapeHtml(m.author || 'HF User')}</span>
+                </div>
+                <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0 0 6px 0; word-break: break-all;">${escapeHtml(m.name)}</h4>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace;">
+                    ${escapeHtml(m.id)}
+                </div>
+                <div style="display: flex; gap: 12px; font-size: 0.76rem; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px;">
+                    <span><i class="fa-solid fa-download" style="color: var(--accent-cyan);"></i> <strong>${m.downloads.toLocaleString()}</strong> indirme</span>
+                    <span><i class="fa-solid fa-heart" style="color: #ef4444;"></i> <strong>${m.likes.toLocaleString()}</strong> beğeni</span>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;">${tagsHtml}</div>
+            </div>
+            <div>
+                <button class="btn-action" style="width: 100%; justify-content: center; padding: 9px; background: linear-gradient(135deg, rgba(255, 184, 0, 0.2), rgba(255, 107, 0, 0.2)); border: 1px solid rgba(255, 184, 0, 0.4); color: #ffb800;" onclick="startStreamingModelPull('${escapeHtml(m.ollama_tag)}')">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> 1-Tıkla İndir & Kur
+                </button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
 }
 
 async function toggleStoreTool(id, isInstall) {

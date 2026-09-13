@@ -71,17 +71,12 @@ irm https://raw.githubusercontent.com/kefe3/nexus/main/windows/install.ps1 | iex
 curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/macos/install.sh | bash
 ```
 
-## 🖥️ Nexus AI Native Desktop Client (Masaüstü Uygulaması)
+## 🛒 Nexus Store & HuggingFace Hub Integration
 
-Nexus AI Studio'yu web tarayıcısına bağımlı kalmadan sistem tepsisi (system tray) entegrasyonlu yerel bir masaüstü uygulaması olarak çalıştırabilirsiniz:
-
-```bash
-# Masaüstü Uygulamasını Başlatın
-./desktop/run_desktop.sh
-
-# Sistem Kısayolu Yükleme (~/.local/share/applications/nexus.desktop)
-./desktop/install_desktop_shortcut.sh
-```
+Nexus AI Studio, HuggingFace Hub üzerindeki yüzbinlerce açık kaynak GGUF modelini canlı arama ve tek tıkla doğrudan yerel Ollama motorunuza indirme desteği sunar:
+- **🤗 HuggingFace Live Search**: Canlı GGUF model arama ve filtreleme.
+- **⚡ Chunked SSE Stream**: Gerçek zamanlı model indirme, katman takibi ve MB/s hız göstergesi.
+- **🛠️ Tools & Skiller**: Otonom web arama, kod yorumlayıcı ve özel ajan yeteneklerini yönetme.
 
 ---
 

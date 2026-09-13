@@ -777,6 +777,9 @@
                     <button class="btn-action store-tab-btn active" onclick="switchStoreTab('models')" id="tab-btn-models" style="background: rgba(0, 242, 254, 0.15); border: 1px solid rgba(0, 242, 254, 0.3); color: var(--accent-cyan);">
                         <i class="fa-solid fa-brain"></i> <span>🤖 Modeller (LLM Store)</span>
                     </button>
+                    <button class="btn-action store-tab-btn" onclick="switchStoreTab('huggingface')" id="tab-btn-huggingface" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-muted);">
+                        <i class="fa-solid fa-cube"></i> <span>🤗 HuggingFace Hub</span>
+                    </button>
                     <button class="btn-action store-tab-btn" onclick="switchStoreTab('tools')" id="tab-btn-tools" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-muted);">
                         <i class="fa-solid fa-wrench"></i> <span>🛠️ Araçlar (Tools)</span>
                     </button>
@@ -858,6 +861,29 @@
                                 <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- STORE TAB: HUGGINGFACE HUB SEARCH -->
+                <div id="store-tab-content-huggingface" class="store-tab-content" style="display: none;">
+                    <div class="glass-panel" style="margin-bottom: 1.5rem;">
+                        <h3 class="glass-panel-title">
+                            <span><i class="fa-solid fa-magnifying-glass" style="color: var(--accent-cyan); margin-right: 8px;"></i> 🤗 Hugging Face Hub GGUF Model Arama</span>
+                        </h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Hugging Face üzerindeki yüzbinlerce açık kaynak GGUF modelini canlı arayın ve 1-tıkla doğrudan Ollama motorunuza indirin.</p>
+                        <div class="form-row">
+                            <input type="text" id="input-hf-search" class="custom-input" placeholder="Model veya yazar adı girin (örn: deepseek, qwen, llama, bartowski, unsloth...)" onkeydown="if(event.key === 'Enter') searchHuggingFaceHub()">
+                            <button class="btn-action" onclick="searchHuggingFaceHub()"><i class="fa-solid fa-search"></i> HuggingFace'te Ara</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;" id="hf-search-results-title">🤗 Popüler HuggingFace GGUF Modelleri</h3>
+                        <span class="badge-size" id="hf-search-count-badge">0 Sonuç</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;" id="hf-models-grid">
+                        <div style="text-align: center; color: var(--text-muted); grid-column: 1/-1; padding: 2rem;">Arama yapılıyor...</div>
                     </div>
                 </div>
 
