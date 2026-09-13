@@ -12,48 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchModelsForActiveProvider();
 });
 
-function getSessionId() {
-    let sid = localStorage.getItem("nexus_session_id");
-    if (!sid) {
-        sid = "sess_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
-        localStorage.setItem("nexus_session_id", sid);
-    }
-    return sid;
-}
-
-async function syncChatsWithServer() {
-    try {
-        const res = await fetch("/api/chats", {
-            headers: { "X-Session-ID": getSessionId() }
-        });
-        const data = await res.json();
-        if (data.status === "ok" && data.chats && data.chats.length > 0) {
-            chatsHistory = data.chats;
-            localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
-            renderChatsList();
-            if (!currentChatId || !chatsHistory.find(c => c.id === currentChatId)) {
-                loadChat(chatsHistory[0].id);
-            }
-        }
-    } catch (e) {
-        console.warn("Server chat sync skipped:", e);
-    }
-}
-
-async function persistChatToServer(chatObj) {
-    if (!chatObj) return;
-    try {
-        await fetch("/api/chats", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Session-ID": getSessionId()
-            },
-            body: JSON.stringify(chatObj)
-        });
-    } catch (e) {}
-}
-
 function initChatInterface() {
     renderChatsList();
     if (chatsHistory.length > 0) {
@@ -61,7 +19,6 @@ function initChatInterface() {
     } else {
         createNewChat();
     }
-    syncChatsWithServer();
 
     const input = document.getElementById("promptInput");
     if (input) {
@@ -126,16 +83,10 @@ function loadChat(id) {
     renderMessages();
 }
 
-async function deleteChat(id, e) {
+function deleteChat(id, e) {
     if (e) e.stopPropagation();
     chatsHistory = chatsHistory.filter(c => c.id !== id);
     localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
-    try {
-        await fetch(`/api/chats/${id}`, {
-            method: "DELETE",
-            headers: { "X-Session-ID": getSessionId() }
-        });
-    } catch (e) {}
     if (currentChatId === id) {
         if (chatsHistory.length > 0) loadChat(chatsHistory[0].id);
         else createNewChat();
@@ -206,7 +157,6 @@ async function sendMessage() {
         chatObj.messages = currentMessages;
     }
     localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
-    persistChatToServer(chatObj);
     renderChatsList();
 
     // Create assistant message container
@@ -290,7 +240,6 @@ async function sendMessage() {
         currentMessages.push({ role: "assistant", content: fullResponse });
         chatObj.messages = currentMessages;
         localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
-        persistChatToServer(chatObj);
 
     } catch (e) {
         if (e.name === "AbortError") {
@@ -348,58 +297,32 @@ function highlightCodeBlocks() {
     document.querySelectorAll("pre code").forEach(block => {
         if (window.hljs) window.hljs.highlightElement(block);
 
-        // Add Live Preview, Deploy & Copy header if not already added
+        // Add Live Preview & Copy header if not already added
         const pre = block.parentElement;
         if (pre && !pre.querySelector(".code-header")) {
             const lang = block.className.replace("hljs language-", "").replace("language-", "").trim();
             const code = block.textContent;
 
             const header = document.createElement("div");
-            header.className = "code-header flex items-center justify-between px-3 py-1.5 bg-slate-900/90 border-b border-white/10 text-slate-400 text-xs font-mono rounded-t-xl select-none";
+            header.className = "code-header flex items-center justify-between px-3 py-1.5 bg-slate-900/90 border-b border-white/10 text-slate-400 text-xs font-mono rounded-t-xl";
             
-            const isWeb = ["html", "javascript", "js", "svg", "css"].includes(lang.toLowerCase()) || code.includes("<!DOCTYPE") || code.includes("<html") || code.includes("<body") || code.includes("<div") || code.includes("<script");
+            const isWeb = ["html", "javascript", "js", "svg"].includes(lang) || code.includes("<!DOCTYPE") || code.includes("<html");
             
             header.innerHTML = `
                 <span class="font-bold uppercase text-[11px] text-indigo-400">${lang || "CODE"}</span>
                 <div class="flex items-center gap-2">
                     ${isWeb ? `
-                        <button type="button" class="btn-publish-direct px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Tek tıkla internete ve dünyaya aç">
-                            <i class="fa-solid fa-globe text-[10px]"></i> <span>Dünyaya Aç</span>
-                        </button>
-                        <button type="button" class="btn-open-sandbox px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm">
-                            <i class="fa-solid fa-play text-[10px]"></i> <span>${t("live_preview")}</span>
+                        <button onclick="openSandbox(decodeURIComponent('${encodeURIComponent(code)}'))" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1 transition-all">
+                            <i class="fa-solid fa-play text-[9px]"></i> <span>${t("live_preview")}</span>
                         </button>
                     ` : ""}
-                    <button type="button" class="btn-copy-code hover:text-white transition-colors text-[11px] flex items-center gap-1.5 px-2 py-1 cursor-pointer">
+                    <button onclick="copyCodeFromBlock(this)" class="hover:text-white transition-colors text-[11px] flex items-center gap-1">
                         <i class="fa-regular fa-copy"></i> <span>${t("copy_code")}</span>
                     </button>
                 </div>
             `;
             pre.insertBefore(header, block);
             pre.className = "rounded-xl border border-white/10 overflow-hidden bg-slate-950/80 my-3";
-
-            // Bind listeners directly
-            const publishBtn = header.querySelector(".btn-publish-direct");
-            if (publishBtn) {
-                publishBtn.onclick = (e) => {
-                    e.preventDefault();
-                    publishDirectCode(block.textContent);
-                };
-            }
-            const sandboxBtn = header.querySelector(".btn-open-sandbox");
-            if (sandboxBtn) {
-                sandboxBtn.onclick = (e) => {
-                    e.preventDefault();
-                    openSandbox(block.textContent);
-                };
-            }
-            const copyBtn = header.querySelector(".btn-copy-code");
-            if (copyBtn) {
-                copyBtn.onclick = (e) => {
-                    e.preventDefault();
-                    copyCodeFromBlock(copyBtn);
-                };
-            }
         }
     });
 }
@@ -470,87 +393,4 @@ function showToast(msg) {
         toast.classList.remove("opacity-100", "translate-y-0");
         toast.classList.add("opacity-0", "translate-y-4", "pointer-events-none");
     }, 2500);
-}
-
-
-// Settings Modal Handlers
-async function openSettingsModal() {
-    const modal = document.getElementById("settingsModal");
-    if (!modal) return;
-
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
-
-    // Load existing settings
-    ['gemini', 'openai', 'groq', 'anthropic'].forEach(prov => {
-        const input = document.getElementById(`input_key_${prov}`);
-        if (input) {
-            input.value = localStorage.getItem(`nexus_key_${prov}`) || "";
-        }
-    });
-    const ollamaInput = document.getElementById("input_url_ollama");
-    if (ollamaInput) {
-        ollamaInput.value = localStorage.getItem("nexus_url_ollama") || "http://localhost:11434";
-    }
-
-    // Also fetch server settings preview
-    try {
-        const res = await fetch("/api/settings");
-        const data = await res.json();
-        if (data.status === "ok" && data.providers) {
-            Object.keys(data.providers).forEach(prov => {
-                const info = data.providers[prov];
-                const input = document.getElementById(`input_key_${prov}`);
-                if (input && !input.value && info.has_key && info.key_preview) {
-                    input.placeholder = `Sunucuda Kayıtlı (${info.key_preview})`;
-                }
-            });
-        }
-    } catch (e) {}
-}
-
-function closeSettingsModal() {
-    const modal = document.getElementById("settingsModal");
-    if (modal) {
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-    }
-}
-
-async function saveSettings() {
-    const providers = ['gemini', 'openai', 'groq', 'anthropic'];
-    for (const prov of providers) {
-        const input = document.getElementById(`input_key_${prov}`);
-        if (input && input.value.trim()) {
-            const val = input.value.trim();
-            localStorage.setItem(`nexus_key_${prov}`, val);
-            localStorage.setItem(`nexus_${prov}_key`, val);
-            try {
-                await fetch("/api/settings", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ provider: prov, api_key: val })
-                });
-            } catch (e) {}
-        }
-    }
-
-    const ollamaInput = document.getElementById("input_url_ollama");
-    if (ollamaInput && ollamaInput.value.trim()) {
-        const url = ollamaInput.value.trim();
-        localStorage.setItem("nexus_url_ollama", url);
-        try {
-            await fetch("/api/settings", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ provider: "ollama", base_url: url })
-            });
-        } catch (e) {}
-    }
-
-    closeSettingsModal();
-    showToast("Ayarlar ve API anahtarları sunucuya kaydedildi!");
-    if (typeof fetchModelsForActiveProvider === "function") {
-        fetchModelsForActiveProvider();
-    }
 }

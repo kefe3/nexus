@@ -55,13 +55,20 @@
 
         <!-- Sidebar Footer -->
         <div class="p-4 border-t border-white/10 space-y-2">
-            <!-- Dedicated Control Panel Button -->
-            <a href="admin.html" class="w-full py-2.5 px-3 bg-gradient-to-r from-indigo-900/60 to-cyan-950/60 hover:from-indigo-800 hover:to-cyan-900 text-cyan-200 rounded-xl text-xs font-black flex items-center justify-between border border-cyan-500/40 shadow-lg shadow-cyan-950/30 transition-all group">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-gauge-high text-cyan-400 group-hover:scale-110 transition-transform"></i><span data-i18n="control_panel">⚡ Kontrol Paneli</span></span>
+            <!-- Dedicated Cluster Control Panel 2.0 Link -->
+            <a href="admin.html" class="w-full py-2 px-3 bg-gradient-to-r from-indigo-900/60 to-cyan-950/60 hover:from-indigo-800 hover:to-cyan-900 text-cyan-200 rounded-xl text-xs font-black flex items-center justify-between border border-cyan-500/40 shadow-lg shadow-cyan-950/30 transition-all group">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-gauge-high text-cyan-400 group-hover:scale-110 transition-transform"></i><span>⚡ Kontrol Paneli (Admin)</span></span>
                 <span class="text-[9px] font-mono px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded font-bold border border-cyan-500/30">ADMIN</span>
             </a>
 
-            <button onclick="openSettingsModal()" class="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-between border border-white/5 transition-all">
+            <!-- Quick Telemetry Dashboard Modal Button -->
+            <button onclick="openControlPanel()" class="w-full py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-between border border-white/5 transition-all">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-chart-line text-cyan-400"></i><span data-i18n="control_panel">Hızlı Metrikler</span></span>
+                <span class="text-[9px] font-mono px-1.5 py-0.5 bg-indigo-500/30 text-indigo-300 rounded font-bold">LIVE</span>
+            </button>
+
+            <!-- Settings Modal Button -->
+            <button onclick="openSettingsModal()" class="w-full py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-between border border-white/5 transition-all">
                 <span class="flex items-center gap-2"><i class="fa-solid fa-gear text-indigo-400"></i><span data-i18n="settings">Ayarlar</span></span>
                 <span class="text-[10px] text-slate-500 font-mono">API Keys</span>
             </button>
@@ -175,9 +182,6 @@
 
                 <!-- Action Controls -->
                 <div class="flex items-center gap-2">
-                    <button onclick="publishCurrentArtifact()" id="publishArtifactBtn" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all" title="Tek tıkla internete ve dünyaya aç">
-                        <i class="fa-solid fa-globe text-xs"></i> <span>Dünyaya Aç / Paylaş</span>
-                    </button>
                     <button onclick="runSandboxCode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
                         <i class="fa-solid fa-rotate-right text-[10px]"></i> <span data-i18n="refresh">Yenile</span>
                     </button>
@@ -343,40 +347,5 @@
     <script src="js/sandbox.js"></script>
     <script src="js/voice.js"></script>
     <script src="js/app.js"></script>
-
-    <script>
-        function openSettingsModal() {
-            document.getElementById("input_key_gemini").value = localStorage.getItem("nexus_key_gemini") || "";
-            document.getElementById("input_key_openai").value = localStorage.getItem("nexus_key_openai") || "";
-            document.getElementById("input_key_groq").value = localStorage.getItem("nexus_key_groq") || "";
-            document.getElementById("input_key_anthropic").value = localStorage.getItem("nexus_key_anthropic") || "";
-            document.getElementById("input_url_ollama").value = localStorage.getItem("nexus_url_ollama") || "http://localhost:11434";
-            document.getElementById("settingsModal").classList.remove("hidden");
-            document.getElementById("settingsModal").classList.add("flex");
-        }
-        function closeSettingsModal() {
-            document.getElementById("settingsModal").classList.add("hidden");
-            document.getElementById("settingsModal").classList.remove("flex");
-        }
-        function saveSettings() {
-            localStorage.setItem("nexus_key_gemini", document.getElementById("input_key_gemini").value.trim());
-            localStorage.setItem("nexus_key_openai", document.getElementById("input_key_openai").value.trim());
-            localStorage.setItem("nexus_key_groq", document.getElementById("input_key_groq").value.trim());
-            localStorage.setItem("nexus_key_anthropic", document.getElementById("input_key_anthropic").value.trim());
-            localStorage.setItem("nexus_url_ollama", document.getElementById("input_url_ollama").value.trim());
-            closeSettingsModal();
-            showToast(t("saved_success"));
-            fetchModelsForActiveProvider();
-        }
-        function switchProvider(prov) {
-            activeProvider = prov;
-            localStorage.setItem("nexus_provider", prov);
-            fetchModelsForActiveProvider();
-        }
-        function switchModel(model) {
-            activeModel = model;
-            localStorage.setItem("nexus_model", model);
-        }
-    </script>
 </body>
 </html>
