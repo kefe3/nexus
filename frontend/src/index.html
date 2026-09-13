@@ -49,7 +49,24 @@
             <!-- Chat History -->
             <div class="space-y-1">
                 <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1" data-i18n="history_title">Geçmiş Sohbetler</div>
-                <div id="chatsHistoryList" class="space-y-1 max-h-[calc(100vh-320px)] overflow-y-auto pr-1"></div>
+                <div id="chatsHistoryList" class="space-y-1 max-h-[calc(100vh-380px)] overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- Workspaces / Project Context Manager -->
+            <div class="pt-2 border-t border-white/5 space-y-2">
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-folder-open text-indigo-400"></i> Proje Bağlamı
+                    </span>
+                    <button onclick="document.getElementById('workspaceFileInput').click()" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                        + Dosya Yükle
+                    </button>
+                    <input type="file" id="workspaceFileInput" multiple class="hidden" onchange="handleWorkspaceFilesUpload(this.files)">
+                </div>
+
+                <div id="workspaceFilesList" class="space-y-1 max-h-28 overflow-y-auto pr-1">
+                    <div class="text-[11px] text-slate-500 italic px-1">Henüz dosya eklenmedi</div>
+                </div>
             </div>
         </div>
 
@@ -94,10 +111,24 @@
                     </select>
                 </div>
 
-                <!-- Model Selector -->
+                <!-- Model Selector 1 -->
                 <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10 text-xs">
-                    <span class="text-slate-500 font-bold" data-i18n="model">Model:</span>
+                    <span class="text-slate-500 font-bold" data-i18n="model">Model 1:</span>
                     <select id="modelSelect" onchange="switchModel(this.value)" class="bg-transparent font-bold text-cyan-300 focus:outline-none cursor-pointer">
+                        <option value="">Yükleniyor...</option>
+                    </select>
+                </div>
+
+                <!-- Arena Mode Toggle Button -->
+                <button onclick="toggleArenaMode()" id="arenaModeBtn" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-amber-400 hover:border-amber-500/40 text-xs font-bold transition-all flex items-center gap-1.5" title="İki modeli yan yana yarıştırın">
+                    <i class="fa-solid fa-bolt text-amber-400"></i>
+                    <span>⚔️ Arena Modu</span>
+                </button>
+
+                <!-- Model Selector 2 (Shown when Arena Mode is ON) -->
+                <div id="modelSelect2Container" class="hidden items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-amber-500/40 text-xs">
+                    <span class="text-amber-400 font-bold">vs Model 2:</span>
+                    <select id="modelSelect2" onchange="switchModel2(this.value)" class="bg-transparent font-bold text-amber-300 focus:outline-none cursor-pointer">
                         <option value="">Yükleniyor...</option>
                     </select>
                 </div>
