@@ -1,4 +1,4 @@
-// Nexus AI Studio — Admin Control Panel v2.0 Engine
+// Nexus AI Studio — Admin Control Panel v3.1.0 Engine
 
 const API_BASE = '/api';
 let telemetryChart = null;
