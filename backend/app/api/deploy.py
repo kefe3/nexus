@@ -7,6 +7,7 @@ import uuid
 import json
 import subprocess
 import threading
+import shutil
 import re
 from typing import Optional, List, Dict, Any
 
