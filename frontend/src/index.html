@@ -78,6 +78,12 @@
                 <span class="text-[9px] font-mono px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded font-bold border border-cyan-500/30">ADMIN</span>
             </a>
 
+            <!-- Packages & License Tiers Button -->
+            <button onclick="openPackagesModal()" class="w-full py-2 px-3 bg-gradient-to-r from-amber-950/60 to-purple-950/60 hover:from-amber-900 hover:to-purple-900 text-amber-200 rounded-xl text-xs font-black flex items-center justify-between border border-amber-500/40 shadow-lg shadow-amber-950/30 transition-all group">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-gem text-amber-400 group-hover:rotate-12 transition-transform"></i><span>🎁 Paketler & Lisanslar</span></span>
+                <span class="text-[9px] font-mono px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded font-bold border border-amber-500/30">TIERS</span>
+            </button>
+
             <!-- Quick Telemetry Dashboard Modal Button -->
             <button onclick="openControlPanel()" class="w-full py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-between border border-white/5 transition-all">
                 <span class="flex items-center gap-2"><i class="fa-solid fa-chart-line text-cyan-400"></i><span data-i18n="control_panel">Hızlı Metrikler</span></span>
@@ -146,6 +152,14 @@
             </div>
 
             <div class="flex items-center gap-2">
+                <button onclick="openPackagesModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-purple-500/20 border border-amber-500/40 text-amber-300 hover:text-amber-200 text-xs font-bold transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-gem text-amber-400"></i>
+                    <span>🎁 Paketler</span>
+                </button>
+                <button onclick="openShowcaseModal()" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-cyan-300 text-xs font-bold transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-star text-cyan-400"></i>
+                    <span>✨ Özellikler</span>
+                </button>
                 <button onclick="createNewChat()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all text-xs" data-i18n-title="clear_history">
                     <i class="fa-solid fa-rotate-left"></i>
                 </button>
@@ -156,15 +170,35 @@
         <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-6 max-w-4xl w-full mx-auto select-text"></div>
 
         <!-- Welcome Hero View (When no messages) -->
-        <div id="welcomeHero" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0 pointer-events-auto">
-            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center text-white text-3xl shadow-2xl mb-4 animate-bounce">
+        <div id="welcomeHero" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0 pointer-events-auto overflow-y-auto">
+            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center text-white text-3xl shadow-2xl mb-3 animate-bounce">
                 <i class="fa-solid fa-bolt"></i>
             </div>
-            <h1 class="text-2xl font-black text-white tracking-tight" data-i18n="app_title">Nexus AI Studio</h1>
-            <p class="text-xs text-slate-400 mt-1 max-w-md" data-i18n="sandbox_desc">Açık kaynaklı, çoklu sağlayıcı destekli ve canlı kod çalıştırma yetenekli self-hosted yapay zeka stüdyosu.</p>
+            <div class="flex flex-wrap items-center justify-center gap-2 mb-2">
+                <span class="text-[11px] font-mono font-bold px-3 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/40">v3.1.0 Self-Hosted & Cloud</span>
+                <span class="text-[11px] font-mono font-bold px-3 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-500/40"><i class="fa-solid fa-shield-halved text-xs mr-1"></i>OOM Kalkanı Aktif</span>
+            </div>
+            <h1 class="text-3xl font-black text-white tracking-tight" data-i18n="app_title">Nexus AI Studio</h1>
+            <p class="text-xs text-slate-400 mt-1 max-w-lg" data-i18n="sandbox_desc">Açık kaynaklı, NVIDIA CUDA & AMD ROCm GPU destekli, HuggingFace GGUF mağazalı ve canlı kod sandbox'lı yerel yapay zeka stüdyosu.</p>
+
+            <!-- Quick Action Buttons -->
+            <div class="flex flex-wrap items-center justify-center gap-2.5 mt-5">
+                <button onclick="openPackagesModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-amber-500/20 border border-amber-300/30 flex items-center gap-2 transition-all active:scale-95">
+                    <i class="fa-solid fa-gem text-amber-200"></i>
+                    <span>🎁 Paketler & Lisanslar</span>
+                </button>
+                <button onclick="openShowcaseModal()" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyan-300 font-bold text-xs border border-cyan-500/30 flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-star text-cyan-400"></i>
+                    <span>✨ Platform Özellikleri</span>
+                </button>
+                <a href="admin.html" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-indigo-300 font-bold text-xs border border-indigo-500/30 flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-gauge-high text-indigo-400"></i>
+                    <span>⚡ Kontrol Paneli (Admin)</span>
+                </a>
+            </div>
 
             <!-- Featured Personas Carousel -->
-            <div class="mt-8 max-w-2xl w-full text-left">
+            <div class="mt-6 max-w-2xl w-full text-left">
                 <div class="text-xs font-bold text-slate-400 mb-2 px-1" data-i18n="presets_title">Öne Çıkan Rol Şablonları</div>
                 <div id="presetsCarousel" class="flex gap-3 overflow-x-auto pb-2"></div>
             </div>
@@ -376,6 +410,226 @@
                     </div>
                     <div id="providersStatusGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Packages & Pricing Tiers Modal -->
+    <div id="packagesModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-2xl hidden z-50 items-center justify-center p-4 select-text">
+        <div class="w-full max-w-5xl max-h-[92vh] bg-[#0c121e] border border-white/10 rounded-3xl flex flex-col shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="h-16 border-b border-white/10 px-6 flex items-center justify-between bg-slate-900/90 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-sm shadow-lg">
+                        <i class="fa-solid fa-gem"></i>
+                    </div>
+                    <div>
+                        <div class="font-black text-sm text-white" data-i18n="packages_title">Nexus Studio Paketleri & Lisanslar</div>
+                        <div class="text-[11px] text-amber-400 font-mono">Bireysel Self-Hosted, Pro Studio & Kurumsal GPU Cluster Tiers</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- Monthly / Yearly Billing Toggle -->
+                    <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-white/10 text-xs">
+                        <button id="billingBtn-monthly" onclick="setBillingCycle('monthly')" class="px-3 py-1 rounded-lg text-slate-200 font-bold bg-slate-800 transition-all text-xs">Aylık</button>
+                        <button id="billingBtn-yearly" onclick="setBillingCycle('yearly')" class="px-3 py-1 rounded-lg text-slate-400 font-bold hover:bg-slate-800 transition-all text-xs flex items-center gap-1">
+                            <span>Yıllık</span>
+                            <span class="text-[9px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded font-black border border-emerald-500/30">%20 İndirim</span>
+                        </button>
+                    </div>
+                    <button onclick="closePackagesModal()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
+                        <i class="fa-solid fa-xmark text-base"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Subtitle banner -->
+                <div class="text-center max-w-2xl mx-auto space-y-2">
+                    <span class="text-xs font-bold px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">🚀 %100 Açık Kaynak & Esnek Yapı</span>
+                    <h2 class="text-xl font-black text-white">İhtiyacınıza Uygun Güçlü AI Paketi Seçin</h2>
+                    <p class="text-xs text-slate-400">Tüm paketlerde sıfır veri sızıntısı koruması ve dinamik VRAM yönetimi standarttır.</p>
+                </div>
+
+                <!-- Pricing Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                    <!-- Tier 1: Community Self-Hosted -->
+                    <div class="p-6 rounded-3xl bg-slate-900/60 border border-white/10 flex flex-col justify-between space-y-4 hover:border-slate-600 transition-all relative">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold px-2.5 py-1 bg-slate-800 text-slate-300 rounded-xl border border-white/5">Topluluk</span>
+                                <span class="text-xs text-slate-500 font-mono">v3.1.0</span>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black text-white">Community Self-Hosted</h3>
+                                <p class="text-xs text-slate-400 mt-1">Kendi sunucunuzda veya yerel PC'nizde tam özgürlük.</p>
+                            </div>
+                            <div class="pt-2 border-t border-white/5">
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-3xl font-black text-white">₺0</span>
+                                    <span class="text-xs text-slate-400">/ süresiz ücretsiz</span>
+                                </div>
+                            </div>
+                            <!-- Features -->
+                            <ul class="space-y-2 text-xs text-slate-300 pt-2">
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Sınırsız Yerel GPU & Ollama Modelleri</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Tam Açık Kaynak Docker Kurulumu</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Kendi API Anahtarlarını Kullanma</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Donanım Audit & OOM Kalkanı (6GB VRAM)</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Çoklu Dil Desteği (TR / EN)</span></li>
+                            </ul>
+                        </div>
+                        <button onclick="selectPackageTier('community')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-2xl text-xs font-black transition-all border border-white/10">
+                            Süresiz Ücretsiz Başlat
+                        </button>
+                    </div>
+
+                    <!-- Tier 2: Pro AI Studio (POPULAR) -->
+                    <div class="p-6 rounded-3xl bg-gradient-to-b from-indigo-950/70 via-slate-900/80 to-purple-950/70 border-2 border-indigo-500 flex flex-col justify-between space-y-4 hover:border-indigo-400 transition-all relative shadow-2xl shadow-indigo-950/50">
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-gradient-to-r from-amber-500 to-indigo-500 text-white text-[10px] font-black tracking-wider uppercase rounded-full shadow-lg">
+                            ⭐ EN POPÜLER YAZILIM
+                        </div>
+                        <div class="space-y-4 pt-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold px-2.5 py-1 bg-indigo-500/20 text-indigo-300 rounded-xl border border-indigo-500/40">Geliştirici & Studio</span>
+                                <span class="text-xs text-amber-400 font-mono font-bold"><i class="fa-solid fa-bolt"></i> Fast Tier</span>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black text-white">Pro Studio Pass</h3>
+                                <p class="text-xs text-slate-300 mt-1">Dış tünel, Arena testi & GGUF model mağazası erişimi.</p>
+                            </div>
+                            <div class="pt-2 border-t border-white/10">
+                                <div class="flex items-baseline gap-1">
+                                    <span id="price-pro" class="text-3xl font-black text-white">₺299</span>
+                                    <span id="period-pro" class="text-xs text-slate-300">/ ay</span>
+                                </div>
+                            </div>
+                            <!-- Features -->
+                            <ul class="space-y-2 text-xs text-slate-200 pt-2">
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <strong class="text-white">Community'deki Tüm Özellikler</strong></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-indigo-400 text-xs"></i> <span>Cloudflare Quick Tunnel (Dış İnternet & Mobil)</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-indigo-400 text-xs"></i> <span>HuggingFace GGUF Store & Tek Tık İndirme</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-indigo-400 text-xs"></i> <span>⚔️ Arena Modu (İki Modeli Yan Yana Yarıştırma)</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-indigo-400 text-xs"></i> <span>Canlı Artifact HTML/JS Sandbox & Simülatör</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-indigo-400 text-xs"></i> <span>👑 Model Çıkarım Hızı Lider Tablosu</span></li>
+                            </ul>
+                        </div>
+                        <button onclick="selectPackageTier('pro')" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-indigo-500/30 transition-all border border-indigo-400/30 active:scale-95">
+                            ⚡ Pro Studio'ya Yükselt
+                        </button>
+                    </div>
+
+                    <!-- Tier 3: Enterprise Cluster -->
+                    <div class="p-6 rounded-3xl bg-slate-900/60 border border-white/10 flex flex-col justify-between space-y-4 hover:border-cyan-500/50 transition-all relative">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold px-2.5 py-1 bg-cyan-500/20 text-cyan-300 rounded-xl border border-cyan-500/40">Kurumsal</span>
+                                <span class="text-xs text-cyan-400 font-mono">Multi-GPU</span>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black text-white">Enterprise Cluster</h3>
+                                <p class="text-xs text-slate-400 mt-1">Yüksek yük, AMD ROCm / NVIDIA hibrit veri merkezi.</p>
+                            </div>
+                            <div class="pt-2 border-t border-white/5">
+                                <div class="flex items-baseline gap-1">
+                                    <span id="price-enterprise" class="text-3xl font-black text-white">₺1.499</span>
+                                    <span id="period-enterprise" class="text-xs text-slate-400">/ ay</span>
+                                </div>
+                            </div>
+                            <!-- Features -->
+                            <ul class="space-y-2 text-xs text-slate-300 pt-2">
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <strong class="text-white">Pro'daki Tüm Özellikler</strong></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-cyan-400 text-xs"></i> <span>Çoklu GPU (NVIDIA CUDA & AMD ROCm HIP) Support</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-cyan-400 text-xs"></i> <span>Dinamik VRAM Offloading & Sınırsız Paralel Yük</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-cyan-400 text-xs"></i> <span>Özel Kurumsal Model Deposu (Local HF Mirror)</span></li>
+                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-cyan-400 text-xs"></i> <span>7/24 Özel Destek & Dedicated Tunnel Kurulumu</span></li>
+                            </ul>
+                        </div>
+                        <button onclick="selectPackageTier('enterprise')" class="w-full py-3 bg-cyan-900/60 hover:bg-cyan-800 text-cyan-200 rounded-2xl text-xs font-black transition-all border border-cyan-500/40">
+                            📞 Kurumsal İletişime Geç
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Guarantee & FAQ banner -->
+                <div class="p-4 rounded-2xl bg-slate-950 border border-white/5 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-shield-halved text-emerald-400 text-lg"></i>
+                        <div>
+                            <div class="font-bold text-white">Gizlilik & Yerel Veri Garantisi</div>
+                            <div class="text-[11px]">Tüm modeller sizin GPU'nuzda çalışır, sohbet verileriniz asla dışarı çıkmaz.</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 font-mono text-[11px] text-slate-300">
+                        <i class="fa-solid fa-lock text-indigo-400"></i>
+                        <span>256-bit SSL & Quick Tunnel Uyumlu</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Showcase & Platform Features Modal -->
+    <div id="showcaseModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-2xl hidden z-50 items-center justify-center p-4 select-text">
+        <div class="w-full max-w-5xl max-h-[92vh] bg-[#0c121e] border border-white/10 rounded-3xl flex flex-col shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="h-16 border-b border-white/10 px-6 flex items-center justify-between bg-slate-900/90 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm shadow-lg">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div>
+                        <div class="font-black text-sm text-white">Nexus AI Studio — Platform Özellikleri</div>
+                        <div class="text-[11px] text-cyan-400 font-mono">v3.1.0 (NVIDIA CUDA & AMD ROCm Destekli Yerel AI Ekosistemi)</div>
+                    </div>
+                </div>
+                <button onclick="closeShowcaseModal()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- Grid Features -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Feature 1 -->
+                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-indigo-500/40 transition-all">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm"><i class="fa-solid fa-bolt"></i></div>
+                        <h4 class="font-black text-sm text-white">Çoklu Model Sağlayıcısı</h4>
+                        <p class="text-xs text-slate-400">Ollama (Yerel GPU), Google Gemini, OpenAI GPT-4o, Groq (300+ tok/s) ve Anthropic Claude 3.5'i tek panelde birleştirin.</p>
+                    </div>
+                    <!-- Feature 2 -->
+                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-amber-500/40 transition-all">
+                        <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm"><i class="fa-solid fa-swords"></i></div>
+                        <h4 class="font-black text-sm text-white">⚔️ Arena Modu</h4>
+                        <p class="text-xs text-slate-400">İki farklı yapay zeka modelini yan yana çalıştırın, yanıt kalitelerini ve hızlarını eş zamanlı karşılaştırın.</p>
+                    </div>
+                    <!-- Feature 3 -->
+                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-emerald-500/40 transition-all">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm"><i class="fa-solid fa-play"></i></div>
+                        <h4 class="font-black text-sm text-white">Canlı Artifact HTML Sandbox</h4>
+                        <p class="text-xs text-slate-400">Yapay zekanın ürettiği HTML, CSS ve JavaScript kodlarını anında canlı iframe içinde çalıştırın, masaüstü/tablet/mobil modlarda test edin.</p>
+                    </div>
+                    <!-- Feature 4 -->
+                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-purple-500/40 transition-all">
+                        <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm"><i class="fa-solid fa-store"></i></div>
+                        <h4 class="font-black text-sm text-white">HuggingFace GGUF Store</h4>
+                        <p class="text-xs text-slate-400">Binlerce GGUF kuantizasyon modelini (`Q4_K_M`, `Q8_0`) HuggingFace Hub üzerinden arayın ve 1 tıkla yerel sunucunuza indirin.</p>
+                    </div>
+                    <!-- Feature 5 -->
+                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-rose-500/40 transition-all">
+                        <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h4 class="font-black text-sm text-white">🛡️ OOM Kalkanı & Audit</h4>
+                        <p class="text-xs text-slate-400">Min 6GB VRAM kontrolü ile GPU belleğinizi çökmeden korur, `OLLAMA_MAX_LOADED_MODELS=1` kuralı ile stabil çalışır.</p>
+                    </div>
+                    <!-- Feature 6 -->
+                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-cyan-500/40 transition-all">
+                        <div class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm"><i class="fa-solid fa-globe"></i></div>
+                        <h4 class="font-black text-sm text-white">Cloudflare Quick Tunnel</h4>
+                        <p class="text-xs text-slate-400">Sunucunuza port açmadan, doğrudan Cloudflare tüneli ile dünyanın her yerinden SSL sertifikalı güvenli erişim sağlayın.</p>
                     </div>
                 </div>
             </div>

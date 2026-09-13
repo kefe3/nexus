@@ -617,7 +617,86 @@ function showToast(msg) {
     }, 2500);
 }
 
+// Packages & Showcase Modal Handlers
+let currentBillingCycle = 'monthly';
+
+function openPackagesModal() {
+    const modal = document.getElementById("packagesModal");
+    if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+}
+
+function closePackagesModal() {
+    const modal = document.getElementById("packagesModal");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+}
+
+function openShowcaseModal() {
+    const modal = document.getElementById("showcaseModal");
+    if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+    }
+}
+
+function closeShowcaseModal() {
+    const modal = document.getElementById("showcaseModal");
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+}
+
+function setBillingCycle(cycle) {
+    currentBillingCycle = cycle;
+    const btnM = document.getElementById("billingBtn-monthly");
+    const btnY = document.getElementById("billingBtn-yearly");
+    const pPro = document.getElementById("price-pro");
+    const pEnt = document.getElementById("price-enterprise");
+    const perPro = document.getElementById("period-pro");
+    const perEnt = document.getElementById("period-enterprise");
+
+    if (cycle === 'yearly') {
+        if (btnM) btnM.className = "px-3 py-1 rounded-lg text-slate-400 font-bold hover:bg-slate-800 transition-all text-xs";
+        if (btnY) btnY.className = "px-3 py-1 rounded-lg text-slate-200 font-bold bg-slate-800 transition-all text-xs flex items-center gap-1";
+        if (pPro) pPro.textContent = "₺239";
+        if (pEnt) pEnt.textContent = "₺1.199";
+        if (perPro) perPro.textContent = "/ ay (yıllık ödeme)";
+        if (perEnt) perEnt.textContent = "/ ay (yıllık ödeme)";
+    } else {
+        if (btnM) btnM.className = "px-3 py-1 rounded-lg text-slate-200 font-bold bg-slate-800 transition-all text-xs";
+        if (btnY) btnY.className = "px-3 py-1 rounded-lg text-slate-400 font-bold hover:bg-slate-800 transition-all text-xs flex items-center gap-1";
+        if (pPro) pPro.textContent = "₺299";
+        if (pEnt) pEnt.textContent = "₺1.499";
+        if (perPro) perPro.textContent = "/ ay";
+        if (perEnt) perEnt.textContent = "/ ay";
+    }
+}
+
+function selectPackageTier(tier) {
+    if (tier === 'community') {
+        showToast("✅ Community Self-Hosted paketini ücretsiz kullanıyorsunuz!");
+        closePackagesModal();
+    } else if (tier === 'pro') {
+        showToast("⚡ Pro Studio Pass talebiniz alındı! Admin panelinden lisans anahtarınızı girebilirsiniz.");
+    } else if (tier === 'enterprise') {
+        showToast("📞 Kurumsal GPU Cluster teklif talebi alındı. Ekibimiz sizinle iletişime geçecektir.");
+    }
+}
+
 // Global scope window exports
 window.toggleArenaMode = toggleArenaMode;
 window.handleWorkspaceFilesUpload = handleWorkspaceFilesUpload;
 window.removeWorkspaceFile = removeWorkspaceFile;
+window.openPackagesModal = openPackagesModal;
+window.closePackagesModal = closePackagesModal;
+window.openShowcaseModal = openShowcaseModal;
+window.closeShowcaseModal = closeShowcaseModal;
+window.setBillingCycle = setBillingCycle;
+window.selectPackageTier = selectPackageTier;
+

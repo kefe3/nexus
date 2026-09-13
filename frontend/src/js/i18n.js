@@ -54,7 +54,9 @@ const TRANSLATIONS = {
         active_providers: "Aktif Model Sağlayıcıları",
         installed_local_models: "Yüklü Yerel Modeller",
         benchmark_test: "Hızlı Çıkarım Testi",
-        traffic_logs: "Sistem ve İstek Logları"
+        traffic_logs: "Sistem ve İstek Logları",
+        packages_title: "Nexus Studio Paketleri & Lisanslar",
+        showcase_title: "Platform Özellikleri & Tanıtım"
     },
     en: {
         app_title: "Nexus AI Studio",
