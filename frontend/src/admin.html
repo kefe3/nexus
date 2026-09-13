@@ -971,11 +971,12 @@
 
                 <div class="glass-panel">
                     <div class="form-row">
-                        <select id="bench-model-select" class="custom-input" style="flex: 0.4;">
+                        <select id="bench-model-select" class="custom-input" style="flex: 0.35;">
                             <option value="">Model Seçin...</option>
                         </select>
                         <input type="text" id="bench-prompt-input" class="custom-input" value="Python ile binary search algoritmasını yaz ve karmaşıklığını açıkla." placeholder="Test istemi girin...">
-                        <button class="btn-action" id="btn-bench-run" onclick="runBenchmark()"><i class="fa-solid fa-play"></i> Hız Testini Başlat</button>
+                        <button class="btn-action" id="btn-bench-run" onclick="runBenchmark()"><i class="fa-solid fa-play"></i> Hız Testi</button>
+                        <button class="btn-action" id="btn-bench-suite" onclick="runBenchmarkSuite()" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); color: #fff; font-weight: 800;"><i class="fa-solid fa-trophy"></i> Tüm Modelleri Yarıştır (Leaderboard)</button>
                     </div>
 
                     <div id="bench-result-container" style="display: none;" class="benchmark-card">
@@ -996,6 +997,28 @@
 
                         <div style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 6px; font-weight: 700;">ÇIKTI ÖNİZLEMESİ:</div>
                         <div id="bench-preview-text" style="background: #000; padding: 12px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #cbd5e1; max-height: 180px; overflow-y: auto;"></div>
+                    </div>
+
+                    <!-- Full Suite Leaderboard Results Box -->
+                    <div id="bench-suite-container" style="display: none; margin-top: 1.5rem;" class="glass-panel">
+                        <h3 class="glass-panel-title">
+                            <span><i class="fa-solid fa-trophy" style="color: var(--accent-amber); margin-right: 8px;"></i> 👑 Model Hız Liderlik Tablosu (Leaderboard)</span>
+                        </h3>
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Sıra</th>
+                                    <th>Model Adı</th>
+                                    <th>Üretim Hızı (tok/s)</th>
+                                    <th>Toplam Süre (ms)</th>
+                                    <th>Üretilen Token</th>
+                                    <th>Önizleme</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bench-suite-tbody">
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Henüz test çalıştırılmadı.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>

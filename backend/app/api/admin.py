@@ -579,6 +579,59 @@ async def run_model_benchmark(req: BenchmarkRequest):
 
     return {"status": "error", "message": f"Benchmark not supported for provider '{prov}' yet"}
 
+
+@router.post("/benchmark/all")
+async def run_full_suite_benchmark(prompt: Optional[str] = None):
+    """
+    Runs a benchmark test on all installed Ollama models and produces a performance leaderboard.
+    """
+    test_prompt = prompt or "Write a python function to compute fibonacci sequence with dynamic programming."
+    leaderboard = []
+
+    try:
+        async with httpx.AsyncClient(timeout=180.0) as client:
+            ollama_url = await resolve_ollama_base_url(client)
+            res = await client.get(f"{ollama_url}/api/tags")
+            if res.status_code != 200:
+                return {"status": "error", "message": "Ollama servisinden model listesi alınamadı."}
+            
+            models = [m.get("name") for m in res.json().get("models", []) if m.get("name")]
+            if not models:
+                return {"status": "error", "message": "Sistemde yüklü yerel Ollama modeli bulunamadı."}
+
+            for model_name in models:
+                t0 = time.time()
+                try:
+                    gen_res = await client.post(
+                        f"{ollama_url}/api/generate",
+                        json={"model": model_name, "prompt": test_prompt, "stream": False}
+                    )
+                    total_time_ms = int((time.time() - t0) * 1000)
+                    if gen_res.status_code == 200:
+                        d = gen_res.json()
+                        eval_count = d.get("eval_count", 0)
+                        eval_duration_ns = d.get("eval_duration", 1)
+                        tok_per_sec = round(eval_count / (eval_duration_ns / 1e9), 1) if eval_duration_ns > 0 else 0
+
+                        leaderboard.append({
+                            "model": model_name,
+                            "tokens_per_second": tok_per_sec,
+                            "total_time_ms": total_time_ms,
+                            "tokens_generated": eval_count,
+                            "output_preview": d.get("response", "")[:150] + "..."
+                        })
+                except Exception:
+                    pass
+
+            leaderboard.sort(key=lambda x: x["tokens_per_second"], reverse=True)
+            return {
+                "status": "ok",
+                "total_models_benchmarked": len(leaderboard),
+                "leaderboard": leaderboard
+            }
+    except Exception as e:
+        return {"status": "error", "message": f"Benchmark suite hatası: {str(e)}"}
+
 @router.post("/providers/test")
 async def test_provider(req: TestProviderRequest):
     t0 = time.time()

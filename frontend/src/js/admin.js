@@ -369,7 +369,50 @@ async function runBenchmark() {
         alert(`Hata: ${e.message}`);
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-play"></i> Hız Testini Başlat';
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> Hız Testi';
+    }
+}
+
+async function runBenchmarkSuite() {
+    const prompt = document.getElementById('bench-prompt-input').value.trim();
+    const btn = document.getElementById('btn-bench-suite');
+    const container = document.getElementById('bench-suite-container');
+    const tbody = document.getElementById('bench-suite-tbody');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Modeller Yarıştırılıyor...';
+    if (container) container.style.display = 'block';
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;"><i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Tüm yüklü modeller sırayla hız ve gecikme testine tabi tutuluyor...</td></tr>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/benchmark/all?prompt=${encodeURIComponent(prompt)}`, {
+            method: 'POST',
+            headers: getOllamaHeaders()
+        });
+        const data = await res.json();
+        if (data.status === 'ok' && data.leaderboard) {
+            tbody.innerHTML = '';
+            data.leaderboard.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const rankBadge = index === 0 ? '🥇 1.' : index === 1 ? '🥈 2.' : index === 2 ? '🥉 3.' : `${index + 1}.`;
+                tr.innerHTML = `
+                    <td style="font-weight: 800; color: ${index === 0 ? 'var(--accent-amber)' : '#fff'};">${rankBadge}</td>
+                    <td style="font-weight: 700; color: #fff;">${escapeHtml(item.model)}</td>
+                    <td style="font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--accent-green);">${item.tokens_per_second} tok/s</td>
+                    <td style="font-family: 'JetBrains Mono', monospace; color: var(--accent-cyan);">${item.total_time_ms} ms</td>
+                    <td style="font-family: 'JetBrains Mono', monospace;">${item.tokens_generated}</td>
+                    <td style="font-size: 0.78rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.output_preview)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            alert(`Leaderboard Hatası: ${data.message || 'Bilinmeyen hata'}`);
+        }
+    } catch (e) {
+        alert(`Hata: ${e.message}`);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-trophy"></i> Tüm Modelleri Yarıştır (Leaderboard)';
     }
 }
 
