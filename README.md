@@ -71,6 +71,18 @@ irm https://raw.githubusercontent.com/kefe3/nexus/main/windows/install.ps1 | iex
 curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/macos/install.sh | bash
 ```
 
+## 🖥️ Nexus AI Native Desktop Client (Masaüstü Uygulaması)
+
+Nexus AI Studio'yu web tarayıcısına bağımlı kalmadan sistem tepsisi (system tray) entegrasyonlu yerel bir masaüstü uygulaması olarak çalıştırabilirsiniz:
+
+```bash
+# Masaüstü Uygulamasını Başlatın
+./desktop/run_desktop.sh
+
+# Sistem Kısayolu Yükleme (~/.local/share/applications/nexus.desktop)
+./desktop/install_desktop_shortcut.sh
+```
+
 ---
 
 ## ⚙️ Port ve Servis Haritası
