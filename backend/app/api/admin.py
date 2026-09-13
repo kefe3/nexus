@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Header, HTTPException, Body
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import psutil
 import time
@@ -789,6 +790,158 @@ async def get_github_commit_history():
         error = str(e)
 
     return {"status": "ok" if not error else "error", "commits": commits, "error": error}
+
+@router.get("/updates/apply-stream")
+async def apply_update_stream():
+    async def update_event_stream():
+        t0 = time.time()
+        repo_dir = get_repo_dir()
+        
+        yield f"data: {json.dumps({'status': 'running', 'step': 'start', 'message': '[1/5] Nexus Evrimsel Güncelleme Motoru Başlatıldı...'})}\n\n"
+        await asyncio.sleep(0.2)
+
+        # Step 1: GitHub Target detection
+        remote_sha = "latest"
+        remote_msg = "Nexus AI Kararlı Güncellemesi"
+        cb = int(time.time())
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                c_res = await client.get(
+                    f"https://api.github.com/repos/kefe3/nexus/commits/main?_cb={cb}",
+                    headers={"User-Agent": "Nexus-Platform"}
+                )
+                if c_res.status_code == 200:
+                    c_data = c_res.json()
+                    remote_sha = c_data.get("sha", "")[:7]
+                    remote_msg = c_data.get("commit", {}).get("message", "").split("\n")[0]
+        except Exception:
+            pass
+
+        if remote_sha == "latest" and shutil.which("git"):
+            try:
+                ls_out = subprocess.check_output(
+                    ["git", "ls-remote", "https://github.com/kefe3/nexus.git", "refs/heads/main"],
+                    stderr=subprocess.DEVNULL, timeout=10
+                ).decode().strip()
+                if ls_out:
+                    remote_sha = ls_out.split()[0][:7]
+            except Exception:
+                pass
+
+        yield f"data: {json.dumps({'status': 'running', 'step': 'github_target', 'message': f'[2/5] Target Sürüm: {remote_sha} ({remote_msg})'})}\n\n"
+        await asyncio.sleep(0.2)
+
+        # Step 2: Primary Git Sync Engine
+        git_success = False
+        if shutil.which("git") and os.path.isdir(os.path.join(repo_dir, ".git")):
+            try:
+                try:
+                    subprocess.run(["git", "config", "--global", "--add", "safe.directory", "*"], check=False)
+                except Exception:
+                    pass
+
+                fetch_out = run_git_cmd(["fetch", "origin", "main", "--force"]) or "GitHub referansları alındı."
+                yield f"data: {json.dumps({'status': 'running', 'step': 'git_fetch', 'message': f'Git Fetch: {fetch_out}'})}\n\n"
+                await asyncio.sleep(0.2)
+
+                reset_out = run_git_cmd(["reset", "--hard", "origin/main"]) or "Çalışma dizini origin/main ile senkronize edildi."
+                yield f"data: {json.dumps({'status': 'running', 'step': 'git_reset', 'message': f'Git Reset: {reset_out}'})}\n\n"
+                await asyncio.sleep(0.2)
+
+                try:
+                    run_git_cmd(["clean", "-fd", "-e", "data", "-e", ".env"])
+                except Exception:
+                    pass
+
+                git_success = True
+            except Exception as e:
+                yield f"data: {json.dumps({'status': 'warning', 'step': 'git_warning', 'message': f'Git uyarısı: {str(e)} — Arşiv paket moduna geçiliyor...'})}\n\n"
+
+        # Step 3: Fallback Archive Sync Engine (httpx + tarfile)
+        if not git_success:
+            try:
+                async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
+                    tar_url = "https://github.com/kefe3/nexus/archive/refs/heads/main.tar.gz"
+                    tar_res = await client.get(tar_url)
+                    if tar_res.status_code != 200:
+                        raise Exception(f"GitHub paketi indirilemedi: HTTP {tar_res.status_code}")
+
+                    kb_size = len(tar_res.content) // 1024
+                    yield f"data: {json.dumps({'status': 'running', 'step': 'download_archive', 'message': f'[3/5] Arşiv paketi indirildi ({kb_size} KB). Dosyalar ayıklanıyor...'})}\n\n"
+                    await asyncio.sleep(0.2)
+
+                    tar_bytes = io.BytesIO(tar_res.content)
+                    file_count = 0
+                    with tarfile.open(fileobj=tar_bytes, mode="r:gz") as tar:
+                        for member in tar.getmembers():
+                            parts = member.name.split("/", 1)
+                            if len(parts) > 1 and parts[1]:
+                                rel_path = parts[1]
+                                if rel_path.startswith("data/") or rel_path == "data":
+                                    continue
+                                member_copy = copy.copy(member)
+                                member_copy.name = rel_path
+                                tar.extract(member_copy, path=repo_dir)
+                                if rel_path.startswith("backend/") and os.path.isdir("/app"):
+                                    app_sub = rel_path[len("backend/"):]
+                                    if app_sub:
+                                        app_member = copy.copy(member)
+                                        app_member.name = app_sub
+                                        tar.extract(app_member, path="/app")
+                                file_count += 1
+
+                    yield f"data: {json.dumps({'status': 'running', 'step': 'extract_files', 'message': f'[3/5] {file_count} dosya ve bileşen başarıyla güncellendi.'})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'status': 'error', 'step': 'archive_error', 'message': f'Arşiv hatası: {str(e)}'})}\n\n"
+                return
+
+        # Step 4: Permissions Fix
+        try:
+            for d in [repo_dir, "/app", "/app/data", os.path.join(repo_dir, "data")]:
+                if os.path.isdir(d):
+                    for root, dirs, files in os.walk(d):
+                        for di in dirs:
+                            try:
+                                os.chmod(os.path.join(root, di), 0o777)
+                            except Exception:
+                                pass
+                        for fi in files:
+                            try:
+                                os.chmod(os.path.join(root, fi), 0o666)
+                            except Exception:
+                                pass
+            yield f"data: {json.dumps({'status': 'running', 'step': 'permissions', 'message': '[4/5] Dosya ve çalışma izinleri (a+rwX) yapılandırıldı.'})}\n\n"
+        except Exception:
+            pass
+
+        # Step 5: Update version.json metadata
+        v_record = {
+            "sha": remote_sha,
+            "message": remote_msg,
+            "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        for v_dir in ["/app/data", "data", os.path.join(repo_dir, "data")]:
+            try:
+                os.makedirs(v_dir, exist_ok=True)
+                v_file = os.path.join(v_dir, "version.json")
+                with open(v_file, "w") as vf:
+                    json.dump(v_record, vf, indent=2)
+                os.chmod(v_file, 0o666)
+            except Exception:
+                pass
+
+        # Step 6: Touch main.py to trigger Uvicorn live reload
+        try:
+            for m_path in ["/app/app/main.py", "backend/app/main.py", os.path.join(repo_dir, "backend/app/main.py")]:
+                if os.path.isfile(m_path):
+                    os.utime(m_path, None)
+        except Exception:
+            pass
+
+        elapsed = round(time.time() - t0, 2)
+        yield f"data: {json.dumps({'status': 'success', 'step': 'complete', 'new_sha': remote_sha, 'message': f'[5/5] 🎉 Nexus AI {remote_sha} sürümüne başarıyla güncellendi ({elapsed}s)!'})}\n\n"
+
+    return StreamingResponse(update_event_stream(), media_type="text/event-stream")
 
 @router.post("/updates/apply")
 async def apply_update():

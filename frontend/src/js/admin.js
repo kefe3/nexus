@@ -82,7 +82,7 @@ function switchSection(secId) {
     if (secId === 'specs') fetchSpecs();
     if (secId === 'system') checkUpdates();
     if (secId === 'vram') fetchRunningModels();
-    if (secId === 'models') fetchInstalledModels();
+    if (secId === 'models') { fetchStoreItems(); fetchInstalledModels(); }
     if (secId === 'benchmark') populateBenchmarkModels();
     if (secId === 'deployments') fetchDeployments();
     if (secId === 'providers') testAllProviders();
@@ -941,7 +941,7 @@ async function fetchCommitHistory() {
     }
 }
 
-// 1-Click Update Application with Live Terminal Modal
+// 1-Click Update Application with Real-Time SSE Stream
 async function applyUpdate() {
     const modal = document.getElementById('updateProgressModal');
     const termBox = document.getElementById('update-terminal-box');
@@ -952,79 +952,75 @@ async function applyUpdate() {
     if (modal) modal.style.display = 'flex';
     if (termBox) {
         termBox.innerHTML = `
-            <div style="color: var(--accent-cyan); font-weight: 700;">> [1/4] Nexus Güncelleme Motoru Başlatıldı...</div>
-            <div style="color: #64748b;">> Hedef Depo: https://github.com/kefe3/nexus.git (Dal: main)</div>
-            <div style="color: var(--accent-amber);">> [2/4] GitHub senkronizasyonu başlatılıyor...</div>
+            <div style="color: var(--accent-cyan); font-weight: 700;">> [1/5] Nexus Evrimsel Güncelleme Motoru Başlatılıyor...</div>
+            <div style="color: #64748b;">> Canlı SSE bağlantısı kuruluyor...</div>
         `;
     }
     if (btnClose) btnClose.style.display = 'none';
     if (btnApply) btnApply.disabled = true;
 
     try {
-        const res = await fetch(`${API_BASE}/admin/updates/apply`, { method: 'POST' });
-        const data = await res.json();
-        
-        if (data.status === 'ok') {
-            if (termBox) {
-                if (data.steps && data.steps.length > 0) {
-                    data.steps.forEach(st => {
-                        const stepDiv = document.createElement('div');
-                        stepDiv.style.color = st.status === 'ok' ? 'var(--accent-green)' : 'var(--accent-amber)';
-                        stepDiv.innerHTML = `> [✓] ${st.step}: ${escapeHtml(st.output || 'Tamamlandı')}`;
-                        termBox.appendChild(stepDiv);
-                    });
+        const evtSource = new EventSource(`${API_BASE}/admin/updates/apply-stream`);
+
+        evtSource.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (termBox && data.message) {
+                    const stepDiv = document.createElement('div');
+                    if (data.status === 'success') {
+                        stepDiv.style.color = 'var(--accent-green)';
+                        stepDiv.style.fontWeight = '800';
+                    } else if (data.status === 'warning') {
+                        stepDiv.style.color = 'var(--accent-amber)';
+                    } else if (data.status === 'error') {
+                        stepDiv.style.color = 'var(--accent-red)';
+                        stepDiv.style.fontWeight = '700';
+                    } else {
+                        stepDiv.style.color = '#cbd5e1';
+                    }
+                    stepDiv.innerHTML = `> ${escapeHtml(data.message)}`;
+                    termBox.appendChild(stepDiv);
+                    termBox.scrollTop = termBox.scrollHeight;
                 }
-                const finDiv = document.createElement('div');
-                finDiv.style.color = 'var(--accent-green)';
-                finDiv.style.fontWeight = '800';
-                finDiv.style.marginTop = '8px';
-                finDiv.innerHTML = `> [3/4] ${data.message} (Yeni Sürüm: ${data.new_commit?.sha || 'latest'})`;
-                termBox.appendChild(finDiv);
 
-                const reloadDiv = document.createElement('div');
-                reloadDiv.style.color = 'var(--accent-cyan)';
-                reloadDiv.innerHTML = `> [4/4] Sistem güncellendi. Sayfa otomatik yenileniyor...`;
-                termBox.appendChild(reloadDiv);
-                termBox.scrollTop = termBox.scrollHeight;
-            }
-
-            if (modalSub) {
-                modalSub.textContent = 'Güncelleme başarıyla tamamlandı! Yenileniyor...';
-                modalSub.style.color = 'var(--accent-green)';
-            }
-            if (btnClose) btnClose.style.display = 'inline-flex';
-
-            setTimeout(() => {
-                window.location.href = window.location.pathname + '?_t=' + Date.now();
-            }, 2500);
-        } else {
-            if (termBox) {
-                if (data.steps && data.steps.length > 0) {
-                    data.steps.forEach(st => {
-                        const stepDiv = document.createElement('div');
-                        stepDiv.style.color = st.status === 'ok' ? 'var(--accent-green)' : 'var(--accent-amber)';
-                        stepDiv.innerHTML = `> [!] ${st.step}: ${escapeHtml(st.output || '')}`;
-                        termBox.appendChild(stepDiv);
-                    });
+                if (data.status === 'success') {
+                    evtSource.close();
+                    if (modalSub) {
+                        modalSub.textContent = '🎉 Güncelleme başarıyla tamamlandı! Sayfa yenileniyor...';
+                        modalSub.style.color = 'var(--accent-green)';
+                    }
+                    if (btnClose) btnClose.style.display = 'inline-flex';
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname + '?_t=' + Date.now();
+                    }, 2500);
+                } else if (data.status === 'error') {
+                    evtSource.close();
+                    if (modalSub) {
+                        modalSub.textContent = 'Güncelleme sırasında hata oluştu.';
+                        modalSub.style.color = 'var(--accent-red)';
+                    }
+                    if (btnClose) {
+                        btnClose.style.display = 'inline-flex';
+                        btnClose.textContent = 'Kapat';
+                        btnClose.onclick = () => { modal.style.display = 'none'; };
+                    }
                 }
+            } catch (e) {
+                console.error('SSE JSON error:', e);
+            }
+        };
+
+        evtSource.onerror = (err) => {
+            evtSource.close();
+            if (termBox) {
                 const errDiv = document.createElement('div');
                 errDiv.style.color = 'var(--accent-red)';
-                errDiv.style.fontWeight = '700';
-                errDiv.style.marginTop = '8px';
-                errDiv.innerHTML = `> [X] HATA: ${data.message || 'Güncelleme başarısız'}`;
+                errDiv.innerHTML = `> [X] Canlı güncelleme bağlantısı tamamlandı / kesildi.`;
                 termBox.appendChild(errDiv);
-                termBox.scrollTop = termBox.scrollHeight;
             }
-            if (modalSub) {
-                modalSub.textContent = 'Güncelleme sırasında bir hata oluştu.';
-                modalSub.style.color = 'var(--accent-red)';
-            }
-            if (btnClose) {
-                btnClose.style.display = 'inline-flex';
-                btnClose.textContent = 'Kapat';
-                btnClose.onclick = () => { modal.style.display = 'none'; };
-            }
-        }
+            if (btnClose) btnClose.style.display = 'inline-flex';
+        };
+
     } catch (e) {
         if (termBox) {
             const errDiv = document.createElement('div');
@@ -1042,7 +1038,267 @@ async function applyUpdate() {
     }
 }
 
-// Auto-check updates on startup
+
+// --- NEXUS STORE & HUB ENGINE ---
+
+function switchStoreTab(tabId) {
+    document.querySelectorAll('.store-tab-btn').forEach(btn => {
+        btn.style.background = 'rgba(255, 255, 255, 0.05)';
+        btn.style.borderColor = 'var(--card-border)';
+        btn.style.color = 'var(--text-muted)';
+        btn.classList.remove('active');
+    });
+
+    const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+    if (activeBtn) {
+        activeBtn.style.background = 'rgba(0, 242, 254, 0.15)';
+        activeBtn.style.borderColor = 'rgba(0, 242, 254, 0.3)';
+        activeBtn.style.color = 'var(--accent-cyan)';
+        activeBtn.classList.add('active');
+    }
+
+    document.querySelectorAll('.store-tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+
+    const targetContent = document.getElementById(`store-tab-content-${tabId}`);
+    if (targetContent) {
+        targetContent.style.display = 'block';
+    }
+}
+
+async function fetchStoreItems() {
+    try {
+        const res = await fetch(`${API_BASE}/store/items`, { headers: getOllamaHeaders() });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            renderStoreModels(data.models || []);
+            renderStoreTools(data.tools || []);
+            renderStoreSkills(data.skills || []);
+
+            const badge = document.getElementById('store-models-installed-badge');
+            if (badge) badge.textContent = `${data.total_installed_models || 0} Yüklü Model`;
+        }
+    } catch (e) {
+        console.error('Error fetching store items:', e);
+    }
+}
+
+function renderStoreModels(models) {
+    const grid = document.getElementById('store-models-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    models.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'glass-panel';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.justifySpaceBetween = 'space-between';
+        card.style.marginBottom = '0';
+        card.style.border = m.installed ? '1px solid rgba(0, 245, 160, 0.35)' : '1px solid var(--card-border)';
+        card.style.background = m.installed ? 'linear-gradient(135deg, rgba(0, 245, 160, 0.05), rgba(14, 20, 32, 0.8))' : 'var(--card-bg)';
+
+        const tagsHtml = (m.tags || []).map(t => `<span class="quick-tag" style="font-size: 0.72rem; padding: 2px 7px;">${escapeHtml(t)}</span>`).join(' ');
+
+        card.innerHTML = `
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <span class="badge-model" style="background: rgba(0,242,254,0.12); color: var(--accent-cyan);">${escapeHtml(m.category_label || 'Model')}</span>
+                    ${m.installed ? '<span class="status-pill" style="padding: 3px 8px; font-size: 0.72rem;"><span class="pulse-dot"></span> YÜKLÜ</span>' : '<span style="font-size: 0.75rem; color: #64748b; font-family: JetBrains Mono;">İndirilebilir</span>'}
+                </div>
+                <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff; margin: 0 0 6px 0;">${escapeHtml(m.name)}</h4>
+                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 12px;">${escapeHtml(m.description)}</p>
+                <div style="display: flex; gap: 8px; font-size: 0.76rem; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; margin-bottom: 10px;">
+                    <span>💾 Boyut: <strong>${m.size_gb} GB</strong></span>
+                    <span>⚡ GPU: <strong>${escapeHtml(m.vram_req)}</strong></span>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;">${tagsHtml}</div>
+            </div>
+            <div>
+                ${m.installed 
+                    ? `<button class="btn-danger" style="width: 100%; padding: 9px;" onclick="deleteModel('${m.id}')"><i class="fa-solid fa-trash"></i> Yüklü (Sil)</button>`
+                    : `<button class="btn-action" style="width: 100%; justify-content: center; padding: 9px;" onclick="startStreamingModelPull('${m.id}')"><i class="fa-solid fa-cloud-arrow-down"></i> 1-Tıkla İndir & Kur</button>`
+                }
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function renderStoreTools(tools) {
+    const grid = document.getElementById('store-tools-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    tools.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'glass-panel';
+        card.style.marginBottom = '0';
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0;">${escapeHtml(t.name)}</h4>
+                <span class="badge-size" style="background: rgba(138,43,226,0.15); color: var(--accent-purple);">${escapeHtml(t.badge)}</span>
+            </div>
+            <p style="font-size: 0.83rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 14px;">${escapeHtml(t.description)}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.75rem; color: #64748b; font-family: JetBrains Mono;">Sürüm: ${t.version}</span>
+                <label style="position: relative; display: inline-block; width: 44px; height: 22px; cursor: pointer;">
+                    <input type="checkbox" ${t.installed ? 'checked' : ''} onchange="toggleStoreTool('${t.id}', this.checked)" style="opacity: 0; width: 0; height: 0;">
+                    <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${t.installed ? '#00f5a0' : '#334155'}; transition: .3s; border-radius: 22px;"></span>
+                </label>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function renderStoreSkills(skills) {
+    const grid = document.getElementById('store-skills-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    skills.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'glass-panel';
+        card.style.marginBottom = '0';
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0;">${escapeHtml(s.name)}</h4>
+                <span class="badge-size" style="background: rgba(0,242,254,0.15); color: var(--accent-cyan);">${escapeHtml(s.badge)}</span>
+            </div>
+            <p style="font-size: 0.83rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 14px;">${escapeHtml(s.description)}</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.75rem; color: #64748b;">Yazar: ${s.author}</span>
+                <button class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; background: ${s.installed ? 'rgba(0,245,160,0.15)' : 'linear-gradient(135deg, var(--accent-cyan), var(--accent-blue))'}; color: ${s.installed ? 'var(--accent-green)' : '#04060c'};" onclick="toggleStoreSkill('${s.id}', ${!s.installed})">
+                    <i class="fa-solid ${s.installed ? 'fa-check' : 'fa-download'}"></i> ${s.installed ? 'AI Studio\'da Aktif' : 'Studio\'ya Aktar'}
+                </button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// Streaming Chunked Model Pull (SSE Engine)
+function startStreamingModelPull(modelName) {
+    const box = document.getElementById('store-download-progress-box');
+    const titleEl = document.getElementById('dl-progress-model-title');
+    const statusEl = document.getElementById('dl-progress-layer-status');
+    const percentEl = document.getElementById('dl-progress-percent');
+    const speedEl = document.getElementById('dl-progress-speed');
+    const barFill = document.getElementById('dl-progress-bar-fill');
+    const bytesEl = document.getElementById('dl-progress-bytes');
+    const etaEl = document.getElementById('dl-progress-eta');
+
+    if (box) box.style.display = 'block';
+    if (titleEl) titleEl.textContent = `'${modelName}' İndiriliyor...`;
+    if (statusEl) statusEl.textContent = 'Ollama katmanlarına bağlanılıyor...';
+
+    const evtSource = new EventSource(`${API_BASE}/store/pull-stream?model=${encodeURIComponent(modelName)}`);
+
+    evtSource.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.status === 'downloading') {
+                if (statusEl) statusEl.textContent = `Katman: ${data.ollama_status} (${data.digest || ''})`;
+                if (percentEl) percentEl.textContent = `${data.percent}%`;
+                if (speedEl) speedEl.textContent = `${data.speed_mb_s} MB/s`;
+                if (barFill) barFill.style.width = `${Math.min(100, data.percent)}%`;
+                if (bytesEl) bytesEl.textContent = `${data.completed_mb} MB / ${data.total_mb} MB`;
+                if (etaEl) etaEl.textContent = `Katman indiriliyor...`;
+            } else if (data.status === 'success') {
+                evtSource.close();
+                if (percentEl) percentEl.textContent = '100%';
+                if (barFill) barFill.style.width = '100%';
+                if (statusEl) statusEl.textContent = `✅ Tamamlandı: ${data.message || 'Model hazır'}`;
+                
+                setTimeout(() => {
+                    if (box) box.style.display = 'none';
+                    fetchStoreItems();
+                    fetchInstalledModels();
+                    alert(`✅ '${modelName}' başarıyla indirildi ve AI Studio kullanıma hazır!`);
+                }, 2000);
+            } else if (data.status === 'error') {
+                evtSource.close();
+                alert(`❌ İndirme Hatası: ${data.message}`);
+                if (box) box.style.display = 'none';
+            }
+        } catch (e) {
+            console.error('SSE Error:', e);
+        }
+    };
+
+    evtSource.onerror = (err) => {
+        evtSource.close();
+    };
+}
+
+function triggerCustomModelPull() {
+    const input = document.getElementById('input-store-custom-model');
+    const name = input ? input.value.trim() : '';
+    if (!name) {
+        alert('Lütfen indirmek istediğiniz model adını girin (örn: deepseek-r1:14b)');
+        return;
+    }
+    startStreamingModelPull(name);
+    if (input) input.value = '';
+}
+
+async function toggleStoreTool(id, isInstall) {
+    try {
+        await fetch(`${API_BASE}/store/toggle-tool`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'tool', id, action: isInstall ? 'install' : 'uninstall' })
+        });
+        fetchStoreItems();
+    } catch (e) {}
+}
+
+async function toggleStoreSkill(id, isInstall) {
+    try {
+        await fetch(`${API_BASE}/store/toggle-skill`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'skill', id, action: isInstall ? 'install' : 'uninstall' })
+        });
+        fetchStoreItems();
+    } catch (e) {}
+}
+
+async function submitCustomStoreUpload() {
+    const type = document.getElementById('upload-item-type').value;
+    const title = document.getElementById('upload-item-title').value.trim();
+    const statusBox = document.getElementById('upload-status-box');
+
+    if (!title) {
+        alert('Lütfen bir başlık girin');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/store/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_type: type, title: title, content: title })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            statusBox.style.display = 'block';
+            statusBox.style.background = 'rgba(0, 245, 160, 0.15)';
+            statusBox.style.color = 'var(--accent-green)';
+            statusBox.textContent = `✅ ${data.message}`;
+            document.getElementById('upload-item-title').value = '';
+            fetchStoreItems();
+        }
+    } catch (e) {
+        alert(`Yükleme hatası: ${e.message}`);
+    }
+}
+
+// Auto-check updates & store on startup
 document.addEventListener('DOMContentLoaded', () => {
     checkUpdates();
 });

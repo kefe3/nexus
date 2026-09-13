@@ -617,10 +617,10 @@
                 <span class="nav-badge" id="badge-vram-count">0 Aktif</span>
             </div>
 
-            <div class="cp-sidebar-label">MODEL & BENCHMARK</div>
+            <div class="cp-sidebar-label">MAĞAZA & BENCHMARK</div>
             <div class="cp-nav-item" onclick="switchSection('models')">
-                <div class="cp-nav-left"><i class="fa-solid fa-cubes-stacked" style="color: var(--accent-blue);"></i><span>Model Merkezi</span></div>
-                <span class="nav-badge" id="badge-models-count">-</span>
+                <div class="cp-nav-left"><i class="fa-solid fa-store" style="color: var(--accent-cyan);"></i><span>Nexus Store & Hub</span></div>
+                <span class="nav-badge" id="badge-models-count" style="background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 242, 254, 0.3);">STORE</span>
             </div>
             <div class="cp-nav-item" onclick="switchSection('benchmark')">
                 <div class="cp-nav-left"><i class="fa-solid fa-stopwatch-20" style="color: var(--accent-amber);"></i><span>Hız & Benchmark</span></div>
@@ -763,54 +763,157 @@
                 </div>
             </section>
 
-            <!-- 3. MODELS SECTION -->
+            <!-- 3. NEXUS STORE & HUB SECTION -->
             <section id="sec-models" class="cp-section">
                 <div class="cp-section-header">
                     <div>
-                        <h2 class="cp-section-title">Ollama Model Merkezi</h2>
-                        <p class="cp-section-desc">Sunucunuzdaki yerel modelleri yönetin, yeni modeller indirin veya kaldırın.</p>
+                        <h2 class="cp-section-title">🛒 Nexus Store & Hub (Ecosystem Marketplace)</h2>
+                        <p class="cp-section-desc">Yapay zeka modellerini (LLM), otonom ajan araçlarını (Tools) ve özel iş akışı skillerini 1-tıkla indirin, yönetin ve yükleyin.</p>
                     </div>
                 </div>
 
-                <!-- Pull Model Form -->
-                <div class="glass-panel">
-                    <h3 class="glass-panel-title"><span><i class="fa-solid fa-cloud-arrow-down" style="color: var(--accent-cyan); margin-right: 8px;"></i> Yeni Model İndir (Pull Model)</span></h3>
-                    <div class="form-row">
-                        <input type="text" id="input-pull-name" class="custom-input" placeholder="Model adı girin (örn: deepseek-r1:8b, qwen2.5-coder:7b, llama3.2)">
-                        <button class="btn-action" id="btn-pull-submit" onclick="pullModel()"><i class="fa-solid fa-download"></i> İndir</button>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-                        <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Önerilen Modeller:</span>
-                        <span class="quick-tag" onclick="setPullName('deepseek-r1:8b')">deepseek-r1:8b (Akıl Yürütme)</span>
-                        <span class="quick-tag" onclick="setPullName('qwen2.5-coder:7b')">qwen2.5-coder:7b (Kodlama)</span>
-                        <span class="quick-tag" onclick="setPullName('qwen2.5:7b')">qwen2.5:7b (Genel Chat)</span>
-                        <span class="quick-tag" onclick="setPullName('deepseek-coder-v2:16b')">deepseek-coder-v2:16b (Uzman)</span>
-                        <span class="quick-tag" onclick="setPullName('llama3.2:3b')">llama3.2:3b (Hafif)</span>
-                        <span class="quick-tag" onclick="setPullName('codellama:7b')">codellama:7b</span>
-                    </div>
-                    <div id="pull-status-box" style="display: none; margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 0.85rem;"></div>
+                <!-- Store Navigation Tabs -->
+                <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; flex-wrap: wrap;">
+                    <button class="btn-action store-tab-btn active" onclick="switchStoreTab('models')" id="tab-btn-models" style="background: rgba(0, 242, 254, 0.15); border: 1px solid rgba(0, 242, 254, 0.3); color: var(--accent-cyan);">
+                        <i class="fa-solid fa-brain"></i> <span>🤖 Modeller (LLM Store)</span>
+                    </button>
+                    <button class="btn-action store-tab-btn" onclick="switchStoreTab('tools')" id="tab-btn-tools" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-muted);">
+                        <i class="fa-solid fa-wrench"></i> <span>🛠️ Araçlar (Tools)</span>
+                    </button>
+                    <button class="btn-action store-tab-btn" onclick="switchStoreTab('skills')" id="tab-btn-skills" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-muted);">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>🧠 Skiller (Workflows)</span>
+                    </button>
+                    <button class="btn-action store-tab-btn" onclick="switchStoreTab('upload')" id="tab-btn-upload" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-muted);">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> <span>📤 Özel Yükle</span>
+                    </button>
                 </div>
 
-                <!-- Installed Models Table -->
-                <div class="glass-panel">
-                    <h3 class="glass-panel-title">
-                        <span><i class="fa-solid fa-list-check" style="color: var(--accent-green); margin-right: 8px;"></i> Yüklü Yerel Modeller</span>
-                        <span class="badge-size" id="installed-count-badge">0 Model</span>
-                    </h3>
-                    <table class="custom-table">
-                        <thead>
-                            <tr>
-                                <th>Model Adı</th>
-                                <th>Parametre / Boyut</th>
-                                <th>Kuantizasyon</th>
-                                <th>Format</th>
-                                <th style="text-align: right;">İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody id="installed-models-tbody">
-                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
-                        </tbody>
-                    </table>
+                <!-- Live Chunked SSE Download Progress Dashboard Box -->
+                <div id="store-download-progress-box" class="glass-panel" style="display: none; border: 1px solid rgba(0, 242, 254, 0.4); background: linear-gradient(135deg, rgba(14, 20, 32, 0.95), rgba(6, 12, 24, 0.98)); margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(0, 242, 254, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent-cyan); font-size: 1.2rem;">
+                                <i class="fa-solid fa-cloud-arrow-down fa-bounce"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 1rem; font-weight: 800; color: #fff; margin: 0;" id="dl-progress-model-title">Model İndiriliyor...</h4>
+                                <span style="font-size: 0.78rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;" id="dl-progress-layer-status">Ollama bağlantısı kuruluyor...</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.25rem; font-weight: 900; color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace;" id="dl-progress-percent">0%</div>
+                            <div style="font-size: 0.76rem; color: var(--accent-green); font-family: 'JetBrains Mono', monospace;" id="dl-progress-speed">0.0 MB/s</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="progress-bar-bg" style="height: 10px; margin-bottom: 8px;">
+                        <div class="progress-bar-fill" id="dl-progress-bar-fill" style="width: 0%; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; font-family: 'JetBrains Mono', monospace;">
+                        <span id="dl-progress-bytes">0 MB / 0 MB</span>
+                        <span id="dl-progress-eta">İşleniyor...</span>
+                    </div>
+                </div>
+
+                <!-- STORE TAB 1: MODELS STORE -->
+                <div id="store-tab-content-models" class="store-tab-content active">
+                    <!-- Custom Model Pull Search Bar -->
+                    <div class="glass-panel" style="margin-bottom: 1.5rem;">
+                        <h3 class="glass-panel-title"><span><i class="fa-solid fa-magnifying-glass" style="color: var(--accent-cyan); margin-right: 8px;"></i> Özel Model Ara & İndir (Custom Ollama Tag)</span></h3>
+                        <div class="form-row">
+                            <input type="text" id="input-store-custom-model" class="custom-input" placeholder="Model adı veya Ollama tagı girin (örn: deepseek-r1:14b, hf.co/Qwen/Qwen2.5-Coder-7B-GGUF)">
+                            <button class="btn-action" onclick="triggerCustomModelPull()"><i class="fa-solid fa-cloud-arrow-down"></i> İndir & Kur</button>
+                        </div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">İstediğiniz herhangi bir HuggingFace GGUF veya Ollama kütüphane modelini doğrudan indirebilirsiniz.</div>
+                    </div>
+
+                    <!-- Curated Models Grid -->
+                    <div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0;">🔥 Öne Çıkan Yerel AI Modelleri</h3>
+                        <span class="badge-size" id="store-models-installed-badge">0 Yüklü Model</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;" id="store-models-grid">
+                        <div style="text-align: center; color: var(--text-muted); grid-column: 1/-1; padding: 2rem;">Mağaza modelleri yükleniyor...</div>
+                    </div>
+
+                    <!-- Installed Models Table -->
+                    <div class="glass-panel">
+                        <h3 class="glass-panel-title">
+                            <span><i class="fa-solid fa-list-check" style="color: var(--accent-green); margin-right: 8px;"></i> Sunucudaki Yüklü Yerel Modeller</span>
+                            <button class="btn-action" style="padding: 5px 12px; font-size: 0.78rem;" onclick="fetchInstalledModels()"><i class="fa-solid fa-rotate"></i> Yenile</button>
+                        </h3>
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Model Adı</th>
+                                    <th>Parametre / Boyut</th>
+                                    <th>Kuantizasyon</th>
+                                    <th>Format</th>
+                                    <th style="text-align: right;">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="installed-models-tbody">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- STORE TAB 2: TOOLS STORE -->
+                <div id="store-tab-content-tools" class="store-tab-content" style="display: none;">
+                    <div style="margin-bottom: 1.25rem;">
+                        <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0 0 4px 0;">🛠️ Otonom Ajan Araçları & Entegrasyonlar</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Nexus AI Studio modellerinin canlı internet, kod çalıştırma ve belge okuma gibi yeteneklerini tek tıkla açın veya kapatın.</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;" id="store-tools-grid">
+                        <div style="text-align: center; color: var(--text-muted); grid-column: 1/-1; padding: 2rem;">Araçlar yükleniyor...</div>
+                    </div>
+                </div>
+
+                <!-- STORE TAB 3: SKILLS STORE -->
+                <div id="store-tab-content-skills" class="store-tab-content" style="display: none;">
+                    <div style="margin-bottom: 1.25rem;">
+                        <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0 0 4px 0;">🧠 Hazır Ajan Skilleri & İş Akışları</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">AI Studio modellerine önceden tanımlı profesyonel roller, sistem promptları ve iş akışları kazandırın.</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;" id="store-skills-grid">
+                        <div style="text-align: center; color: var(--text-muted); grid-column: 1/-1; padding: 2rem;">Skiller yükleniyor...</div>
+                    </div>
+                </div>
+
+                <!-- STORE TAB 4: UPLOAD CUSTOM -->
+                <div id="store-tab-content-upload" class="store-tab-content" style="display: none;">
+                    <div class="glass-panel" style="max-width: 680px;">
+                        <h3 class="glass-panel-title"><span><i class="fa-solid fa-cloud-arrow-up" style="color: var(--accent-cyan); margin-right: 8px;"></i> Özel Öğe (Model / Tool / Skill) Yükle</span></h3>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px;">Öğe Türü:</label>
+                            <select id="upload-item-type" class="custom-input">
+                                <option value="skill">🧠 Özel Skill / Prompt Kütüphanesi (.md / .json)</option>
+                                <option value="tool">🛠️ Özel Entegrasyon Aracı (.py / .json)</option>
+                                <option value="model">🤖 Özel GGUF Modelfile (.modelfile)</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px;">Öğe Başlığı:</label>
+                            <input type="text" id="upload-item-title" class="custom-input" placeholder="Örn: Benim Özel Python Kodlayıcı Skill'im">
+                        </div>
+
+                        <div style="margin-bottom: 1.25rem;">
+                            <label style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 6px;">Dosya Seçin (İsteğe Bağlı):</label>
+                            <input type="file" id="upload-item-file" class="custom-input" style="padding: 8px;">
+                        </div>
+
+                        <button class="btn-action" style="width: 100%; justify-content: center; padding: 12px;" onclick="submitCustomStoreUpload()">
+                            <i class="fa-solid fa-upload"></i> <span>Mağazaya Yükle & Etkinleştir</span>
+                        </button>
+                        <div id="upload-status-box" style="display: none; margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 0.85rem;"></div>
+                    </div>
                 </div>
             </section>
 
