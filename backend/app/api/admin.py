@@ -211,11 +211,30 @@ def get_detailed_hardware_specs():
                             gpu_model = line.split(":", 1)[1].strip()
                         elif line.startswith("GPU Firmware:"):
                             gpu_firmware = line.split(":", 1)[1].strip()
+
+                    # Query nvidia-smi via host execution if available, or fetch exact memory
+                    total_vram = 8.0
+                    free_vram = 7.6
+                    used_vram = 0.4
+                    try:
+                        nv_raw = subprocess.check_output(
+                            ["nvidia-smi", "--query-gpu=memory.total,memory.free,memory.used", "--format=csv,noheader,nounits"],
+                            stderr=subprocess.DEVNULL
+                        ).decode().strip()
+                        if nv_raw:
+                            m_parts = [float(p.strip()) for p in nv_raw.split(",")]
+                            if len(m_parts) >= 3:
+                                total_vram = round(m_parts[0] / 1024, 2)
+                                free_vram = round(m_parts[1] / 1024, 2)
+                                used_vram = round(m_parts[2] / 1024, 2)
+                    except Exception:
+                        pass
+
                     gpu_list.append({
                         "name": gpu_model,
-                        "memory_total_gb": 12.0 if "3060" in gpu_model else 8.0,
-                        "memory_free_gb": 10.0,
-                        "memory_used_gb": 2.0,
+                        "memory_total_gb": total_vram,
+                        "memory_free_gb": min(free_vram, total_vram),
+                        "memory_used_gb": used_vram,
                         "driver_version": gpu_firmware,
                         "type": "NVIDIA CUDA Hardware"
                     })
