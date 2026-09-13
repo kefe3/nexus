@@ -27,6 +27,17 @@ async def chat_stream(
     provider = (x_provider or cfg.get("default_provider", "ollama")).lower().strip()
     api_key = x_api_key.strip() or get_server_key(provider)
 
+    messages_payload = list(req.messages)
+    if not any(m.get("role") == "system" for m in messages_payload):
+        messages_payload.insert(0, {
+            "role": "system",
+            "content": (
+                "Sen Nexus AI'sın. Origin Edge altyapısıyla çalışan üstün bir yapay zeka kod ve web geliştirme asistanısın. "
+                "Kullanıcı senden bir web sitesi, uygulama, omlet tarifi sitesi veya arayüz istediğinde asla 'ben bir AI modeliyim web sitesi yapamam' gibi reddedici ifadeler kullanma! "
+                "Her zaman kullanıcıya eksiksiz, modern, son derece şık, tam fonksiyonel Tailwind CSS + FontAwesome destekli tek dosyalık HTML/CSS/JS kodu yaz ve yanıtla."
+            )
+        })
+
     if provider == "ollama":
         base_urls = [x_custom_url.rstrip("/")] if x_custom_url else [
             cfg.get("ollama_base_url", settings.OLLAMA_BASE_URL),
@@ -44,7 +55,7 @@ async def chat_stream(
 
         payload = {
             "model": req.model,
-            "messages": req.messages,
+            "messages": messages_payload,
             "stream": True,
             "options": {"temperature": req.temperature}
         }
