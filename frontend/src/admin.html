@@ -1072,6 +1072,48 @@
                 </div>
 
                 
+                <!-- Hardware Compatibility & OOM Protection Card -->
+                <div class="glass-panel" style="margin-bottom: 1.5rem; border: 1px solid rgba(0, 245, 160, 0.35); background: linear-gradient(135deg, rgba(14, 20, 32, 0.9), rgba(6, 12, 24, 0.95));">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div style="width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, rgba(0, 245, 160, 0.2), rgba(0, 242, 254, 0.2)); border: 1px solid rgba(0, 245, 160, 0.3); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--accent-green);">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 3px;">🛡️ Donanım Uyumluluğu & OOM Çökme Kalkanı</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">En az 6 GB VRAM, 8 GB RAM ve bellek taşması (Out-Of-Memory) çökme koruma durumu.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span class="status-pill" id="preflight-risk-badge" style="font-size: 0.82rem; padding: 5px 12px;"><span class="pulse-dot"></span> Denetleniyor...</span>
+                            <button class="btn-action" style="padding: 6px 12px; font-size: 0.78rem;" onclick="fetchPreflightCheck()"><i class="fa-solid fa-rotate"></i> Yeniden Tara</button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border);">
+                            <div style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">🎮 VRAM Koruması (Min. 6 GB)</div>
+                            <div style="font-size: 1.1rem; font-weight: 800; color: #fff;" id="preflight-vram-text">-- GB</div>
+                            <div style="font-size: 0.72rem; margin-top: 2px;" id="preflight-vram-sub">Kontrol ediliyor</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border);">
+                            <div style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">💾 Sistem RAM Koruması (Min. 8 GB)</div>
+                            <div style="font-size: 1.1rem; font-weight: 800; color: #fff;" id="preflight-ram-text">-- GB</div>
+                            <div style="font-size: 0.72rem; margin-top: 2px;" id="preflight-ram-sub">Kontrol ediliyor</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border);">
+                            <div style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">💽 Boş Disk Alanı (Min. 10 GB)</div>
+                            <div style="font-size: 1.1rem; font-weight: 800; color: #fff;" id="preflight-disk-text">-- GB</div>
+                            <div style="font-size: 0.72rem; margin-top: 2px;" id="preflight-disk-sub">Kontrol ediliyor</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.82rem; color: var(--text-muted); background: rgba(0,0,0,0.2); padding: 10px 14px; border-radius: 8px;" id="preflight-summary-text">
+                        Sistem kaynakları denetleniyor...
+                    </div>
+                </div>
+
                 <!-- GitHub Auto-Update Checker Card -->
                 <div class="glass-panel" style="margin-bottom: 1.5rem; border: 1px solid rgba(0, 242, 254, 0.3); background: linear-gradient(135deg, rgba(14, 20, 32, 0.9), rgba(6, 12, 24, 0.95));">
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.06);">

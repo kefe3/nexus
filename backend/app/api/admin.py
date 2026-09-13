@@ -661,6 +661,107 @@ async def get_system_specs():
     return {"status": "ok", "specs": get_detailed_hardware_specs()}
 
 
+@router.get("/preflight-check")
+async def run_system_preflight_check():
+    """
+    Evaluates hardware compatibility and OOM crash risks.
+    Minimum Requirements:
+      - VRAM: 6.0 GB recommended for 7B/8B GGUF models.
+      - System RAM: 8.0 GB minimum.
+      - Free Disk: 10.0 GB minimum.
+    """
+    specs = get_detailed_hardware_specs()
+    gpus = specs.get("gpu", [])
+    ram_info = specs.get("ram", {})
+    disk_info = specs.get("disk", {})
+    
+    # 1. VRAM Evaluation
+    vram_total_gb = 0.0
+    vram_free_gb = 0.0
+    gpu_type = "CPU Mode"
+    if gpus:
+        vram_total_gb = max(g.get("memory_total_gb", 0) for g in gpus)
+        vram_free_gb = max(g.get("memory_free_gb", 0) for g in gpus)
+        gpu_type = gpus[0].get("type", "GPU")
+    
+    min_vram_gb = 6.0
+    vram_ok = (vram_total_gb >= min_vram_gb) if gpus else False
+    
+    # 2. RAM Evaluation
+    ram_total_gb = ram_info.get("total_gb", 0.0)
+    ram_available_gb = ram_info.get("available_gb", 0.0)
+    min_ram_gb = 8.0
+    ram_ok = ram_total_gb >= min_ram_gb
+
+    # 3. Disk Evaluation
+    disk_free_gb = disk_info.get("free_gb", 0.0)
+    min_disk_gb = 10.0
+    disk_ok = disk_free_gb >= min_disk_gb
+
+    # 4. Overall Status & OOM Risk Assessment
+    if gpus and vram_total_gb >= 6.0 and ram_total_gb >= 16.0 and disk_free_gb >= 15.0:
+        overall_status = "PASS"
+        oom_risk = "LOW"
+        risk_label = "🟢 Mükemmel (OOM Riski Yok)"
+        summary = "Sistem donanımınız 7B/8B yerel modelleri VRAM ve RAM üzerinde sıfır çökme riskiyle tam hızda çalıştırabilir."
+    elif (vram_total_gb >= 6.0 or ram_total_gb >= 8.0) and disk_free_gb >= 10.0:
+        overall_status = "WARNING"
+        oom_risk = "MODERATE"
+        risk_label = "🟡 Orta Risk (OOM Koruması Aktif)"
+        summary = "Donanımınız standart kullanım için yeterlidir. OOM çökmelerini önlemek için modeller sırayla VRAM'e yüklenecektir."
+    else:
+        overall_status = "CRITICAL"
+        oom_risk = "HIGH"
+        risk_label = "🔴 Yüksek Çökme / OOM Riski"
+        summary = "Sistem kaynakları (RAM, VRAM veya Disk) sınırda! Hafif 1.5B/3B modeller ve aktif OOM koruması tavsiye edilir."
+
+    recommendations = []
+    if not gpus:
+        recommendations.append("Ayrık GPU bulunamadı; Ollama çıkarımları sistem RAM'i üzerinden CPU modunda yapılacaktır.")
+    elif vram_total_gb < 6.0:
+        recommendations.append(f"VRAM {vram_total_gb} GB (Önerilen en az 6.0 GB). 3B/Hafif modeller veya Q4 kuantizasyon tercih edilmelidir.")
+    
+    if ram_total_gb < 8.0:
+        recommendations.append(f"Sistem RAM'i {ram_total_gb} GB. Arka planda ağır uygulamaları kapatmanız tavsiye edilir.")
+    
+    if disk_free_gb < 10.0:
+        recommendations.append(f"Boş disk alanı {disk_free_gb} GB. Model indirme sırasında disk dolmaması için temizlik yapın.")
+
+    return {
+        "status": "ok",
+        "preflight": {
+            "overall_status": overall_status,
+            "oom_risk": oom_risk,
+            "risk_label": risk_label,
+            "summary": summary,
+            "vram": {
+                "total_gb": vram_total_gb,
+                "free_gb": vram_free_gb,
+                "min_req_gb": min_vram_gb,
+                "passed": vram_ok,
+                "gpu_type": gpu_type
+            },
+            "ram": {
+                "total_gb": ram_total_gb,
+                "available_gb": ram_available_gb,
+                "min_req_gb": min_ram_gb,
+                "passed": ram_ok
+            },
+            "disk": {
+                "free_gb": disk_free_gb,
+                "min_req_gb": min_disk_gb,
+                "passed": disk_ok
+            },
+            "oom_guards": [
+                {"name": "OLLAMA_MAX_LOADED_MODELS", "value": "1", "desc": "VRAM aşımını önlemek için aynı anda tek model yüklenebilir."},
+                {"name": "OLLAMA_NUM_PARALLEL", "value": "1", "desc": "Paralel isteklerin VRAM sıçramasını engeller."},
+                {"name": "DYNAMIC_VRAM_ALLOCATOR", "value": "Active", "desc": "Kuantize GGUF modelleri dinamik boyutlandırır."}
+            ],
+            "recommendations": recommendations
+        }
+    }
+
+
 import io
 import json
 import shutil

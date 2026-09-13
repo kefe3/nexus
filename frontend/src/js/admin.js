@@ -1383,9 +1383,95 @@ async function submitCustomStoreUpload() {
     }
 }
 
+async function fetchPreflightCheck() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/preflight-check`);
+        const data = await res.json();
+        if (data.status === 'ok' && data.preflight) {
+            const pf = data.preflight;
+            
+            const badge = document.getElementById('preflight-risk-badge');
+            if (badge) {
+                badge.textContent = pf.risk_label || 'Denetlendi';
+                if (pf.oom_risk === 'LOW') {
+                    badge.style.background = 'rgba(0, 245, 160, 0.15)';
+                    badge.style.color = 'var(--accent-green)';
+                    badge.style.border = '1px solid rgba(0, 245, 160, 0.3)';
+                } else if (pf.oom_risk === 'MODERATE') {
+                    badge.style.background = 'rgba(255, 184, 0, 0.15)';
+                    badge.style.color = '#ffb800';
+                    badge.style.border = '1px solid rgba(255, 184, 0, 0.3)';
+                } else {
+                    badge.style.background = 'rgba(239, 68, 68, 0.15)';
+                    badge.style.color = '#ef4444';
+                    badge.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                }
+            }
+
+            const vramTxt = document.getElementById('preflight-vram-text');
+            const vramSub = document.getElementById('preflight-vram-sub');
+            if (vramTxt) vramTxt.textContent = `${pf.vram.total_gb} GB VRAM`;
+            if (vramSub) {
+                if (pf.vram.passed) {
+                    vramSub.style.color = 'var(--accent-green)';
+                    vramSub.textContent = `✅ Uyumlu (>= 6 GB ${escapeHtml(pf.vram.gpu_type)})`;
+                } else if (pf.vram.total_gb > 0) {
+                    vramSub.style.color = '#ffb800';
+                    vramSub.textContent = `⚠️ Uyarı (${pf.vram.total_gb} GB < 6 GB). 3B model önerilir.`;
+                } else {
+                    vramSub.style.color = 'var(--accent-cyan)';
+                    vramSub.textContent = `ℹ️ CPU Modu (Sistem RAM Paylaşımlı)`;
+                }
+            }
+
+            const ramTxt = document.getElementById('preflight-ram-text');
+            const ramSub = document.getElementById('preflight-ram-sub');
+            if (ramTxt) ramTxt.textContent = `${pf.ram.total_gb} GB RAM`;
+            if (ramSub) {
+                if (pf.ram.passed) {
+                    ramSub.style.color = 'var(--accent-green)';
+                    ramSub.textContent = `✅ Uyumlu (Boş: ${pf.ram.available_gb} GB)`;
+                } else {
+                    ramSub.style.color = '#ef4444';
+                    ramSub.textContent = `🔴 Düşük RAM (8 GB Altında!)`;
+                }
+            }
+
+            const diskTxt = document.getElementById('preflight-disk-text');
+            const diskSub = document.getElementById('preflight-disk-sub');
+            if (diskTxt) diskTxt.textContent = `${pf.disk.free_gb} GB Boş`;
+            if (diskSub) {
+                if (pf.disk.passed) {
+                    diskSub.style.color = 'var(--accent-green)';
+                    diskSub.textContent = `✅ Yeterli Depolama (>= 10 GB)`;
+                } else {
+                    diskSub.style.color = '#ef4444';
+                    diskSub.textContent = `⚠️ Düşük Disk Alanı (< 10 GB)`;
+                }
+            }
+
+            const sumEl = document.getElementById('preflight-summary-text');
+            if (sumEl) {
+                let html = `<div><strong>🛡️ Sistem Analiz Özeti:</strong> ${escapeHtml(pf.summary)}</div>`;
+                if (pf.recommendations && pf.recommendations.length > 0) {
+                    html += `<ul style="margin: 6px 0 0 18px; padding: 0;">`;
+                    pf.recommendations.forEach(r => {
+                        html += `<li style="color: #cbd5e1;">${escapeHtml(r)}</li>`;
+                    });
+                    html += `</ul>`;
+                }
+                sumEl.innerHTML = html;
+            }
+        }
+    } catch (e) {
+        console.error('Error fetching preflight check:', e);
+    }
+}
+
 // Auto-check updates & store on startup
 document.addEventListener('DOMContentLoaded', () => {
     checkUpdates();
+    fetchPreflightCheck();
 });
 
 
