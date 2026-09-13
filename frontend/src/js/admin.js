@@ -1256,6 +1256,27 @@ function triggerCustomModelPull() {
     if (input) input.value = '';
 }
 
+function filterHuggingFaceCategory(query, btnEl) {
+    document.querySelectorAll('.hf-filter-pill').forEach(b => {
+        b.style.background = 'rgba(255, 255, 255, 0.05)';
+        b.style.color = 'var(--text-muted)';
+        b.style.border = '1px solid var(--card-border)';
+        b.classList.remove('active');
+    });
+
+    if (btnEl) {
+        btnEl.style.background = 'rgba(0, 242, 254, 0.2)';
+        btnEl.style.color = 'var(--accent-cyan)';
+        btnEl.style.border = '1px solid rgba(0, 242, 254, 0.4)';
+        btnEl.classList.add('active');
+    }
+
+    const input = document.getElementById('input-hf-search');
+    if (input) input.value = query === 'gguf' ? '' : query;
+
+    searchHuggingFaceHub(query);
+}
+
 async function searchHuggingFaceHub(query) {
     const input = document.getElementById('input-hf-search');
     const searchQuery = (query !== undefined ? query : (input ? input.value : '')).trim() || 'gguf';
@@ -1269,7 +1290,7 @@ async function searchHuggingFaceHub(query) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/store/huggingface/search?q=${encodeURIComponent(searchQuery)}`);
+        const res = await fetch(`${API_BASE}/store/huggingface/search?q=${encodeURIComponent(searchQuery)}`, { headers: getOllamaHeaders() });
         const data = await res.json();
         
         if (data.status === 'ok') {
@@ -1294,6 +1315,9 @@ function renderHuggingFaceResults(models) {
         return;
     }
 
+    const quantSelect = document.getElementById('select-hf-quant');
+    const quantSuffix = quantSelect && quantSelect.value ? `:${quantSelect.value}` : '';
+
     grid.innerHTML = '';
     models.forEach(m => {
         const card = document.createElement('div');
@@ -1302,18 +1326,24 @@ function renderHuggingFaceResults(models) {
         card.style.flexDirection = 'column';
         card.style.justifyContent = 'space-between';
         card.style.marginBottom = '0';
+        card.style.border = m.installed ? '1px solid rgba(0, 245, 160, 0.35)' : '1px solid var(--card-border)';
+        card.style.background = m.installed ? 'linear-gradient(135deg, rgba(0, 245, 160, 0.05), rgba(14, 20, 32, 0.8))' : 'var(--card-bg)';
 
         const tagsHtml = (m.tags || []).map(t => `<span class="quick-tag" style="font-size: 0.72rem; padding: 2px 7px;">${escapeHtml(t)}</span>`).join(' ');
+        const fullTag = `${m.ollama_tag}${quantSuffix}`;
 
         card.innerHTML = `
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                     <span class="badge-model" style="background: rgba(255, 184, 0, 0.15); color: #ffb800; border: 1px solid rgba(255, 184, 0, 0.3);"><i class="fa-solid fa-cube"></i> GGUF</span>
-                    <span style="font-size: 0.75rem; color: #64748b; font-family: 'JetBrains Mono', monospace;"><i class="fa-solid fa-user" style="margin-right: 4px;"></i> ${escapeHtml(m.author || 'HF User')}</span>
+                    ${m.installed 
+                        ? '<span class="status-pill" style="padding: 3px 8px; font-size: 0.72rem;"><span class="pulse-dot"></span> YÜKLÜ</span>'
+                        : `<span style="font-size: 0.75rem; color: #64748b; font-family: 'JetBrains Mono', monospace;"><i class="fa-solid fa-user" style="margin-right: 4px;"></i> ${escapeHtml(m.author || 'HF User')}</span>`
+                    }
                 </div>
                 <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0 0 6px 0; word-break: break-all;">${escapeHtml(m.name)}</h4>
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace;">
-                    ${escapeHtml(m.id)}
+                    ${escapeHtml(fullTag)}
                 </div>
                 <div style="display: flex; gap: 12px; font-size: 0.76rem; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; margin-bottom: 12px;">
                     <span><i class="fa-solid fa-download" style="color: var(--accent-cyan);"></i> <strong>${m.downloads.toLocaleString()}</strong> indirme</span>
@@ -1322,9 +1352,12 @@ function renderHuggingFaceResults(models) {
                 <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;">${tagsHtml}</div>
             </div>
             <div>
-                <button class="btn-action" style="width: 100%; justify-content: center; padding: 9px; background: linear-gradient(135deg, rgba(255, 184, 0, 0.2), rgba(255, 107, 0, 0.2)); border: 1px solid rgba(255, 184, 0, 0.4); color: #ffb800;" onclick="startStreamingModelPull('${escapeHtml(m.ollama_tag)}')">
-                    <i class="fa-solid fa-cloud-arrow-down"></i> 1-Tıkla İndir & Kur
-                </button>
+                ${m.installed 
+                    ? `<button class="btn-danger" style="width: 100%; padding: 9px;" onclick="deleteModel('${escapeHtml(fullTag)}')"><i class="fa-solid fa-trash"></i> Yüklü (Sil)</button>`
+                    : `<button class="btn-action" style="width: 100%; justify-content: center; padding: 9px; background: linear-gradient(135deg, rgba(255, 184, 0, 0.2), rgba(255, 107, 0, 0.2)); border: 1px solid rgba(255, 184, 0, 0.4); color: #ffb800;" onclick="startStreamingModelPull('${escapeHtml(fullTag)}')">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> 1-Tıkla İndir & Kur
+                       </button>`
+                }
             </div>
         `;
         grid.appendChild(card);

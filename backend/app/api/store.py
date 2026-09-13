@@ -154,6 +154,26 @@ CURATED_MODELS = [
         "tags": ["Mistral AI", "Instruct"]
     },
     {
+        "id": "qwen2-vl:7b",
+        "name": "Qwen 2 VL 7B Vision",
+        "category": "vision",
+        "category_label": "👁️ Görsel & Vision",
+        "description": "Görselleri, grafikleri ve diyagramları okuyup analiz edebilen multimodal yapay zeka modeli.",
+        "size_gb": 4.5,
+        "vram_req": "6 GB VRAM / 16 GB RAM",
+        "tags": ["Alibaba", "Vision", "Multimodal", "OCR"]
+    },
+    {
+        "id": "gemma2:9b",
+        "name": "Google Gemma 2 9B",
+        "category": "general",
+        "category_label": "💬 Genel Chat",
+        "description": "Google DeepMind tarafından geliştirilen yüksek kaliteli metin ve kod üretim modeli.",
+        "size_gb": 5.4,
+        "vram_req": "6 GB VRAM / 16 GB RAM",
+        "tags": ["Google", "DeepMind", "Gemma"]
+    },
+    {
         "id": "llama3.3:70b",
         "name": "Llama 3.3 70B Flagship",
         "category": "flagship",
@@ -317,7 +337,7 @@ async def toggle_store_skill(req: InstallItemRequest):
 
 
 @router.get("/huggingface/search")
-async def search_huggingface_hub(q: str = "gguf", limit: int = 24):
+async def search_huggingface_hub(q: str = "gguf", limit: int = 24, x_ollama_url: str = Header(default="")):
     """
     Search Hugging Face Hub for GGUF format open-weights models.
     """
@@ -330,6 +350,19 @@ async def search_huggingface_hub(q: str = "gguf", limit: int = 24):
         "limit": min(limit, 50)
     }
     headers = {"User-Agent": "Nexus-AI-Studio/1.0"}
+
+    installed_ollama_names = set()
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            url = await resolve_ollama_base_url(client, x_ollama_url)
+            res = await client.get(f"{url}/api/tags")
+            if res.status_code == 200:
+                models = res.json().get("models", [])
+                for m in models:
+                    installed_ollama_names.add(m.get("name", ""))
+                    installed_ollama_names.add(m.get("model", ""))
+    except Exception:
+        pass
     
     try:
         async with httpx.AsyncClient(timeout=15.0, headers=headers) as client:
@@ -346,17 +379,21 @@ async def search_huggingface_hub(q: str = "gguf", limit: int = 24):
                 parts = model_id.split("/")
                 author = parts[0] if len(parts) > 1 else ""
                 name = parts[1] if len(parts) > 1 else model_id
+                ollama_tag = f"hf.co/{model_id}"
                 
                 tags = [t for t in item.get("tags", []) if t not in ["gguf", "endpoints_compatible", "region:us", "license:other"] and not t.startswith("base_model:")]
                 
+                is_installed = (ollama_tag in installed_ollama_names or any(model_id.lower() in name.lower() for name in installed_ollama_names if name))
+
                 results.append({
                     "id": model_id,
-                    "ollama_tag": f"hf.co/{model_id}",
+                    "ollama_tag": ollama_tag,
                     "author": author,
                     "name": name,
                     "downloads": item.get("downloads", 0),
                     "likes": item.get("likes", 0),
                     "tags": tags[:5],
+                    "installed": is_installed,
                     "pipeline_tag": item.get("pipeline_tag", "text-generation"),
                     "created_at": item.get("createdAt", "")
                 })

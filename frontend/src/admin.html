@@ -873,7 +873,24 @@
                         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Hugging Face üzerindeki yüzbinlerce açık kaynak GGUF modelini canlı arayın ve 1-tıkla doğrudan Ollama motorunuza indirin.</p>
                         <div class="form-row">
                             <input type="text" id="input-hf-search" class="custom-input" placeholder="Model veya yazar adı girin (örn: deepseek, qwen, llama, bartowski, unsloth...)" onkeydown="if(event.key === 'Enter') searchHuggingFaceHub()">
+                            <select id="select-hf-quant" class="custom-input" style="max-width: 170px;">
+                                <option value="">Kuantizasyon: Otomatik (Default)</option>
+                                <option value="Q4_K_M">Q4_K_M (Dengeli 4-bit)</option>
+                                <option value="Q8_0">Q8_0 (Maksimum 8-bit)</option>
+                                <option value="Q5_K_M">Q5_K_M (Yüksek 5-bit)</option>
+                                <option value="Q2_K">Q2_K (Ultra Hafif 2-bit)</option>
+                            </select>
                             <button class="btn-action" onclick="searchHuggingFaceHub()"><i class="fa-solid fa-search"></i> HuggingFace'te Ara</button>
+                        </div>
+
+                        <!-- HuggingFace Category Filter Pills -->
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;" id="hf-category-pills">
+                            <button class="quick-tag hf-filter-pill active" onclick="filterHuggingFaceCategory('gguf', this)" style="cursor: pointer; background: rgba(0, 242, 254, 0.2); color: var(--accent-cyan); border: 1px solid rgba(0,242,254,0.4);">🌟 Hepsi (GGUF)</button>
+                            <button class="quick-tag hf-filter-pill" onclick="filterHuggingFaceCategory('deepseek', this)" style="cursor: pointer;">🧠 DeepSeek R1</button>
+                            <button class="quick-tag hf-filter-pill" onclick="filterHuggingFaceCategory('qwen', this)" style="cursor: pointer;">💻 Qwen 2.5</button>
+                            <button class="quick-tag hf-filter-pill" onclick="filterHuggingFaceCategory('llama', this)" style="cursor: pointer;">🦙 Llama 3</button>
+                            <button class="quick-tag hf-filter-pill" onclick="filterHuggingFaceCategory('mistral', this)" style="cursor: pointer;">💬 Mistral</button>
+                            <button class="quick-tag hf-filter-pill" onclick="filterHuggingFaceCategory('vision', this)" style="cursor: pointer;">👁️ Vision (VL)</button>
                         </div>
                     </div>
 
