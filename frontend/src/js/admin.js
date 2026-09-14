@@ -574,7 +574,7 @@ async function fetchDeployments() {
             if (cpLink) cpLink.style.display = 'none';
 
             if (qrImg) {
-                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=http://192.168.0.188:3050`;
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin)}`;
                 qrImg.style.opacity = '0.35';
                 qrImg.style.filter = 'grayscale(100%)';
             }
@@ -1257,6 +1257,42 @@ async function revokeApiKeyUI(keyId) {
     }
 }
 
+function updateDynamicGatewayBaseUrl() {
+    const origin = window.location.origin;
+    const v1Url = `${origin}/v1`;
+
+    const baseCode = document.getElementById('gateway-base-url-code');
+    const curlSnippet = document.getElementById('gateway-curl-snippet');
+    const pythonSnippet = document.getElementById('gateway-python-snippet');
+
+    if (baseCode) {
+        baseCode.textContent = v1Url;
+    }
+    if (curlSnippet) {
+        curlSnippet.textContent = `curl ${v1Url}/chat/completions \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "qwen2.5-coder:7b",
+    "messages": [{"role": "user", "content": "Merhaba!"}]
+  }'`;
+    }
+    if (pythonSnippet) {
+        pythonSnippet.textContent = `from openai import OpenAI
+
+client = OpenAI(
+    base_url="${v1Url}",
+    api_key="YOUR_API_KEY"
+)
+
+res = client.chat.completions.create(
+    model="qwen2.5-coder:7b",
+    messages=[{"role": "user", "content": "Merhaba!"}]
+)
+print(res.choices[0].message.content)`;
+    }
+}
+
 // Hook into section switching
 const originalSwitchSection = window.switchSection;
 window.switchSection = function(sectionId) {
@@ -1273,6 +1309,7 @@ window.switchSection = function(sectionId) {
         loadStoreCatalog();
     } else if (sectionId === 'apikeys') {
         loadApiKeys();
+        updateDynamicGatewayBaseUrl();
     }
 };
 
@@ -1280,4 +1317,5 @@ window.switchSection = function(sectionId) {
 document.addEventListener('DOMContentLoaded', () => {
     loadStoreCatalog();
     loadApiKeys();
+    updateDynamicGatewayBaseUrl();
 });

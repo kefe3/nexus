@@ -1528,7 +1528,7 @@
                     
                     <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
                         <div style="font-size: 0.85rem; font-weight: 700; color: #f59e0b; margin-bottom: 8px;">
-                            <i class="fa-solid fa-plug"></i> Base URL: <code style="background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; color: #fff;">https://nexus.oedge.xyz/v1</code>
+                            <i class="fa-solid fa-plug"></i> Base URL: <code id="gateway-base-url-code" style="background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; color: #fff;">https://nexus.oedge.xyz/v1</code>
                         </div>
                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
                             Ürettiğiniz herhangi bir Nexus API anahtarını <code>Authorization: Bearer nx-live-...</code> başlığı ile cURL, Python <code>openai</code> paketine veya Node.js istemcisine geçebilirsiniz.
@@ -1539,7 +1539,7 @@
                         <!-- cURL -->
                         <div style="background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px;">
                             <div style="font-weight: 700; font-size: 0.85rem; color: #10b981; margin-bottom: 8px;"><i class="fa-solid fa-terminal"></i> cURL İstek Örneği</div>
-                            <pre style="background: #000; padding: 10px; border-radius: 6px; font-size: 0.75rem; color: #38bdf8; overflow-x: auto;">curl https://nexus.oedge.xyz/v1/chat/completions \
+                            <pre id="gateway-curl-snippet" style="background: #000; padding: 10px; border-radius: 6px; font-size: 0.75rem; color: #38bdf8; overflow-x: auto;">curl https://nexus.oedge.xyz/v1/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -1551,7 +1551,7 @@
                         <!-- Python -->
                         <div style="background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px;">
                             <div style="font-weight: 700; font-size: 0.85rem; color: #3b82f6; margin-bottom: 8px;"><i class="fa-brands fa-python"></i> Python OpenAI SDK</div>
-                            <pre style="background: #000; padding: 10px; border-radius: 6px; font-size: 0.75rem; color: #a78bfa; overflow-x: auto;">from openai import OpenAI
+                            <pre id="gateway-python-snippet" style="background: #000; padding: 10px; border-radius: 6px; font-size: 0.75rem; color: #a78bfa; overflow-x: auto;">from openai import OpenAI
 
 client = OpenAI(
     base_url="https://nexus.oedge.xyz/v1",
