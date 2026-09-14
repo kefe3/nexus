@@ -19,7 +19,7 @@
     <!-- 1. Collapsible Sidebar -->
     <aside id="sidebar" class="w-72 bg-[#0a0f19] border-r border-white/10 flex flex-col justify-between shrink-0 transition-all z-20">
         <div class="p-4 space-y-4">
-            <!-- Brand & New Chat -->
+            <!-- Brand & Language -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 flex items-center justify-center text-white shadow-lg">
@@ -35,6 +35,7 @@
                 </button>
             </div>
 
+            <!-- New Chat Button -->
             <button onclick="createNewChat()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-emerald-500/25 active:scale-95">
                 <i class="fa-solid fa-plus text-xs"></i>
                 <span>Yeni Sohbet</span>
@@ -46,14 +47,14 @@
                 <input type="text" id="searchChatInput" placeholder="Sohbetlerde ara..." class="w-full pl-8 pr-3 py-1.5 bg-slate-900/80 border border-white/5 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
             </div>
 
-            <!-- Chat History -->
+            <!-- Chat History List -->
             <div class="space-y-1">
                 <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1">Geçmiş Sohbetler</div>
-                <div id="chatsHistoryList" class="space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto pr-1"></div>
+                <div id="chatsHistoryList" class="space-y-1 max-h-[calc(100vh-230px)] overflow-y-auto pr-1"></div>
             </div>
         </div>
 
-        <!-- Clean Sidebar Footer -->
+        <!-- Sidebar Footer Status -->
         <div class="p-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 font-mono">
             <span class="flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -66,14 +67,27 @@
     <!-- 2. Main Studio Canvas -->
     <main class="flex-1 flex flex-col h-full bg-[#06090e] overflow-hidden relative">
         
-        <!-- Top Navigation Bar -->
+        <!-- Top Navigation Control Bar -->
         <header class="h-14 border-b border-white/10 px-6 flex items-center justify-between glass-panel z-10 shrink-0">
             <div class="flex items-center gap-3">
-                <!-- Locked GPU Badge -->
-                <div class="flex items-center gap-2 bg-slate-900/90 px-3.5 py-1.5 rounded-xl border border-emerald-500/30 text-xs text-emerald-400 font-bold shadow-md">
-                    <i class="fa-solid fa-microchip text-emerald-400 animate-pulse"></i>
-                    <span>Qwen 2.5 Coder</span>
-                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-mono border border-emerald-500/30">Self-Hosted Local Engine</span>
+                <!-- Multi-Provider Selector -->
+                <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-xl border border-emerald-500/30 shadow-md">
+                    <i class="fa-solid fa-server text-emerald-400 text-xs"></i>
+                    <select id="providerSelect" onchange="switchProvider(this.value)" class="bg-transparent text-emerald-400 font-bold text-xs focus:outline-none cursor-pointer">
+                        <option value="ollama" class="bg-slate-900 text-white">Ollama (Yerel GPU)</option>
+                        <option value="gemini" class="bg-slate-900 text-white">Google Gemini</option>
+                        <option value="openai" class="bg-slate-900 text-white">OpenAI (GPT-4o)</option>
+                        <option value="groq" class="bg-slate-900 text-white">Groq (Ultra Hızlı)</option>
+                        <option value="anthropic" class="bg-slate-900 text-white">Anthropic (Claude)</option>
+                    </select>
+                </div>
+
+                <!-- Dynamic Model Selector -->
+                <div class="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-xl border border-white/10 shadow-md">
+                    <i class="fa-solid fa-microchip text-slate-400 text-xs"></i>
+                    <select id="modelSelect" onchange="switchModel(this.value)" class="bg-transparent text-slate-200 font-bold text-xs focus:outline-none cursor-pointer min-w-[160px]">
+                        <option value="">Modeller yükleniyor...</option>
+                    </select>
                 </div>
 
                 <!-- Active Persona Badge -->
@@ -81,6 +95,19 @@
             </div>
 
             <div class="flex items-center gap-2">
+                <!-- Settings Button -->
+                <button onclick="openSettingsModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-white/10 transition-all shadow-md" title="API Key & Sunucu Ayarları">
+                    <i class="fa-solid fa-gear text-slate-400"></i>
+                    <span>Ayarlar</span>
+                </button>
+
+                <!-- Control Panel Direct Button -->
+                <a href="/admin.html" target="_blank" class="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-600/20" title="Küme Kontrol Paneli & Mağaza">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Kontrol Paneli</span>
+                </a>
+
+                <!-- Reset / New Chat -->
                 <button onclick="createNewChat()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all text-xs" title="Sohbeti Temizle">
                     <i class="fa-solid fa-rotate-left"></i>
                 </button>
@@ -90,7 +117,7 @@
         <!-- Messages Viewport -->
         <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-6 max-w-4xl w-full mx-auto select-text"></div>
 
-        <!-- Welcome Hero View (When no messages) -->
+        <!-- Welcome Hero View (Shown when conversation is empty) -->
         <div id="welcomeHero" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0 pointer-events-auto">
             <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 flex items-center justify-center text-white text-3xl shadow-2xl mb-4 animate-bounce">
                 <i class="fa-solid fa-bolt"></i>
@@ -98,9 +125,9 @@
             <h1 class="text-2xl font-black text-white tracking-tight">Nexus AI Studio</h1>
             <p class="text-xs text-slate-400 mt-1 max-w-md">Kendi yerel donanımınız (GPU/CPU) ve bulut sağlayıcılarınızla çalışan akıllı açık kaynaklı yapay zeka platformu.</p>
 
-            <!-- Featured Personas Carousel -->
+            <!-- Featured Personas / Role Templates Carousel -->
             <div class="mt-8 max-w-2xl w-full text-left">
-                <div class="text-xs font-bold text-slate-400 mb-2 px-1">Öne Çıkan Rol Şablonları</div>
+                <div class="text-xs font-bold text-slate-400 mb-2 px-1"><i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i> Öne Çıkan Rol Şablonları</div>
                 <div id="presetsCarousel" class="flex gap-3 overflow-x-auto pb-2"></div>
             </div>
         </div>
@@ -108,23 +135,21 @@
         <!-- Sticky Floating Prompt Input Capsule -->
         <div class="p-4 max-w-4xl w-full mx-auto z-10">
             <div class="glass-panel p-2.5 rounded-2xl border border-white/10 shadow-2xl focus-within:border-emerald-500 transition-all flex flex-col gap-2">
-                <textarea id="promptInput" rows="1" placeholder="Bir mesaj yazın veya kod/web uygulaması isteyin... (Shift+Enter yeni satır)" class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none px-3 py-1.5 max-h-44"></textarea>
+                <textarea id="promptInput" rows="1" placeholder="Nexus AI'ya bir soru sorun veya kod yazmasını isteyin..." class="w-full bg-transparent border-0 text-slate-100 text-sm focus:outline-none resize-none px-2 py-1 max-h-44"></textarea>
                 
                 <div class="flex items-center justify-between pt-1 border-t border-white/5">
                     <div class="flex items-center gap-2">
-                        <button onclick="toggleVoice()" id="voiceInputBtn" class="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 rounded-xl text-xs transition-all" title="Sesli Konuşma">
+                        <button onclick="toggleVoice()" id="voiceInputBtn" class="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 rounded-xl text-xs transition-all" title="Sesli Konuşma Mode">
                             <i class="fa-solid fa-microphone"></i>
                         </button>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button id="sendBtn" onclick="sendMessage()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-lg transition-all active:scale-95">
-                            <span>Gönder</span>
-                            <i class="fa-solid fa-arrow-up text-[10px]"></i>
+                        <button onclick="stopGeneration()" id="stopBtn" class="hidden px-3 py-1.5 bg-rose-600/80 hover:bg-rose-600 text-white rounded-xl text-xs font-bold items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-square text-[10px]"></i> <span>Durdur</span>
                         </button>
-                        <button id="stopBtn" onclick="stopStreaming()" class="hidden px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-lg transition-all">
-                            <span>Durdur</span>
-                            <i class="fa-solid fa-stop text-[10px]"></i>
+                        <button onclick="sendMessage()" id="sendBtn" class="p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all active:scale-95">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
                         </button>
                     </div>
                 </div>
@@ -132,61 +157,131 @@
         </div>
     </main>
 
-    <!-- 3. Live Artifact Sandbox Modal -->
-    <div id="sandboxModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl hidden z-50 items-center justify-center p-4">
-        <div class="w-full h-full max-w-6xl max-h-[92vh] bg-[#0c121e] border border-white/10 rounded-3xl flex flex-col shadow-2xl overflow-hidden">
-            <!-- Sandbox Header -->
-            <div class="h-14 border-b border-white/10 px-6 flex items-center justify-between bg-slate-900/90 shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-xs font-bold">
-                        <i class="fa-solid fa-play"></i>
+    <!-- 3. Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="bg-[#0b0f19] border border-white/10 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                        <i class="fa-solid fa-sliders text-sm"></i>
                     </div>
                     <div>
-                        <div class="font-bold text-xs text-white">⚡ Canlı Artifact Sandbox</div>
-                        <div class="text-[10px] text-slate-400">HTML/CSS/JS canlı render</div>
+                        <h3 class="font-bold text-white text-base">API & Sunucu Ayarları</h3>
+                        <p class="text-xs text-slate-400">Model sağlayıcı anahtarlarınızı yapılandırın</p>
                     </div>
                 </div>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
 
-                <!-- Responsive Device Switcher -->
-                <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-white/10 text-xs">
-                    <button id="deviceBtn-desktop" onclick="setDeviceMode('desktop')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs">Masaüstü</button>
-                    <button id="deviceBtn-tablet" onclick="setDeviceMode('tablet')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs">Tablet</button>
-                    <button id="deviceBtn-mobile" onclick="setDeviceMode('mobile')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs">Mobil</button>
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                <!-- Ollama URL -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-server text-emerald-400"></i> Yerel Ollama Base URL
+                    </label>
+                    <input type="text" id="input_url_ollama" placeholder="http://127.0.0.1:11435 veya http://localhost:11434" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
                 </div>
 
-                <!-- Action Controls -->
-                <div class="flex items-center gap-2">
-                    <button onclick="publishCurrentArtifact()" id="publishArtifactBtn" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all" title="Tek tıkla internete ve dünyaya aç">
-                        <i class="fa-solid fa-globe text-xs"></i> <span>Dünyaya Aç / Paylaş</span>
-                    </button>
-                    <button onclick="runSandboxCode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-rotate-right text-[10px]"></i> <span>Yenile</span>
-                    </button>
-                    <button onclick="downloadSandboxHtml()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-download text-[10px]"></i> <span>İndir</span>
-                    </button>
-                    <button onclick="closeSandbox()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
-                        <i class="fa-solid fa-xmark text-sm"></i>
-                    </button>
+                <!-- Gemini API Key -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                        <i class="fa-brands fa-google text-blue-400"></i> Google Gemini API Key
+                    </label>
+                    <input type="password" id="input_key_gemini" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
+
+                <!-- OpenAI API Key -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-brain text-emerald-400"></i> OpenAI API Key
+                    </label>
+                    <input type="password" id="input_key_openai" placeholder="sk-proj-..." class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
+
+                <!-- Groq API Key -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-amber-400"></i> Groq API Key
+                    </label>
+                    <input type="password" id="input_key_groq" placeholder="gsk_..." class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
+
+                <!-- Anthropic API Key -->
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-robot text-purple-400"></i> Anthropic Claude API Key
+                    </label>
+                    <input type="password" id="input_key_anthropic" placeholder="sk-ant-..." class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
                 </div>
             </div>
 
-            <!-- Iframe Container -->
-            <div class="flex-1 bg-slate-950 flex items-center justify-center p-3 overflow-hidden">
-                <div id="sandboxFrameWrapper" class="h-full bg-white rounded-2xl overflow-hidden shadow-2xl transition-all duration-300" style="width: 100%;">
-                    <iframe id="sandboxIframe" class="w-full h-full border-0" sandbox="allow-scripts allow-modals allow-same-origin allow-forms"></iframe>
-                </div>
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all">Vazgeç</button>
+                <button onclick="saveSettings()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-600/30 transition-all">Kaydet & Uygula</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
+    <!-- 4. Live Artifact Sandbox Modal -->
+    <div id="sandboxModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl hidden flex-col z-50">
+        <!-- Sandbox Header Bar -->
+        <div class="h-14 border-b border-white/10 px-6 flex items-center justify-between bg-slate-900/80 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-rose-500 cursor-pointer" onclick="closeSandbox()"></div>
+                    <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                </div>
+                <span class="text-xs font-mono text-slate-400 border-l border-white/10 pl-3">Canlı Kod Sanal Alanı (Sandbox)</span>
+            </div>
+
+            <!-- Device Mode Switcher -->
+            <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-white/10">
+                <button onclick="setDeviceMode('desktop')" id="deviceBtn-desktop" class="device-btn px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all active-device bg-indigo-600 text-white">
+                    <i class="fa-solid fa-desktop text-xs"></i> Masaüstü
+                </button>
+                <button onclick="setDeviceMode('tablet')" id="deviceBtn-tablet" class="device-btn px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-tablet-screen-button text-xs"></i> Tablet
+                </button>
+                <button onclick="setDeviceMode('mobile')" id="deviceBtn-mobile" class="device-btn px-3 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all">
+                    <i class="fa-solid fa-mobile-screen text-xs"></i> Mobil
+                </button>
+            </div>
+
+            <!-- Sandbox Actions -->
+            <div class="flex items-center gap-2">
+                <button onclick="runSandboxCode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-rotate-right text-[10px]"></i> <span>Yenile</span>
+                </button>
+                <button onclick="downloadSandboxHtml()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-download text-[10px]"></i> <span>İndir</span>
+                </button>
+                <button onclick="publishCurrentArtifact()" id="publishArtifactBtn" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all" title="Tek tıkla internete ve dünyaya aç">
+                    <i class="fa-solid fa-globe text-xs"></i> <span>İnternete Aç</span>
+                </button>
+                <button onclick="closeSandbox()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Iframe Workspace -->
+        <div class="flex-1 bg-slate-950 flex items-center justify-center p-3 overflow-hidden">
+            <div id="sandboxFrameWrapper" class="h-full bg-white rounded-2xl overflow-hidden shadow-2xl transition-all duration-300" style="width: 100%;">
+                <iframe id="sandboxIframe" class="w-full h-full border-0" sandbox="allow-scripts allow-modals allow-same-origin allow-forms"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Toast Notification -->
     <div id="toastNotification" class="fixed bottom-6 right-6 px-4 py-3 bg-emerald-600 text-white rounded-2xl text-xs font-bold shadow-2xl border border-emerald-400/40 opacity-0 translate-y-4 pointer-events-none transition-all duration-300 flex items-center gap-2 z-50">
         <i class="fa-solid fa-check-circle text-emerald-300 text-sm"></i>
         <span id="toastText">İşlem tamamlandı!</span>
     </div>
 
-    <!-- Scripts -->
+    <!-- Engine Scripts -->
     <script src="js/i18n.js"></script>
     <script src="js/providers.js"></script>
     <script src="js/voice.js"></script>

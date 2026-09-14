@@ -1,23 +1,20 @@
 // Nexus AI Studio — Main Controller Engine
+// NOTE: activeProvider, activeModel, getProviderHeaders(), fetchModelsForActiveProvider()
+// are defined in providers.js (loaded before this file). Do NOT redeclare them here.
 let currentChatId = null;
 let chatsHistory = JSON.parse(localStorage.getItem("nexus_chats") || "[]");
 let currentMessages = [];
 let activeAbortController = null;
 let currentPersonaPrompt = "";
-let activeProvider = "ollama";
-let activeModel = "qwen2.5-coder:7b";
 let currentLang = "tr";
 
-function getProviderHeaders() {
+// Wrapper that adds session ID to provider headers from providers.js
+function getProviderHeadersWithSession() {
+    const provHeaders = (typeof getProviderHeaders === "function") ? getProviderHeaders() : { "x-provider": activeProvider };
     return {
-        "X-Provider": "ollama",
+        ...provHeaders,
         "X-Session-ID": getSessionId()
     };
-}
-
-function fetchModelsForActiveProvider() {
-    activeModel = "qwen2.5-coder:7b";
-    activeProvider = "ollama";
 }
 
 function applyTranslations() {}
@@ -269,7 +266,7 @@ async function sendMessage() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                ...getProviderHeaders()
+                ...getProviderHeadersWithSession()
             },
             body: JSON.stringify({
                 model: activeModel,
