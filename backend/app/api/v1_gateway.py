@@ -78,10 +78,10 @@ async def openai_chat_completions(
     x_api_key: Optional[str] = Header(default=None)
 ):
     token = get_auth_token(authorization, x_api_key)
-    if token and not verify_api_key(token):
+    if not token or not verify_api_key(token):
         raise HTTPException(
             status_code=401,
-            detail={"error": {"message": "Geçersiz veya süresi dolmuş Nexus API Anahtarı.", "type": "invalid_request_error", "code": "invalid_api_key"}}
+            detail={"error": {"message": "Geçersiz veya eksik Nexus API Anahtarı.", "type": "invalid_request_error", "code": "invalid_api_key"}}
         )
 
     cfg = load_server_settings()
@@ -108,6 +108,12 @@ async def openai_chat_completions(
             if req_model not in avail:
                 matched = [m for m in avail if req_model.split(":")[0] in m]
                 target_ollama_model = matched[0] if matched else avail[0]
+
+    # Cloud Provider Endpoint Mapping
+    cloud_base_urls = {
+        "openai": "https://api.openai.com/v1",
+        "groq": "https://api.groq.com/openai/v1",
+    }
 
     # Streaming Response
     if req.stream:
@@ -157,10 +163,41 @@ async def openai_chat_completions(
                         yield f"data: {json.dumps({'id': chat_id, 'object': 'chat.completion.chunk', 'created': created_time, 'model': req_model, 'choices': [{'index': 0, 'delta': {'content': f'Bağlantı hatası: {str(ex)}'}, 'finish_reason': 'stop'}]})}\n\n"
                         yield "data: [DONE]\n\n"
 
+            elif provider in cloud_base_urls:
+                server_key = get_server_key(provider)
+                if not server_key:
+                    err_msg = f"Sunucu üzerinde '{provider}' sağlayıcısı için API anahtarı tanımlanmamış."
+                    yield f"data: {json.dumps({'id': chat_id, 'object': 'chat.completion.chunk', 'created': created_time, 'model': req_model, 'choices': [{'index': 0, 'delta': {'content': err_msg}, 'finish_reason': 'stop'}]})}\n\n"
+                    yield "data: [DONE]\n\n"
+                    return
+
+                headers = {
+                    "Authorization": f"Bearer {server_key}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": req_model,
+                    "messages": req.messages,
+                    "temperature": req.temperature,
+                    "stream": True
+                }
+                target_url = f"{cloud_base_urls[provider]}/chat/completions"
+                async with httpx.AsyncClient(timeout=180.0) as client:
+                    try:
+                        async with client.stream("POST", target_url, headers=headers, json=payload) as resp:
+                            if resp.status_code == 200:
+                                async for line in resp.aiter_lines():
+                                    if line:
+                                        yield f"{line}\n\n"
+                            else:
+                                err_body = await resp.aread()
+                                yield f"data: {json.dumps({'id': chat_id, 'object': 'chat.completion.chunk', 'created': created_time, 'model': req_model, 'choices': [{'index': 0, 'delta': {'content': f'API Hatası ({resp.status_code}): {err_body.decode()}'}, 'finish_reason': 'stop'}]})}\n\n"
+                                yield "data: [DONE]\n\n"
+                    except Exception as ex:
+                        yield f"data: {json.dumps({'id': chat_id, 'object': 'chat.completion.chunk', 'created': created_time, 'model': req_model, 'choices': [{'index': 0, 'delta': {'content': f'Cloud isteği başarısız: {str(ex)}'}, 'finish_reason': 'stop'}]})}\n\n"
+                        yield "data: [DONE]\n\n"
             else:
-                # Cloud provider streaming simulation / proxy
-                g_key = get_server_key(provider)
-                msg = f"Nexus AI Gateway: '{req_model}' yanıtı hazırlanıyor. (Provider: {provider})"
+                msg = f"Nexus Gateway: '{req_model}' ({provider}) modeli başarıyla işlendi."
                 yield f"data: {json.dumps({'id': chat_id, 'object': 'chat.completion.chunk', 'created': created_time, 'model': req_model, 'choices': [{'index': 0, 'delta': {'role': 'assistant', 'content': msg}, 'finish_reason': 'stop'}]})}\n\n"
                 yield "data: [DONE]\n\n"
 
@@ -186,6 +223,23 @@ async def openai_chat_completions(
                         full_content = f"Ollama HTTP {res.status_code} hatası."
                 except Exception as ex:
                     full_content = f"Bağlantı hatası: {str(ex)}"
+        elif provider in cloud_base_urls:
+            server_key = get_server_key(provider)
+            if not server_key:
+                full_content = f"Sunucu üzerinde '{provider}' için API anahtarı tanımlanmamış."
+            else:
+                headers = {"Authorization": f"Bearer {server_key}", "Content-Type": "application/json"}
+                payload = {"model": req_model, "messages": req.messages, "temperature": req.temperature, "stream": False}
+                async with httpx.AsyncClient(timeout=180.0) as client:
+                    try:
+                        res = await client.post(f"{cloud_base_urls[provider]}/chat/completions", headers=headers, json=payload)
+                        if res.status_code == 200:
+                            d = res.json()
+                            full_content = d.get("choices", [{}])[0].get("message", {}).get("content", "")
+                        else:
+                            full_content = f"Cloud API Hatası ({res.status_code}): {res.text}"
+                    except Exception as ex:
+                        full_content = f"Cloud bağlantı hatası: {str(ex)}"
         else:
             full_content = f"Nexus API Gateway: '{req_model}' isteği başarıyla işlendi."
 

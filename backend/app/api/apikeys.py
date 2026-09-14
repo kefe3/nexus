@@ -8,7 +8,8 @@ from typing import Optional, List, Dict, Any
 
 router = APIRouter(prefix="/apikeys", tags=["apikeys"])
 
-DATA_DIR = os.path.join(os.getcwd(), "data")
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DATA_DIR = os.getenv("DATA_DIR", os.path.join(BASE_DIR, "data"))
 APIKEYS_FILE = os.path.join(DATA_DIR, "apikeys.json")
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -49,17 +50,14 @@ def verify_api_key(token: str) -> bool:
     if not token:
         return False
     clean_token = token.strip()
-    if clean_token == DEFAULT_MASTER_KEY or clean_token.startswith("nx-live-"):
-        data = load_apikeys()
-        for item in data.get("keys", []):
-            if item.get("key") == clean_token and item.get("status") == "active":
-                item["requests_count"] = item.get("requests_count", 0) + 1
-                item["last_used"] = time.strftime("%Y-%m-%d %H:%M:%S")
-                save_apikeys(data)
-                return True
-        # If token starts with nx-live- but not found, still allow master/custom keys if active
-        return True
-    return True
+    data = load_apikeys()
+    for item in data.get("keys", []):
+        if item.get("key") == clean_token and item.get("status", "active") == "active":
+            item["requests_count"] = item.get("requests_count", 0) + 1
+            item["last_used"] = time.strftime("%Y-%m-%d %H:%M:%S")
+            save_apikeys(data)
+            return True
+    return False
 
 class GenerateKeyRequest(BaseModel):
     name: Optional[str] = "Sınırsız Client Key"

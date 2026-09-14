@@ -108,33 +108,43 @@ def save_metadata(meta: Dict[str, Any]):
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
 class PublishRequest(BaseModel):
-    html: str
+    html: Optional[str] = None
+    html_code: Optional[str] = None
     title: Optional[str] = "Nexus AI Generated App"
 
 @router.post("/api/deploy/publish")
-async def publish_deployment(req: PublishRequest):
-    html_content = req.html.strip()
-    if not html_content:
-        raise HTTPException(status_code=400, detail="HTML content is empty")
+async def publish_artifact(req: PublishRequest, request: Request):
+    html_code = req.html_code or req.html
+    if not html_code or not html_code.strip():
+        raise HTTPException(status_code=400, detail="HTML içeriği boş olamaz.")
+    req.html_code = html_code
 
-    deploy_id = uuid.uuid4().hex[:8]
+    deploy_id = f"art-{secrets.token_hex(6)}"
+    created_at = time.strftime("%Y-%m-%d %H:%M:%S")
     file_path = os.path.join(DEPLOYMENTS_DIR, f"{deploy_id}.html")
 
+    # Save artifact HTML
     with open(file_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
+        f.write(req.html_code)
 
-    meta = load_metadata()
     pub_url = tunnel_manager.public_url
-    if not pub_url:
-        pub_url = tunnel_manager.start_tunnel(8500)
+    base_host = request.headers.get("host", "localhost:3050")
+    scheme = request.url.scheme or "http"
+    local_base = f"{scheme}://{base_host}"
 
-    meta[deploy_id] = {
+    rec = {
         "id": deploy_id,
         "title": req.title,
-        "size_bytes": len(html_content.encode("utf-8")),
-        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "views": 0
+        "created_at": created_at,
+        "file_size": len(req.html_code),
+        "views": 0,
+        "local_path": f"/share/{deploy_id}",
+        "local_url": f"{local_base}/share/{deploy_id}",
+        "public_url": f"{pub_url}/share/{deploy_id}" if pub_url else f"{local_base}/share/{deploy_id}"
     }
+
+    meta = load_metadata()
+    meta[deploy_id] = rec
     save_metadata(meta)
 
     return {
@@ -142,8 +152,8 @@ async def publish_deployment(req: PublishRequest):
         "id": deploy_id,
         "title": req.title,
         "local_path": f"/share/{deploy_id}",
-        "local_url": f"http://192.168.0.188:3050/share/{deploy_id}",
-        "public_url": f"{pub_url}/share/{deploy_id}" if pub_url else f"http://192.168.0.188:3050/share/{deploy_id}",
+        "local_url": f"{local_base}/share/{deploy_id}",
+        "public_url": f"{pub_url}/share/{deploy_id}" if pub_url else f"{local_base}/share/{deploy_id}",
         "tunnel_active": bool(pub_url),
         "tunnel_base": pub_url or ""
     }
@@ -171,15 +181,19 @@ async def serve_share_page(deploy_id: str):
     return HTMLResponse(content=content, status_code=200)
 
 @router.get("/api/deploy/list")
-async def list_deployments():
+async def list_deployments(request: Request):
     meta = load_metadata()
     pub_url = tunnel_manager.public_url
+    base_host = request.headers.get("host", "localhost:3050")
+    scheme = request.url.scheme or "http"
+    local_base = f"{scheme}://{base_host}"
+
     items = []
     for k, v in meta.items():
         items.append({
             **v,
-            "local_url": f"http://192.168.0.188:3050/share/{k}",
-            "public_url": f"{pub_url}/share/{k}" if pub_url else f"http://192.168.0.188:3050/share/{k}"
+            "local_url": f"{local_base}/share/{k}",
+            "public_url": f"{pub_url}/share/{k}" if pub_url else f"{local_base}/share/{k}"
         })
     return {
         "status": "ok",
@@ -190,16 +204,20 @@ async def list_deployments():
 
 @router.get("/api/deploy/tunnel")
 @router.get("/api/deploy/studio-tunnel")
-async def get_tunnel_status():
+async def get_tunnel_status(request: Request):
     pub_url = tunnel_manager.public_url
+    base_host = request.headers.get("host", "localhost:3050")
+    scheme = request.url.scheme or "http"
+    local_base = f"{scheme}://{base_host}"
+
     return {
         "status": "ok",
         "active": bool(pub_url),
         "url": pub_url or "",
         "public_studio_url": pub_url or "",
         "public_admin_url": f"{pub_url}/admin.html" if pub_url else "",
-        "local_studio_url": "http://192.168.0.188:3050",
-        "local_admin_url": "http://192.168.0.188:3050/admin.html",
+        "local_studio_url": local_base,
+        "local_admin_url": f"{local_base}/admin.html",
         "service": "Cloudflare Quick Tunnel (Zero-Config HTTPS)"
     }
 

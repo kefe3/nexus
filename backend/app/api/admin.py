@@ -1,3 +1,8 @@
+import io
+import json
+import shutil
+import tarfile
+import copy
 from fastapi import APIRouter, Header, HTTPException, Body
 from pydantic import BaseModel
 import psutil
@@ -572,18 +577,12 @@ async def get_system_specs():
     return {"status": "ok", "specs": get_detailed_hardware_specs()}
 
 
-import io
-import json
-import shutil
-import tarfile
-import copy
-
 def get_repo_dir():
     candidates = ["/repo", ".", "..", "/app/..", "/app"]
     for c in candidates:
         if os.path.isdir(os.path.join(c, ".git")):
             return os.path.abspath(c)
-    return "."
+    return os.path.abspath(os.getcwd())
 
 def run_git_cmd(args, custom_dir=None):
     repo_dir = custom_dir or get_repo_dir()
