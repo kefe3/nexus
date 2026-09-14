@@ -1167,7 +1167,7 @@ async function pullStoreModel(name) {
 
 async function pullCustomModel() {
     const input = document.getElementById('hf-model-input');
-    if (!input || !input.value.strip) return;
+    if (!input || !input.value || !input.value.trim()) return;
     const val = input.value.trim();
     if (!val) {
         alert("Lütfen bir HuggingFace veya Ollama model adı girin.");
