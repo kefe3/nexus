@@ -6,30 +6,7 @@ let chatsHistory = JSON.parse(localStorage.getItem("nexus_chats") || "[]");
 let currentMessages = [];
 let activeAbortController = null;
 let currentPersonaPrompt = "";
-let currentLang = "tr";
-
-// Wrapper that adds session ID to provider headers from providers.js
-function getProviderHeadersWithSession() {
-    const provHeaders = (typeof getProviderHeaders === "function") ? getProviderHeaders() : { "x-provider": activeProvider };
-    return {
-        ...provHeaders,
-        "X-Session-ID": getSessionId()
-    };
-}
-
-function applyTranslations() {}
-function setLanguage(lang) {
-    currentLang = lang;
-}
-function t(key) {
-    const tr = {
-        thinking: "Düşünce Adımları",
-        live_preview: "Canlı Önizleme",
-        copy_code: "Kodu Kopyala",
-        copied: "Kopyalandı!"
-    };
-    return tr[key] || key;
-}
+// currentLang, setLanguage(), applyTranslations(), t() are defined in i18n.js
 
 document.addEventListener("DOMContentLoaded", () => {
     initChatInterface();
@@ -266,7 +243,8 @@ async function sendMessage() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                ...getProviderHeadersWithSession()
+                ...getProviderHeaders(),
+                "X-Session-ID": getSessionId()
             },
             body: JSON.stringify({
                 model: activeModel,
