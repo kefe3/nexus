@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus AI — Qwen 2.5 Coder (Topcubuntu GPU)</title>
+    <title>Nexus AI Studio — Self-Hosted AI Platform</title>
     
     <!-- CDNs -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -27,7 +27,7 @@
                     </div>
                     <div>
                         <div class="font-black text-sm tracking-wide text-white">Nexus AI</div>
-                        <div class="text-[10px] text-emerald-400 font-mono font-bold">Qwen 2.5 Edition</div>
+                        <div class="text-[10px] text-emerald-400 font-mono font-bold">Studio Edition</div>
                     </div>
                 </div>
                 <button onclick="setLanguage(currentLang === 'tr' ? 'en' : 'tr')" id="langToggleBtn" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-white/10 flex items-center gap-1 transition-all">
@@ -53,13 +53,13 @@
             </div>
         </div>
 
-        <!-- Clean Sidebar Footer (No admin/settings buttons) -->
+        <!-- Clean Sidebar Footer -->
         <div class="p-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 font-mono">
             <span class="flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Topcubuntu GPU</span>
+                <span>Nexus Local Engine</span>
             </span>
-            <span class="text-[10px] text-slate-600">RTX 4060</span>
+            <span class="text-[10px] text-slate-500">Self-Hosted</span>
         </div>
     </aside>
 
@@ -69,11 +69,11 @@
         <!-- Top Navigation Bar -->
         <header class="h-14 border-b border-white/10 px-6 flex items-center justify-between glass-panel z-10 shrink-0">
             <div class="flex items-center gap-3">
-                <!-- Locked GPU Badge (No dropdowns) -->
+                <!-- Locked GPU Badge -->
                 <div class="flex items-center gap-2 bg-slate-900/90 px-3.5 py-1.5 rounded-xl border border-emerald-500/30 text-xs text-emerald-400 font-bold shadow-md">
                     <i class="fa-solid fa-microchip text-emerald-400 animate-pulse"></i>
                     <span>Qwen 2.5 Coder</span>
-                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-mono border border-emerald-500/30">Topcubuntu GPU Offloaded (RTX 4060)</span>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-mono border border-emerald-500/30">Self-Hosted Local Engine</span>
                 </div>
 
                 <!-- Active Persona Badge -->
@@ -95,8 +95,8 @@
             <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 flex items-center justify-center text-white text-3xl shadow-2xl mb-4 animate-bounce">
                 <i class="fa-solid fa-bolt"></i>
             </div>
-            <h1 class="text-2xl font-black text-white tracking-tight">Qwen 2.5 Coder</h1>
-            <p class="text-xs text-slate-400 mt-1 max-w-md">Topcubuntu Ev Sunucusu (NVIDIA RTX 4060 GPU Offloading) donanım hızıyla çalışan akıllı kod & yanıt asistanı.</p>
+            <h1 class="text-2xl font-black text-white tracking-tight">Nexus AI Studio</h1>
+            <p class="text-xs text-slate-400 mt-1 max-w-md">Kendi yerel donanımınız (GPU/CPU) ve bulut sağlayıcılarınızla çalışan akıllı açık kaynaklı yapay zeka platformu.</p>
 
             <!-- Featured Personas Carousel -->
             <div class="mt-8 max-w-2xl w-full text-left">
