@@ -627,6 +627,17 @@
                 <span class="nav-badge" style="color: var(--accent-amber);">ARENA</span>
             </div>
 
+            
+            <div class="cp-sidebar-label">NEXUS MAĞAZA & API</div>
+            <div class="cp-nav-item" onclick="switchSection('store')">
+                <div class="cp-nav-left"><i class="fa-solid fa-store" style="color: #ec4899;"></i><span>Nexus Store & HuggingFace</span></div>
+                <span class="nav-badge" style="color: #ec4899; background: rgba(236, 72, 153, 0.15);">HUB</span>
+            </div>
+            <div class="cp-nav-item" onclick="switchSection('apikeys')">
+                <div class="cp-nav-left"><i class="fa-solid fa-key" style="color: #f59e0b;"></i><span>API Key Verme & Gateway</span></div>
+                <span class="nav-badge" style="color: #f59e0b; background: rgba(245, 158, 11, 0.15);">OPENAI V1</span>
+            </div>
+
             <div class="cp-sidebar-label">YÖNETİM & LOGLAR</div>
             <div class="cp-nav-item" onclick="switchSection('deployments')">
                 <div class="cp-nav-left"><i class="fa-solid fa-globe" style="color: var(--accent-cyan);"></i><span>Canlı Yayınlar & Tünel</span></div>
@@ -1402,6 +1413,158 @@
                         </div>
                     </div>
 
+                </div>
+            </section>
+
+        
+            <!-- ==================== STORE & HUGGINGFACE SECTION ==================== -->
+            <section id="sec-store" class="cp-section">
+                <div class="cp-section-header">
+                    <div>
+                        <h2 class="cp-section-title"><i class="fa-solid fa-store" style="color: #ec4899;"></i> Nexus Store & HuggingFace Hub</h2>
+                        <p class="cp-section-desc">Yapay zeka modelleri, Hugging Face GGUF depoları, eklentiler ve ajan becerileri mağazası.</p>
+                    </div>
+                </div>
+
+                <!-- Sub-tab Navigation -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px;">
+                    <button class="btn btn-secondary active" id="tab-btn-models" onclick="switchStoreTab('models')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-cubes" style="color: #06b6d4;"></i> Modeller & HuggingFace
+                    </button>
+                    <button class="btn btn-secondary" id="tab-btn-plugins" onclick="switchStoreTab('plugins')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-plug" style="color: #10b981;"></i> Eklentiler (Plugins)
+                    </button>
+                    <button class="btn btn-secondary" id="tab-btn-skills" onclick="switchStoreTab('skills')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-brain" style="color: #a855f7;"></i> Beceriler (Skills)
+                    </button>
+                </div>
+
+                <!-- Store Tab 1: Models & HuggingFace -->
+                <div id="store-tab-models" class="store-subtab">
+                    <!-- HuggingFace Direct Installer Banner -->
+                    <div style="background: linear-gradient(135deg, rgba(255, 210, 0, 0.08), rgba(245, 158, 11, 0.12)); border: 1px solid rgba(245, 158, 11, 0.3); padding: 18px; border-radius: 16px; margin-bottom: 24px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <h4 style="margin: 0; color: #f59e0b; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-face-smile" style="color: #f59e0b; font-size: 1.2rem;"></i> Hugging Face Model İndirici & Arama
+                            </h4>
+                            <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 3px 8px; border-radius: 10px; font-weight: 700;">GGUF ENTEGRASYONU</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 14px;">
+                            Hugging Face üzerindeki herhangi bir GGUF modelini (Örn: <code>TheBloke/Llama-2-7B-GGUF</code> veya <code>Qwen/Qwen2.5-Coder-7B-GGUF</code>) yazın ve 1-tıkla Nexus kütüphanesine indirin:
+                        </p>
+                        <div style="display: flex; gap: 10px; max-width: 700px;">
+                            <input type="text" id="hf-model-input" placeholder="Hugging Face Model Adı (Örn: deepseek-r1 veya Qwen/Qwen2.5-Coder-7B-GGUF)" style="flex: 1; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(245, 158, 11, 0.4); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem;">
+                            <button class="btn btn-primary" onclick="pullCustomModel()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 10px; padding: 10px 18px; font-weight: 700;">
+                                <i class="fa-solid fa-cloud-arrow-down"></i> Modeli İndir
+                            </button>
+                        </div>
+                        <div id="hf-status-msg" style="margin-top: 10px; font-size: 0.85rem; color: #10b981; font-weight: 600; display: none;"></div>
+                    </div>
+
+                    <!-- Store Model Cards Grid -->
+                    <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 16px; color: var(--text-primary);"><i class="fa-solid fa-fire" style="color: #ef4444;"></i> Popüler Nexus Model Mağazası</h3>
+                    <div id="store-models-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Store Tab 2: Plugins -->
+                <div id="store-tab-plugins" class="store-subtab" style="display: none;">
+                    <div id="store-plugins-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Store Tab 3: Skills -->
+                <div id="store-tab-skills" class="store-subtab" style="display: none;">
+                    <div id="store-skills-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== API KEYS SECTION ==================== -->
+            <section id="sec-apikeys" class="cp-section">
+                <div class="cp-section-header">
+                    <div>
+                        <h2 class="cp-section-title"><i class="fa-solid fa-key" style="color: #f59e0b;"></i> Nexus API Key Verme & Gateway</h2>
+                        <p class="cp-section-desc">Tüm modeller için sınırsız OpenAI RESTful API anahtarı üretin, yönetin ve entegre edin.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateApiKeyUI()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; font-weight: 700;">
+                        <i class="fa-solid fa-plus"></i> Sınırsız API Key Oluştur
+                    </button>
+                </div>
+
+                <!-- API Keys Table -->
+                <div class="cp-card" style="margin-bottom: 24px; padding: 20px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 16px; color: var(--text-primary);">
+                        <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Aktif API Anahtarlarınız
+                    </h3>
+                    <div style="overflow-x: auto;">
+                        <table class="port-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>İstemci / Tanım</th>
+                                    <th>API Key Önizleme</th>
+                                    <th>Sınır</th>
+                                    <th>İstek Sayısı</th>
+                                    <th>Oluşturulma</th>
+                                    <th>Son Kullanım</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody id="apikeys-table-body">
+                                <tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 20px;">API anahtarları yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Integration Code Snippets -->
+                <div class="cp-card" style="padding: 20px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 16px; color: var(--text-primary);">
+                        <i class="fa-solid fa-code" style="color: #3b82f6;"></i> Entegrasyon & Kullanım Kılavuzu
+                    </h3>
+                    
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                        <div style="font-size: 0.85rem; font-weight: 700; color: #f59e0b; margin-bottom: 8px;">
+                            <i class="fa-solid fa-plug"></i> Base URL: <code style="background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; color: #fff;">https://nexus.oedge.xyz/v1</code>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
+                            Ürettiğiniz herhangi bir Nexus API anahtarını <code>Authorization: Bearer nx-live-...</code> başlığı ile cURL, Python <code>openai</code> paketine veya Node.js istemcisine geçebilirsiniz.
+                        </p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                        <!-- cURL -->
+                        <div style="background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px;">
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #10b981; margin-bottom: 8px;"><i class="fa-solid fa-terminal"></i> cURL İstek Örneği</div>
+                            <pre style="background: #000; padding: 10px; border-radius: 6px; font-size: 0.75rem; color: #38bdf8; overflow-x: auto;">curl https://nexus.oedge.xyz/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen2.5-coder:7b",
+    "messages": [{"role": "user", "content": "Merhaba!"}]
+  }'</pre>
+                        </div>
+
+                        <!-- Python -->
+                        <div style="background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px;">
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #3b82f6; margin-bottom: 8px;"><i class="fa-brands fa-python"></i> Python OpenAI SDK</div>
+                            <pre style="background: #000; padding: 10px; border-radius: 6px; font-size: 0.75rem; color: #a78bfa; overflow-x: auto;">from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://nexus.oedge.xyz/v1",
+    api_key="YOUR_API_KEY"
+)
+
+res = client.chat.completions.create(
+    model="qwen2.5-coder:7b",
+    messages=[{"role": "user", "content": "Merhaba!"}]
+)
+print(res.choices[0].message.content)</pre>
+                        </div>
+                    </div>
                 </div>
             </section>
 

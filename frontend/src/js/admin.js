@@ -1048,3 +1048,236 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+
+
+// ==================== STORE & API KEYS MODULE ====================
+
+function switchStoreTab(tab) {
+    document.querySelectorAll('.store-subtab').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('#sec-store .btn-secondary').forEach(el => el.classList.remove('active'));
+    
+    const targetTab = document.getElementById('store-tab-' + tab);
+    const targetBtn = document.getElementById('tab-btn-' + tab);
+    if (targetTab) targetTab.style.display = 'block';
+    if (targetBtn) targetBtn.classList.add('active');
+}
+
+async function loadStoreCatalog() {
+    try {
+        const res = await fetch('/api/store/catalog');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        // Render Models
+        const modelsGrid = document.getElementById('store-models-grid');
+        if (modelsGrid && data.models) {
+            modelsGrid.innerHTML = data.models.map(m => `
+                <div class="cp-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid ${m.color || '#6366f1'};">
+                    <div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.08); color: ${m.color || '#6366f1'}; border: 1px solid rgba(255,255,255,0.1);">${m.badge}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-family: 'JetBrains Mono';">${m.size}</span>
+                        </div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+                            <i class="${m.icon}" style="color: ${m.color};"></i> ${m.display_name}
+                        </h4>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.4;">${m.desc}</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button class="btn btn-primary" onclick="pullStoreModel('${m.name}')" style="flex: 1; border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; background: linear-gradient(135deg, ${m.color}, #4f46e5); border: none;">
+                            <i class="fa-solid fa-download"></i> İndir / Yükle
+                        </button>
+                        <button class="btn btn-secondary" onclick="deleteStoreModel('${m.name}')" style="border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; color: #ef4444;" title="Sil">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Plugins
+        const pluginsGrid = document.getElementById('store-plugins-grid');
+        if (pluginsGrid && data.plugins) {
+            pluginsGrid.innerHTML = data.plugins.map(p => `
+                <div class="cp-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">${p.badge}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">${p.category}</span>
+                        </div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+                            <i class="${p.icon}" style="color: #10b981;"></i> ${p.name}
+                        </h4>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 12px 0;">${p.description}</p>
+                    </div>
+                    <button class="btn btn-secondary" style="border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; color: #10b981; border-color: rgba(16, 185, 129, 0.3);">
+                        <i class="fa-solid fa-check"></i> Aktif Entegre
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Render Skills
+        const skillsGrid = document.getElementById('store-skills-grid');
+        if (skillsGrid && data.skills) {
+            skillsGrid.innerHTML = data.skills.map(s => `
+                <div class="cp-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3);">${s.badge}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">${s.author}</span>
+                        </div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+                            <i class="${s.icon}" style="color: #a855f7;"></i> ${s.name}
+                        </h4>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 12px 0;">${s.description}</p>
+                    </div>
+                    <button class="btn btn-secondary" style="border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; color: #a855f7; border-color: rgba(168, 85, 247, 0.3);">
+                        <i class="fa-solid fa-check-double"></i> Yüklü Beceri
+                    </button>
+                </div>
+            `).join('');
+        }
+
+    } catch (e) {
+        console.error("Store catalog error:", e);
+    }
+}
+
+async function pullStoreModel(name) {
+    if (!name) return;
+    const msg = document.getElementById('hf-status-msg');
+    if (msg) {
+        msg.style.display = 'block';
+        msg.innerText = `'${name}' indirme işlemi arka planda başlatıldı...`;
+    }
+    try {
+        const res = await fetch('/api/store/pull', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name })
+        });
+        const data = await res.json();
+        alert(data.message || `'${name}' indirme işlemi başlatıldı.`);
+    } catch (e) {
+        alert("Model indirme hatası: " + e);
+    }
+}
+
+async function pullCustomModel() {
+    const input = document.getElementById('hf-model-input');
+    if (!input || !input.value.strip) return;
+    const val = input.value.trim();
+    if (!val) {
+        alert("Lütfen bir HuggingFace veya Ollama model adı girin.");
+        return;
+    }
+    await pullStoreModel(val);
+}
+
+async function deleteStoreModel(name) {
+    if (!confirm(`'${name}' modelini silmek istediğinizden emin misiniz?`)) return;
+    try {
+        const res = await fetch(`/api/store/delete/${encodeURIComponent(name)}`, { method: 'DELETE' });
+        const data = await res.json();
+        alert(data.message || "Model silindi.");
+        loadStoreCatalog();
+    } catch (e) {
+        alert("Model silme hatası: " + e);
+    }
+}
+
+async function loadApiKeys() {
+    const tableBody = document.getElementById('apikeys-table-body');
+    if (!tableBody) return;
+    
+    try {
+        const res = await fetch('/api/apikeys');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        if (!data.keys || data.keys.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 20px;">Henüz aktif bir API anahtarı bulunmuyor.</td></tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = data.keys.map(k => `
+            <tr>
+                <td style="font-weight: 700; color: #fff;">${k.name}</td>
+                <td><code style="background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 6px; color: #38bdf8; font-family: 'JetBrains Mono';">${k.key_preview}</code></td>
+                <td><span style="font-size: 0.75rem; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 8px; border-radius: 10px; font-weight: 700;">${k.rate_limit.toUpperCase()}</span></td>
+                <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #f59e0b;">${k.requests_count} İstek</td>
+                <td style="font-size: 0.8rem; color: var(--text-secondary);">${k.created_at}</td>
+                <td style="font-size: 0.8rem; color: var(--text-secondary);">${k.last_used}</td>
+                <td>
+                    <button class="btn btn-secondary" onclick="revokeApiKeyUI('${k.id}')" style="padding: 4px 8px; font-size: 0.75rem; color: #ef4444; border-color: rgba(239,68,68,0.3);">
+                        <i class="fa-solid fa-trash"></i> İptal Et
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (e) {
+        console.error("API keys loading error:", e);
+    }
+}
+
+async function generateApiKeyUI() {
+    const name = prompt("Yeni API Key için İstemci / Tanım Adı girin:", "Sınırsız Uygulama Key");
+    if (name === null) return;
+    
+    try {
+        const res = await fetch('/api/apikeys/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name || "Sınırsız Client Key" })
+        });
+        const data = await res.json();
+        if (data.key) {
+            prompt("✅ Yeni Sınırsız Nexus API Key Üretildi! Bu anahtarı kopyalayıp saklayın:", data.key);
+            loadApiKeys();
+        } else {
+            alert("Hata: " + (data.message || "Key üretilemedi."));
+        }
+    } catch (e) {
+        alert("API Key üretme hatası: " + e);
+    }
+}
+
+async function revokeApiKeyUI(keyId) {
+    if (!confirm("Bu API anahtarını iptal etmek istediğinizden emin misiniz?")) return;
+    try {
+        const res = await fetch(`/api/apikeys/${keyId}`, { method: 'DELETE' });
+        const data = await res.json();
+        alert(data.message || "Key iptal edildi.");
+        loadApiKeys();
+    } catch (e) {
+        alert("İptal hatası: " + e);
+    }
+}
+
+// Hook into section switching
+const originalSwitchSection = window.switchSection;
+window.switchSection = function(sectionId) {
+    if (typeof originalSwitchSection === 'function') {
+        originalSwitchSection(sectionId);
+    } else {
+        document.querySelectorAll('.cp-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.cp-nav-item').forEach(el => el.classList.remove('active'));
+        const sec = document.getElementById('sec-' + sectionId);
+        if (sec) sec.classList.add('active');
+    }
+    
+    if (sectionId === 'store') {
+        loadStoreCatalog();
+    } else if (sectionId === 'apikeys') {
+        loadApiKeys();
+    }
+};
+
+// Initial trigger
+document.addEventListener('DOMContentLoaded', () => {
+    loadStoreCatalog();
+    loadApiKeys();
+});

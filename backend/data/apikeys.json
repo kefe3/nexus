@@ -1,0 +1,24 @@
+{
+  "keys": [
+    {
+      "id": "key_master_001",
+      "key": "nx-live-unlimited-nexus-master-key",
+      "name": "Sınırsız Ana Nexus API Key",
+      "rate_limit": "unlimited",
+      "created_at": "2026-09-14 17:05:41",
+      "status": "active",
+      "requests_count": 1,
+      "last_used": "2026-09-14 17:06:39"
+    },
+    {
+      "id": "key_479a973446b7",
+      "key": "nx-live-4ea7bbc7ebea404c02236cd9be32857195e669761cd86ea6",
+      "name": "Test Unlimited Key",
+      "rate_limit": "unlimited",
+      "created_at": "2026-09-14 17:05:41",
+      "status": "active",
+      "requests_count": 1,
+      "last_used": "2026-09-14 17:05:44"
+    }
+  ]
+}

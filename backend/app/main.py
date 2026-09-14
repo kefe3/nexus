@@ -15,6 +15,7 @@ from app.api.settings_api import router as settings_router
 from app.api.chats import router as chats_router
 from app.api.apikeys import router as apikeys_router
 from app.api.v1_gateway import router as v1_gateway_router
+from app.api.store import router as store_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -39,6 +40,7 @@ app.include_router(admin_router, prefix=settings.API_PREFIX)
 app.include_router(settings_router, prefix=settings.API_PREFIX)
 app.include_router(chats_router, prefix=settings.API_PREFIX)
 app.include_router(apikeys_router, prefix=settings.API_PREFIX)
+app.include_router(store_router, prefix=settings.API_PREFIX)
 app.include_router(v1_gateway_router)
 app.include_router(deploy_router)
 
