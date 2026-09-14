@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus AI Studio — Open Source Self-Hosted AI Platform</title>
+    <title>Nexus AI — Qwen 2.5 Coder (Topcubuntu GPU)</title>
     
     <!-- CDNs -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +14,7 @@
     
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="h-screen flex overflow-hidden antialiased select-none">
+<body class="h-screen flex overflow-hidden antialiased select-none bg-[#06090e]">
 
     <!-- 1. Collapsible Sidebar -->
     <aside id="sidebar" class="w-72 bg-[#0a0f19] border-r border-white/10 flex flex-col justify-between shrink-0 transition-all z-20">
@@ -22,12 +22,12 @@
             <!-- Brand & New Chat -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center text-white shadow-lg">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 flex items-center justify-center text-white shadow-lg">
                         <i class="fa-solid fa-bolt text-sm"></i>
                     </div>
                     <div>
-                        <div class="font-black text-sm tracking-wide text-white" data-i18n="app_title">Nexus AI Studio</div>
-                        <div class="text-[10px] text-indigo-400 font-mono font-bold">v1.0.0 Self-Hosted</div>
+                        <div class="font-black text-sm tracking-wide text-white">Nexus AI</div>
+                        <div class="text-[10px] text-emerald-400 font-mono font-bold">Qwen 2.5 Edition</div>
                     </div>
                 </div>
                 <button onclick="setLanguage(currentLang === 'tr' ? 'en' : 'tr')" id="langToggleBtn" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-white/10 flex items-center gap-1 transition-all">
@@ -35,66 +35,31 @@
                 </button>
             </div>
 
-            <button onclick="createNewChat()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-indigo-500/25 active:scale-95">
+            <button onclick="createNewChat()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-emerald-500/25 active:scale-95">
                 <i class="fa-solid fa-plus text-xs"></i>
-                <span data-i18n="new_chat">Yeni Sohbet</span>
+                <span>Yeni Sohbet</span>
             </button>
 
             <!-- Search Chats -->
             <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-                <input type="text" id="searchChatInput" data-i18n-placeholder="search_chats" placeholder="Sohbetlerde ara..." class="w-full pl-8 pr-3 py-1.5 bg-slate-900/80 border border-white/5 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                <input type="text" id="searchChatInput" placeholder="Sohbetlerde ara..." class="w-full pl-8 pr-3 py-1.5 bg-slate-900/80 border border-white/5 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
             </div>
 
             <!-- Chat History -->
             <div class="space-y-1">
-                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1" data-i18n="history_title">Geçmiş Sohbetler</div>
-                <div id="chatsHistoryList" class="space-y-1 max-h-[calc(100vh-380px)] overflow-y-auto pr-1"></div>
-            </div>
-
-            <!-- Workspaces / Project Context Manager -->
-            <div class="pt-2 border-t border-white/5 space-y-2">
-                <div class="flex items-center justify-between px-1">
-                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-folder-open text-indigo-400"></i> Proje Bağlamı
-                    </span>
-                    <button onclick="document.getElementById('workspaceFileInput').click()" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
-                        + Dosya Yükle
-                    </button>
-                    <input type="file" id="workspaceFileInput" multiple class="hidden" onchange="handleWorkspaceFilesUpload(this.files)">
-                </div>
-
-                <div id="workspaceFilesList" class="space-y-1 max-h-28 overflow-y-auto pr-1">
-                    <div class="text-[11px] text-slate-500 italic px-1">Henüz dosya eklenmedi</div>
-                </div>
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1">Geçmiş Sohbetler</div>
+                <div id="chatsHistoryList" class="space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto pr-1"></div>
             </div>
         </div>
 
-        <!-- Sidebar Footer -->
-        <div class="p-4 border-t border-white/10 space-y-2">
-            <!-- Dedicated Cluster Control Panel 2.0 Link -->
-            <a href="admin.html" class="w-full py-2 px-3 bg-gradient-to-r from-indigo-900/60 to-cyan-950/60 hover:from-indigo-800 hover:to-cyan-900 text-cyan-200 rounded-xl text-xs font-black flex items-center justify-between border border-cyan-500/40 shadow-lg shadow-cyan-950/30 transition-all group">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-gauge-high text-cyan-400 group-hover:scale-110 transition-transform"></i><span>⚡ Kontrol Paneli (Admin)</span></span>
-                <span class="text-[9px] font-mono px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded font-bold border border-cyan-500/30">ADMIN</span>
-            </a>
-
-            <!-- OS Specific Packages Button -->
-            <button onclick="openPackagesModal()" class="w-full py-2 px-3 bg-gradient-to-r from-cyan-950/60 to-purple-950/60 hover:from-cyan-900 hover:to-purple-900 text-cyan-200 rounded-xl text-xs font-black flex items-center justify-between border border-cyan-500/40 shadow-lg shadow-cyan-950/30 transition-all group">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-box-open text-cyan-400 group-hover:scale-110 transition-transform"></i><span>📦 OS Paketleri (Win/Mac/Lin)</span></span>
-                <span class="text-[9px] font-mono px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded font-bold border border-cyan-500/30">BUILD</span>
-            </button>
-
-            <!-- Quick Telemetry Dashboard Modal Button -->
-            <button onclick="openControlPanel()" class="w-full py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-between border border-white/5 transition-all">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-chart-line text-cyan-400"></i><span data-i18n="control_panel">Hızlı Metrikler</span></span>
-                <span class="text-[9px] font-mono px-1.5 py-0.5 bg-indigo-500/30 text-indigo-300 rounded font-bold">LIVE</span>
-            </button>
-
-            <!-- Settings Modal Button -->
-            <button onclick="openSettingsModal()" class="w-full py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold flex items-center justify-between border border-white/5 transition-all">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-gear text-indigo-400"></i><span data-i18n="settings">Ayarlar</span></span>
-                <span class="text-[10px] text-slate-500 font-mono">API Keys</span>
-            </button>
+        <!-- Clean Sidebar Footer (No admin/settings buttons) -->
+        <div class="p-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500 font-mono">
+            <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Topcubuntu GPU</span>
+            </span>
+            <span class="text-[10px] text-slate-600">RTX 4060</span>
         </div>
     </aside>
 
@@ -104,47 +69,11 @@
         <!-- Top Navigation Bar -->
         <header class="h-14 border-b border-white/10 px-6 flex items-center justify-between glass-panel z-10 shrink-0">
             <div class="flex items-center gap-3">
-                <!-- Provider Selector -->
-                <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10 text-xs">
-                    <span class="text-slate-500 font-bold" data-i18n="provider">Sağlayıcı:</span>
-                    <select id="providerSelect" onchange="switchProvider(this.value)" class="bg-transparent font-bold text-indigo-300 focus:outline-none cursor-pointer">
-                        <option value="ollama" class="bg-slate-900 text-white">Ollama (Local GPU)</option>
-                        <option value="gemini" class="bg-slate-900 text-white">Google Gemini (Pro/Flash)</option>
-                        <option value="openai" class="bg-slate-900 text-white">OpenAI (GPT-4o)</option>
-                        <option value="groq" class="bg-slate-900 text-white">Groq (300+ tok/s)</option>
-                        <option value="anthropic" class="bg-slate-900 text-white">Anthropic (Claude)</option>
-                        <option value="custom" class="bg-slate-900 text-white">Custom Endpoint</option>
-                    </select>
-                </div>
-
-                <!-- Model Selector 1 -->
-                <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10 text-xs">
-                    <span class="text-slate-500 font-bold" data-i18n="model">Model 1:</span>
-                    <select id="modelSelect" onchange="switchModel(this.value)" class="bg-transparent font-bold text-cyan-300 focus:outline-none cursor-pointer">
-                        <option value="">Yükleniyor...</option>
-                    </select>
-                </div>
-
-                <!-- Arena Mode Toggle Button -->
-                <button onclick="toggleArenaMode()" id="arenaModeBtn" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-amber-400 hover:border-amber-500/40 text-xs font-bold transition-all flex items-center gap-1.5" title="İki modeli yan yana yarıştırın">
-                    <i class="fa-solid fa-bolt text-amber-400"></i>
-                    <span>⚔️ Arena Modu</span>
-                </button>
-
-                <!-- Model Selector 2 (Shown when Arena Mode is ON) -->
-                <div id="modelSelect2Container" class="hidden items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-amber-500/40 text-xs">
-                    <span class="text-amber-400 font-bold">vs Model 2:</span>
-                    <select id="modelSelect2" onchange="switchModel2(this.value)" class="bg-transparent font-bold text-amber-300 focus:outline-none cursor-pointer">
-                        <option value="">Yükleniyor...</option>
-                    </select>
-                </div>
-
-                <!-- Temperature Control Slider -->
-                <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-white/10 text-xs" title="Yaratıcılık / Sıcaklık Ayarı (0.0: Kesin, 1.0: Yaratıcı)">
-                    <i class="fa-solid fa-sliders text-amber-400"></i>
-                    <span class="text-slate-400 font-bold hidden sm:inline">Sıcaklık:</span>
-                    <input type="range" id="tempSlider" min="0.0" max="1.0" step="0.05" value="0.7" oninput="updateTemperature(this.value)" class="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500">
-                    <span id="tempVal" class="font-mono text-amber-300 font-bold w-6 text-right">0.7</span>
+                <!-- Locked GPU Badge (No dropdowns) -->
+                <div class="flex items-center gap-2 bg-slate-900/90 px-3.5 py-1.5 rounded-xl border border-emerald-500/30 text-xs text-emerald-400 font-bold shadow-md">
+                    <i class="fa-solid fa-microchip text-emerald-400 animate-pulse"></i>
+                    <span>Qwen 2.5 Coder</span>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-mono border border-emerald-500/30">Topcubuntu GPU Offloaded (RTX 4060)</span>
                 </div>
 
                 <!-- Active Persona Badge -->
@@ -152,15 +81,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <button onclick="openPackagesModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/40 text-cyan-300 hover:text-cyan-200 text-xs font-bold transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-box-open text-cyan-400"></i>
-                    <span>📦 OS Paketleri</span>
-                </button>
-                <button onclick="openShowcaseModal()" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-cyan-300 text-xs font-bold transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-star text-cyan-400"></i>
-                    <span>✨ Özellikler</span>
-                </button>
-                <button onclick="createNewChat()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all text-xs" data-i18n-title="clear_history">
+                <button onclick="createNewChat()" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all text-xs" title="Sohbeti Temizle">
                     <i class="fa-solid fa-rotate-left"></i>
                 </button>
             </div>
@@ -170,59 +91,39 @@
         <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-6 max-w-4xl w-full mx-auto select-text"></div>
 
         <!-- Welcome Hero View (When no messages) -->
-        <div id="welcomeHero" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0 pointer-events-auto overflow-y-auto">
-            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center text-white text-3xl shadow-2xl mb-3 animate-bounce">
+        <div id="welcomeHero" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-0 pointer-events-auto">
+            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 flex items-center justify-center text-white text-3xl shadow-2xl mb-4 animate-bounce">
                 <i class="fa-solid fa-bolt"></i>
             </div>
-            <div class="flex flex-wrap items-center justify-center gap-2 mb-2">
-                <span class="text-[11px] font-mono font-bold px-3 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/40">v3.1.0 Self-Hosted & Cloud</span>
-                <span class="text-[11px] font-mono font-bold px-3 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-500/40"><i class="fa-solid fa-shield-halved text-xs mr-1"></i>OOM Kalkanı Aktif</span>
-            </div>
-            <h1 class="text-3xl font-black text-white tracking-tight" data-i18n="app_title">Nexus AI Studio</h1>
-            <p class="text-xs text-slate-400 mt-1 max-w-lg" data-i18n="sandbox_desc">Açık kaynaklı, NVIDIA CUDA & AMD ROCm GPU destekli, HuggingFace GGUF mağazalı ve canlı kod sandbox'lı yerel yapay zeka stüdyosu.</p>
-
-            <!-- Quick Action Buttons -->
-            <div class="flex flex-wrap items-center justify-center gap-2.5 mt-5">
-                <button onclick="openPackagesModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-cyan-500/20 border border-cyan-300/30 flex items-center gap-2 transition-all active:scale-95">
-                    <i class="fa-solid fa-box-open text-cyan-200"></i>
-                    <span>📦 OS İndirme Paketleri (Win/Mac/Linux)</span>
-                </button>
-                <button onclick="openShowcaseModal()" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyan-300 font-bold text-xs border border-cyan-500/30 flex items-center gap-2 transition-all">
-                    <i class="fa-solid fa-star text-cyan-400"></i>
-                    <span>✨ Platform Özellikleri</span>
-                </button>
-                <a href="admin.html" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-indigo-300 font-bold text-xs border border-indigo-500/30 flex items-center gap-2 transition-all">
-                    <i class="fa-solid fa-gauge-high text-indigo-400"></i>
-                    <span>⚡ Kontrol Paneli (Admin)</span>
-                </a>
-            </div>
+            <h1 class="text-2xl font-black text-white tracking-tight">Qwen 2.5 Coder</h1>
+            <p class="text-xs text-slate-400 mt-1 max-w-md">Topcubuntu Ev Sunucusu (NVIDIA RTX 4060 GPU Offloading) donanım hızıyla çalışan akıllı kod & yanıt asistanı.</p>
 
             <!-- Featured Personas Carousel -->
-            <div class="mt-6 max-w-2xl w-full text-left">
-                <div class="text-xs font-bold text-slate-400 mb-2 px-1" data-i18n="presets_title">Öne Çıkan Rol Şablonları</div>
+            <div class="mt-8 max-w-2xl w-full text-left">
+                <div class="text-xs font-bold text-slate-400 mb-2 px-1">Öne Çıkan Rol Şablonları</div>
                 <div id="presetsCarousel" class="flex gap-3 overflow-x-auto pb-2"></div>
             </div>
         </div>
 
         <!-- Sticky Floating Prompt Input Capsule -->
         <div class="p-4 max-w-4xl w-full mx-auto z-10">
-            <div class="glass-panel p-2.5 rounded-2xl border border-white/10 shadow-2xl focus-within:border-indigo-500 transition-all flex flex-col gap-2">
-                <textarea id="promptInput" rows="1" data-i18n-placeholder="input_placeholder" placeholder="Bir mesaj yazın veya web sitesi/uygulama isteyin... (Shift+Enter yeni satır)" class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none px-3 py-1.5 max-h-44"></textarea>
+            <div class="glass-panel p-2.5 rounded-2xl border border-white/10 shadow-2xl focus-within:border-emerald-500 transition-all flex flex-col gap-2">
+                <textarea id="promptInput" rows="1" placeholder="Bir mesaj yazın veya kod/web uygulaması isteyin... (Shift+Enter yeni satır)" class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none px-3 py-1.5 max-h-44"></textarea>
                 
                 <div class="flex items-center justify-between pt-1 border-t border-white/5">
                     <div class="flex items-center gap-2">
-                        <button onclick="toggleVoice()" id="voiceInputBtn" class="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-800/80 rounded-xl text-xs transition-all" data-i18n-title="voice_start">
+                        <button onclick="toggleVoice()" id="voiceInputBtn" class="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 rounded-xl text-xs transition-all" title="Sesli Konuşma">
                             <i class="fa-solid fa-microphone"></i>
                         </button>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button id="sendBtn" onclick="sendMessage()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-lg transition-all active:scale-95">
-                            <span data-i18n="send">Gönder</span>
+                        <button id="sendBtn" onclick="sendMessage()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-lg transition-all active:scale-95">
+                            <span>Gönder</span>
                             <i class="fa-solid fa-arrow-up text-[10px]"></i>
                         </button>
                         <button id="stopBtn" onclick="stopStreaming()" class="hidden px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-lg transition-all">
-                            <span data-i18n="stop">Durdur</span>
+                            <span>Durdur</span>
                             <i class="fa-solid fa-stop text-[10px]"></i>
                         </button>
                     </div>
@@ -241,28 +142,28 @@
                         <i class="fa-solid fa-play"></i>
                     </div>
                     <div>
-                        <div class="font-bold text-xs text-white" data-i18n="sandbox_title">⚡ Canlı Artifact Sandbox</div>
-                        <div class="text-[10px] text-slate-400" data-i18n="sandbox_desc">HTML/CSS/JS canlı render</div>
+                        <div class="font-bold text-xs text-white">⚡ Canlı Artifact Sandbox</div>
+                        <div class="text-[10px] text-slate-400">HTML/CSS/JS canlı render</div>
                     </div>
                 </div>
 
                 <!-- Responsive Device Switcher -->
                 <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-white/10 text-xs">
-                    <button id="deviceBtn-desktop" onclick="setDeviceMode('desktop')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs" data-i18n="device_desktop">Masaüstü</button>
-                    <button id="deviceBtn-tablet" onclick="setDeviceMode('tablet')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs" data-i18n="device_tablet">Tablet</button>
-                    <button id="deviceBtn-mobile" onclick="setDeviceMode('mobile')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs" data-i18n="device_mobile">Mobil</button>
+                    <button id="deviceBtn-desktop" onclick="setDeviceMode('desktop')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs">Masaüstü</button>
+                    <button id="deviceBtn-tablet" onclick="setDeviceMode('tablet')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs">Tablet</button>
+                    <button id="deviceBtn-mobile" onclick="setDeviceMode('mobile')" class="device-btn px-3 py-1 rounded-lg text-slate-300 font-bold hover:bg-slate-800 transition-all text-xs">Mobil</button>
                 </div>
 
                 <!-- Action Controls -->
                 <div class="flex items-center gap-2">
-                    <button onclick="openSandboxInNewTab()" class="px-3 py-1.5 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold border border-indigo-400/30 flex items-center gap-1.5 transition-all" title="Yeni sekmede tam ekran çalıştır">
-                        <i class="fa-solid fa-up-right-from-square text-[10px]"></i> <span>Tam Ekran Aç</span>
+                    <button onclick="publishCurrentArtifact()" id="publishArtifactBtn" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all" title="Tek tıkla internete ve dünyaya aç">
+                        <i class="fa-solid fa-globe text-xs"></i> <span>Dünyaya Aç / Paylaş</span>
                     </button>
                     <button onclick="runSandboxCode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-rotate-right text-[10px]"></i> <span data-i18n="refresh">Yenile</span>
+                        <i class="fa-solid fa-rotate-right text-[10px]"></i> <span>Yenile</span>
                     </button>
-                    <button onclick="downloadSandboxHtml()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-download text-[10px]"></i> <span data-i18n="download_html">İndir</span>
+                    <button onclick="downloadSandboxHtml()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-download text-[10px]"></i> <span>İndir</span>
                     </button>
                     <button onclick="closeSandbox()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
                         <i class="fa-solid fa-xmark text-sm"></i>
@@ -279,363 +180,13 @@
         </div>
     </div>
 
-    <!-- 4. Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl hidden z-50 items-center justify-center p-4">
-        <div class="w-full max-w-lg bg-[#0c121e] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-gear text-indigo-400 text-sm"></i>
-                    <span class="font-black text-sm text-white" data-i18n="settings_title">Nexus AI Studio Ayarları</span>
-                </div>
-                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <p class="text-xs text-slate-400" data-i18n="api_keys_desc">API anahtarlarınız yalnızca yerel tarayıcınızda saklanır.</p>
-
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="gemini_key">Google Gemini API Key</label>
-                    <input type="password" id="input_key_gemini" placeholder="AIzaSy..." class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="openai_key">OpenAI API Key</label>
-                    <input type="password" id="input_key_openai" placeholder="sk-..." class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="groq_key">Groq API Key</label>
-                    <input type="password" id="input_key_groq" placeholder="gsk_..." class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="anthropic_key">Anthropic Claude API Key</label>
-                    <input type="password" id="input_key_anthropic" placeholder="sk-ant-..." class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-300 block mb-1" data-i18n="ollama_url">Ollama URL</label>
-                    <input type="text" id="input_url_ollama" placeholder="http://localhost:11434" class="w-full p-2.5 bg-slate-900 border border-white/10 rounded-xl text-slate-200 focus:outline-none focus:border-indigo-500">
-                </div>
-            </div>
-
-            <div class="pt-3 border-t border-white/10 flex justify-end gap-2">
-                <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold" data-i18n="close">Kapat</button>
-                <button onclick="saveSettings()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black" data-i18n="save_settings">Kaydet</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. Toast Notification -->
-    <div id="toastNotification" class="fixed bottom-6 right-6 px-4 py-3 bg-indigo-600 text-white rounded-2xl text-xs font-bold shadow-2xl border border-indigo-400/40 opacity-0 translate-y-4 pointer-events-none transition-all duration-300 flex items-center gap-2 z-50">
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 px-4 py-3 bg-emerald-600 text-white rounded-2xl text-xs font-bold shadow-2xl border border-emerald-400/40 opacity-0 translate-y-4 pointer-events-none transition-all duration-300 flex items-center gap-2 z-50">
         <i class="fa-solid fa-check-circle text-emerald-300 text-sm"></i>
         <span id="toastText">İşlem tamamlandı!</span>
     </div>
 
-    
-    <!-- 6. Control Panel / Admin Dashboard Modal -->
-    <div id="controlPanelModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-2xl hidden z-50 items-center justify-center p-4 select-text">
-        <div class="w-full max-w-5xl max-h-[92vh] bg-[#0c121e] border border-white/10 rounded-3xl flex flex-col shadow-2xl overflow-hidden">
-            <!-- Header -->
-            <div class="h-16 border-b border-white/10 px-6 flex items-center justify-between bg-slate-900/90 shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center text-white text-sm shadow-lg">
-                        <i class="fa-solid fa-chart-line"></i>
-                    </div>
-                    <div>
-                        <div class="font-black text-sm text-white" data-i18n="control_panel">Nexus AI Kontrol Paneli</div>
-                        <div class="text-[11px] text-indigo-400 font-mono">Sistem Metrikleri, Sağlayıcılar & Trafik Monitörü</div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button onclick="refreshControlPanel()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-rotate-right text-[10px]"></i> <span data-i18n="refresh">Yenile</span>
-                    </button>
-                    <button onclick="closeControlPanel()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
-                        <i class="fa-solid fa-xmark text-base"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Dashboard Content -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <!-- System Hardware Cards -->
-                <div>
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-microchip text-indigo-400"></i> <span data-i18n="system_metrics">Sistem & Donanım Metrikleri</span>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- CPU Card -->
-                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-400 font-bold" data-i18n="cpu_usage">İşlemci (CPU)</span>
-                                <span id="metricCpuText" class="text-white font-mono font-bold">-%</span>
-                            </div>
-                            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="metricCpuBar" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-
-                        <!-- RAM Card -->
-                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-400 font-bold" data-i18n="ram_usage">Bellek (RAM)</span>
-                                <span id="metricRamText" class="text-white font-mono font-bold">-%</span>
-                            </div>
-                            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="metricRamBar" class="bg-cyan-400 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-
-                        <!-- Disk Card -->
-                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-400 font-bold" data-i18n="disk_usage">Disk Alanı</span>
-                                <span id="metricDiskText" class="text-white font-mono font-bold">-%</span>
-                            </div>
-                            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                                <div id="metricDiskBar" class="bg-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- System Info Bar -->
-                    <div class="mt-3 p-3 rounded-xl bg-slate-950/80 border border-white/5 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-2 font-mono">
-                        <div><span class="text-slate-500">İşletim Sistemi:</span> <strong id="metricOs" class="text-slate-200">-</strong></div>
-                        <div><span class="text-slate-500" data-i18n="server_uptime">Açık Kalma:</span> <strong id="metricUptime" class="text-emerald-300">-</strong></div>
-                    </div>
-                </div>
-
-                <!-- Providers Health Grid -->
-                <div>
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-network-wired text-cyan-400"></i> <span data-i18n="active_providers">Aktif Model Sağlayıcıları</span>
-                    </div>
-                    <div id="providersStatusGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <!-- Loaded dynamically -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 7. Platform Specific OS Packages & Installers Modal -->
-    <div id="packagesModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-2xl hidden z-50 items-center justify-center p-4 select-text">
-        <div class="w-full max-w-5xl max-h-[92vh] bg-[#0c121e] border border-white/10 rounded-3xl flex flex-col shadow-2xl overflow-hidden">
-            <!-- Header -->
-            <div class="h-16 border-b border-white/10 px-6 flex items-center justify-between bg-slate-900/90 shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm shadow-lg">
-                        <i class="fa-solid fa-box-open"></i>
-                    </div>
-                    <div>
-                        <div class="font-black text-sm text-white">Nexus AI Studio — İşletim Sistemine Özel Paketler</div>
-                        <div class="text-[11px] text-cyan-400 font-mono">Windows, macOS & Linux İçin Hazır 1-Tık Kurulum Paketleri (v3.1.0)</div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <a href="https://github.com/kefe3/nexus/pkgs/container/nexus-backend" target="_blank" class="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold border border-purple-400/30 flex items-center gap-1.5 transition-all">
-                        <i class="fa-solid fa-cubes text-sm"></i>
-                        <span>GitHub Packages (GHCR)</span>
-                    </a>
-                    <a href="https://github.com/kefe3/nexus/releases/tag/v3.1.0" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-white/10 flex items-center gap-1.5 transition-all">
-                        <i class="fa-brands fa-github text-sm"></i>
-                        <span>GitHub Releases</span>
-                    </a>
-                    <button onclick="closePackagesModal()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
-                        <i class="fa-solid fa-xmark text-base"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Content Area -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <!-- Subtitle banner -->
-                <div class="text-center max-w-2xl mx-auto space-y-2">
-                    <span class="text-xs font-bold px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-500/30">💻 Çapraz Platform Destekli Resmi Paketler</span>
-                    <h2 class="text-xl font-black text-white">İşletim Sisteminize Özel Paketi İndirin</h2>
-                    <p class="text-xs text-slate-400">Tek bir komut veya 1-tık kurulum dosyası ile kendi bilgisayarınıza veya sunucunuza hemen kurun.</p>
-                </div>
-
-                <!-- OS Packages Cards Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                    <!-- Package 1: Windows -->
-                    <div class="p-6 rounded-3xl bg-slate-900/70 border border-white/10 flex flex-col justify-between space-y-4 hover:border-blue-500/60 transition-all relative">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold px-2.5 py-1 bg-blue-500/20 text-blue-300 rounded-xl border border-blue-500/30 flex items-center gap-1.5"><i class="fa-brands fa-windows text-sm"></i> Windows</span>
-                                <span class="text-xs text-slate-400 font-mono">x64 / WSL2</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-black text-white">Windows Özel Paketi</h3>
-                                <p class="text-xs text-slate-400 mt-1">Docker Desktop & WSL2 Uyumlu .bat kurucusu ve .zip paketi.</p>
-                            </div>
-                            <!-- Features -->
-                            <ul class="space-y-2 text-xs text-slate-300 pt-1">
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Tek Tıkla `.bat` Kurulum Otomasyonu</span></li>
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>NVIDIA CUDA & DirectX GPU Hızlandırma</span></li>
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Docker Desktop & Port 3050 Otomatik Açılış</span></li>
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Masaüstü Kısayol Oluşturma</span></li>
-                            </ul>
-                        </div>
-                        <div class="space-y-2 pt-2 border-t border-white/10">
-                            <a href="https://github.com/kefe3/nexus/releases/download/v3.1.0/nexus-v3.1.0-windows-x64.zip" download class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
-                                <i class="fa-solid fa-download"></i>
-                                <span>İndir (windows-x64.zip)</span>
-                            </a>
-                            <a href="https://github.com/kefe3/nexus/releases/download/v3.1.0/nexus-installer-windows.bat" download class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 border border-white/10">
-                                <i class="fa-solid fa-terminal text-blue-400"></i>
-                                <span>Kurulum Scripti (.bat)</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Package 2: macOS -->
-                    <div class="p-6 rounded-3xl bg-slate-900/70 border border-white/10 flex flex-col justify-between space-y-4 hover:border-purple-500/60 transition-all relative">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold px-2.5 py-1 bg-purple-500/20 text-purple-300 rounded-xl border border-purple-500/30 flex items-center gap-1.5"><i class="fa-brands fa-apple text-sm"></i> macOS</span>
-                                <span class="text-xs text-slate-400 font-mono">Metal / Universal</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-black text-white">macOS Özel Paketi</h3>
-                                <p class="text-xs text-slate-400 mt-1">Apple Silicon M1/M2/M3/M4 & Intel için Metal GPU hızlandırmalı paket.</p>
-                            </div>
-                            <!-- Features -->
-                            <ul class="space-y-2 text-xs text-slate-300 pt-1">
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Apple Metal GPU Hızlandırma Desteği</span></li>
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>ARM64 (M1/M2/M3/M4) & x86_64 İkili Mimari</span></li>
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Docker Desktop macOS Entegrasyonu</span></li>
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Otomatik `open http://localhost:3050`</span></li>
-                            </ul>
-                        </div>
-                        <div class="space-y-2 pt-2 border-t border-white/10">
-                            <a href="https://github.com/kefe3/nexus/releases/download/v3.1.0/nexus-v3.1.0-macos-universal.tar.gz" download class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
-                                <i class="fa-solid fa-download"></i>
-                                <span>İndir (macos-universal.tar.gz)</span>
-                            </a>
-                            <a href="https://github.com/kefe3/nexus/releases/download/v3.1.0/nexus-installer-macos.sh" download class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 border border-white/10">
-                                <i class="fa-solid fa-terminal text-purple-400"></i>
-                                <span>Kurulum Scripti (.sh)</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Package 3: Linux -->
-                    <div class="p-6 rounded-3xl bg-slate-900/70 border border-white/10 flex flex-col justify-between space-y-4 hover:border-amber-500/60 transition-all relative">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold px-2.5 py-1 bg-amber-500/20 text-amber-300 rounded-xl border border-amber-500/30 flex items-center gap-1.5"><i class="fa-brands fa-linux text-sm"></i> Linux</span>
-                                <span class="text-xs text-slate-400 font-mono">CUDA / ROCm</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-black text-white">Linux Özel Paketi</h3>
-                                <p class="text-xs text-slate-400 mt-1">Ubuntu/Debian/Arch/Fedora için NVIDIA & AMD ROCm hibrit paketi.</p>
-                            </div>
-                            <!-- Features -->
-                            <ul class="space-y-2 text-xs text-slate-300 pt-1">
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>NVIDIA CUDA + AMD ROCm HIP Telemetri</span></li>
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Donanım Audit & OOM Kalkanı (6GB VRAM)</span></li>
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Systemd & Docker Daemon Tam Uyumlu</span></li>
-                                <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-xs"></i> <span>Tek Satır Kurulum (Curl 1-Liner)</span></li>
-                            </ul>
-                        </div>
-                        <div class="space-y-2 pt-2 border-t border-white/10">
-                            <a href="https://github.com/kefe3/nexus/releases/download/v3.1.0/nexus-v3.1.0-linux-x64.tar.gz" download class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
-                                <i class="fa-solid fa-download"></i>
-                                <span>İndir (linux-x64.tar.gz)</span>
-                            </a>
-                            <a href="https://github.com/kefe3/nexus/releases/download/v3.1.0/nexus-installer-linux.sh" download class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 border border-white/10">
-                                <i class="fa-solid fa-terminal text-amber-400"></i>
-                                <span>Kurulum Scripti (.sh)</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- One liner install code snippet -->
-                <div class="p-4 rounded-2xl bg-slate-950 border border-white/10 space-y-2">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="font-bold text-slate-300 flex items-center gap-2"><i class="fa-solid fa-terminal text-emerald-400"></i> 🚀 Linux & macOS Hızlı Kurulum Komutu (1-Liner)</span>
-                        <button onclick="navigator.clipboard.writeText('curl -fsSL https://github.com/kefe3/nexus/releases/download/v3.1.0/nexus-installer-linux.sh | bash'); showToast('Komut kopyalandı!')" class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold">
-                            <i class="fa-regular fa-copy"></i> Kopyala
-                        </button>
-                    </div>
-                    <div class="p-3 bg-slate-900 rounded-xl font-mono text-xs text-emerald-300 select-all overflow-x-auto">
-                        curl -fsSL https://github.com/kefe3/nexus/releases/download/v3.1.0/nexus-installer-linux.sh | bash
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 8. Showcase & Platform Features Modal -->
-    <div id="showcaseModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-2xl hidden z-50 items-center justify-center p-4 select-text">
-        <div class="w-full max-w-5xl max-h-[92vh] bg-[#0c121e] border border-white/10 rounded-3xl flex flex-col shadow-2xl overflow-hidden">
-            <!-- Header -->
-            <div class="h-16 border-b border-white/10 px-6 flex items-center justify-between bg-slate-900/90 shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm shadow-lg">
-                        <i class="fa-solid fa-star"></i>
-                    </div>
-                    <div>
-                        <div class="font-black text-sm text-white">Nexus AI Studio — Platform Özellikleri</div>
-                        <div class="text-[11px] text-cyan-400 font-mono">v3.1.0 (NVIDIA CUDA & AMD ROCm Destekli Yerel AI Ekosistemi)</div>
-                    </div>
-                </div>
-                <button onclick="closeShowcaseModal()" class="p-2 text-slate-400 hover:text-white rounded-xl text-xs transition-all">
-                    <i class="fa-solid fa-xmark text-base"></i>
-                </button>
-            </div>
-
-            <!-- Grid Features -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Feature 1 -->
-                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-indigo-500/40 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm"><i class="fa-solid fa-bolt"></i></div>
-                        <h4 class="font-black text-sm text-white">Çoklu Model Sağlayıcısı</h4>
-                        <p class="text-xs text-slate-400">Ollama (Yerel GPU), Google Gemini, OpenAI GPT-4o, Groq (300+ tok/s) ve Anthropic Claude 3.5'i tek panelde birleştirin.</p>
-                    </div>
-                    <!-- Feature 2 -->
-                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-amber-500/40 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm"><i class="fa-solid fa-swords"></i></div>
-                        <h4 class="font-black text-sm text-white">⚔️ Arena Modu</h4>
-                        <p class="text-xs text-slate-400">İki farklı yapay zeka modelini yan yana çalıştırın, yanıt kalitelerini ve hızlarını eş zamanlı karşılaştırın.</p>
-                    </div>
-                    <!-- Feature 3 -->
-                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-emerald-500/40 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm"><i class="fa-solid fa-play"></i></div>
-                        <h4 class="font-black text-sm text-white">Canlı Artifact HTML Sandbox</h4>
-                        <p class="text-xs text-slate-400">Yapay zekanın ürettiği HTML, CSS ve JavaScript kodlarını anında canlı iframe içinde çalıştırın, masaüstü/tablet/mobil modlarda test edin.</p>
-                    </div>
-                    <!-- Feature 4 -->
-                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-purple-500/40 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm"><i class="fa-solid fa-store"></i></div>
-                        <h4 class="font-black text-sm text-white">HuggingFace GGUF Store</h4>
-                        <p class="text-xs text-slate-400">Binlerce GGUF kuantizasyon modelini (`Q4_K_M`, `Q8_0`) HuggingFace Hub üzerinden arayın ve 1 tıkla yerel sunucunuza indirin.</p>
-                    </div>
-                    <!-- Feature 5 -->
-                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-rose-500/40 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm"><i class="fa-solid fa-shield-halved"></i></div>
-                        <h4 class="font-black text-sm text-white">🛡️ OOM Kalkanı & Audit</h4>
-                        <p class="text-xs text-slate-400">Min 6GB VRAM kontrolü ile GPU belleğinizi çökmeden korur, `OLLAMA_MAX_LOADED_MODELS=1` kuralı ile stabil çalışır.</p>
-                    </div>
-                    <!-- Feature 6 -->
-                    <div class="p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-cyan-500/40 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm"><i class="fa-solid fa-globe"></i></div>
-                        <h4 class="font-black text-sm text-white">Cloudflare Quick Tunnel</h4>
-                        <p class="text-xs text-slate-400">Sunucunuza port açmadan, doğrudan Cloudflare tüneli ile dünyanın her yerinden SSL sertifikalı güvenli erişim sağlayın.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
-    <script src="js/dashboard.js"></script>
-    <script src="js/i18n.js"></script>
-    <script src="js/providers.js"></script>
-    <script src="js/sandbox.js"></script>
-    <script src="js/voice.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

@@ -84,64 +84,6 @@ fi
 
 echo -e "${YELLOW}🔍 Sistem Analiz Ediliyor: ${BOLD}${DISTRO} (${OS} ${ARCH})${NC}..."
 
-# 3. Donanım & OOM Çökme Koruma Denetimi (Hardware Audit & OOM Protection)
-echo -e "\n${CYAN}🛡️ Donanım Uyumluluğu & OOM Çökme Kalkanı Denetleniyor...${NC}"
-
-VRAM_GB=0
-if command -v nvidia-smi >/dev/null 2>&1; then
-    VRAM_MB=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -n 1 | tr -d ' ' || echo "0")
-    if [ -n "$VRAM_MB" ] && [ "$VRAM_MB" -gt 0 ] 2>/dev/null; then
-        VRAM_GB=$((VRAM_MB / 1024))
-    fi
-elif command -v rocm-smi >/dev/null 2>&1; then
-    VRAM_B=$(rocm-smi --showmeminfo vram --json 2>/dev/null | grep -o '"VRAM Total Memory (B)": "[0-9]*"' | head -n 1 | awk -F'"' '{print $4}' || echo "0")
-    if [ -n "$VRAM_B" ] && [ "$VRAM_B" -gt 0 ] 2>/dev/null; then
-        VRAM_GB=$((VRAM_B / 1073741824))
-    fi
-fi
-
-if [ "$VRAM_GB" -eq 0 ] && [ -d /sys/class/drm ]; then
-    for v_file in /sys/class/drm/card*/device/mem_info_vram_total; do
-        if [ -f "$v_file" ]; then
-            v_b=$(cat "$v_file" 2>/dev/null || echo "0")
-            if [ -n "$v_b" ] && [ "$v_b" -gt 0 ] 2>/dev/null; then
-                curr_gb=$((v_b / 1073741824))
-                if [ "$curr_gb" -gt "$VRAM_GB" ]; then
-                    VRAM_GB=$curr_gb
-                fi
-            fi
-        fi
-    done
-fi
-
-RAM_KB=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}' || echo "8388608")
-RAM_GB=$((RAM_KB / 1048576))
-DISK_FREE_GB=$(df -BG . 2>/dev/null | tail -n 1 | awk '{print $4}' | tr -d 'G' || echo "20")
-
-echo -e "  📊 Tespit Edilen Donanım: ${BOLD}${VRAM_GB} GB VRAM${NC} | ${BOLD}${RAM_GB} GB RAM${NC} | ${BOLD}${DISK_FREE_GB} GB Boş Disk${NC}"
-
-if [ "$VRAM_GB" -ge 6 ]; then
-    echo -e "${GREEN}  ✓ Donanım Harika! En az 6 GB VRAM şartı karşılandı (${VRAM_GB} GB VRAM).${NC}"
-    echo -e "${GREEN}  ✓ 7B / 8B GGUF modelleri VRAM üzerinde tam performansla çalışabilir.${NC}"
-elif [ "$VRAM_GB" -gt 0 ]; then
-    echo -e "${YELLOW}  ⚠️ Uyarı: VRAM ${VRAM_GB} GB (Önerilen en az 6 GB VRAM).${NC}"
-    echo -e "${YELLOW}  -> OOM çökmelerini önlemek için 3B/Hafif modeller ve sıkı bellek yönetimi aktif edildi.${NC}"
-else
-    echo -e "${CYAN}  ℹ️ Ayrık GPU bulunamadı (CPU Modu). Sistem ${RAM_GB} GB RAM üzerinden çalışacak.${NC}"
-fi
-
-if [ "$RAM_GB" -lt 8 ]; then
-    echo -e "${RED}  ⚠️ Kritik Uyarısı: Sistem RAM'i (${RAM_GB} GB) 8 GB altında! Ağır modeller OOM çökmesine yol açabilir.${NC}"
-fi
-
-if [ "$DISK_FREE_GB" -lt 10 ]; then
-    echo -e "${RED}  ⚠️ Disk Uyarısı: Boş alan (${DISK_FREE_GB} GB) 10 GB altında! Model indirmede yetersiz alan riski var.${NC}"
-fi
-
-export OLLAMA_MAX_LOADED_MODELS=1
-export OLLAMA_NUM_PARALLEL=1
-echo -e "${GREEN}  🛡️ OOM Koruma Kalkanı Aktif edildi: OLLAMA_MAX_LOADED_MODELS=1 (Tekil VRAM Yükleme)${NC}"
-
 # 3. Temel Araçların Kurulum Fonksiyonu
 install_pkg() {
     PKG=$1

@@ -305,26 +305,11 @@ function createPublishModalElement() {
     document.body.appendChild(div);
 }
 
-function openSandboxInNewTab() {
-    if (!currentSandboxCode) {
-        if (typeof showToast === "function") showToast("Açılacak kod ortamı bulunamadı.");
-        return;
-    }
-    let html = currentSandboxCode;
-    if (!html.includes("<html") && !html.includes("<!DOCTYPE")) {
-        html = `<!DOCTYPE html><html><head><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></head><body>${html}</body></html>`;
-    }
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-}
-
 // Global scope window exports
 window.openSandbox = openSandbox;
 window.closeSandbox = closeSandbox;
 window.setDeviceMode = setDeviceMode;
 window.runSandboxCode = runSandboxCode;
-window.openSandboxInNewTab = openSandboxInNewTab;
 window.downloadSandboxHtml = downloadSandboxHtml;
 window.copySandboxCode = copySandboxCode;
 window.publishCurrentArtifact = publishCurrentArtifact;
@@ -332,5 +317,4 @@ window.publishDirectCode = publishDirectCode;
 window.openPublishModal = openPublishModal;
 window.closePublishModal = closePublishModal;
 window.copyPublishUrl = copyPublishUrl;
-
 

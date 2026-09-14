@@ -1,6 +1,5 @@
 services:
   backend:
-    image: ghcr.io/kefe3/nexus-backend:v3.1.0
     build:
       context: ./backend
     container_name: nexus-backend
@@ -15,10 +14,8 @@ services:
       - ./backend:/app
       - ./:/repo
       - ./data:/app/data
-      - /sys:/sys:ro
 
   frontend:
-    image: ghcr.io/kefe3/nexus-frontend:v3.1.0
     build:
       context: ./frontend
     container_name: nexus-frontend

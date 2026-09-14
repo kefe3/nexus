@@ -7,3 +7,7 @@ node_modules/
 *.log
 data/sessions/
 data/*.json
+
+data/cloudflared*
+*.tmp
+*.log

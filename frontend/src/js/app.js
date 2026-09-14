@@ -4,125 +4,41 @@ let chatsHistory = JSON.parse(localStorage.getItem("nexus_chats") || "[]");
 let currentMessages = [];
 let activeAbortController = null;
 let currentPersonaPrompt = "";
-let isArenaMode = false;
-let workspaceFiles = [];
+let activeProvider = "ollama";
+let activeModel = "qwen2.5-coder:7b";
+let currentLang = "tr";
+
+function getProviderHeaders() {
+    return {
+        "X-Provider": "ollama",
+        "X-Session-ID": getSessionId()
+    };
+}
+
+function fetchModelsForActiveProvider() {
+    activeModel = "qwen2.5-coder:7b";
+    activeProvider = "ollama";
+}
+
+function applyTranslations() {}
+function setLanguage(lang) {
+    currentLang = lang;
+}
+function t(key) {
+    const tr = {
+        thinking: "Düşünce Adımları",
+        live_preview: "Canlı Önizleme",
+        copy_code: "Kodu Kopyala",
+        copied: "Kopyalandı!"
+    };
+    return tr[key] || key;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-    applyTranslations();
     initChatInterface();
     loadPresets();
     fetchModelsForActiveProvider();
 });
-
-function initChatInterface() {
-    renderChatsList();
-    if (chatsHistory.length > 0) {
-        loadChat(chatsHistory[0].id);
-    } else {
-        createNewChat();
-    }
-
-    const input = document.getElementById("promptInput");
-    if (input) {
-        input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-        input.addEventListener("input", () => autoResizeInput(input));
-    }
-}
-
-function toggleArenaMode() {
-    isArenaMode = !isArenaMode;
-    const btn = document.getElementById("arenaModeBtn");
-    const container = document.getElementById("modelSelect2Container");
-    if (btn) {
-        if (isArenaMode) {
-            btn.classList.add("bg-amber-500/20", "text-amber-300", "border-amber-500/40");
-            btn.classList.remove("bg-slate-900", "text-slate-300");
-        } else {
-            btn.classList.remove("bg-amber-500/20", "text-amber-300", "border-amber-500/40");
-            btn.classList.add("bg-slate-900", "text-slate-300");
-        }
-    }
-    if (container) {
-        if (isArenaMode) {
-            container.classList.remove("hidden");
-            container.classList.add("flex");
-        } else {
-            container.classList.add("hidden");
-            container.classList.remove("flex");
-        }
-    }
-    if (typeof showToast === "function") {
-        showToast(isArenaMode ? "⚔️ Arena Modu Aktif (İkili Model Yarışı)" : "Standart Tek Model Modu");
-    }
-}
-
-function handleWorkspaceFilesUpload(fileList) {
-    if (!fileList || fileList.length === 0) return;
-    Array.from(fileList).forEach(file => {
-        if (file.size > 2 * 1024 * 1024) {
-            if (typeof showToast === "function") showToast(`${file.name} çok büyük (maks 2MB)`);
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const content = e.target.result;
-            workspaceFiles.push({
-                name: file.name,
-                size: file.size,
-                content: content
-            });
-            renderWorkspaceFiles();
-            if (typeof showToast === "function") showToast(`${file.name} projenize eklendi!`);
-        };
-        reader.readAsText(file);
-    });
-}
-
-function removeWorkspaceFile(index) {
-    workspaceFiles.splice(index, 1);
-    renderWorkspaceFiles();
-}
-
-function renderWorkspaceFiles() {
-    const list = document.getElementById("workspaceFilesList");
-    if (!list) return;
-    if (workspaceFiles.length === 0) {
-        list.innerHTML = '<div class="text-[11px] text-slate-500 italic px-1">Henüz dosya eklenmedi</div>';
-        return;
-    }
-    list.innerHTML = "";
-    workspaceFiles.forEach((file, idx) => {
-        const item = document.createElement("div");
-        item.className = "flex items-center justify-between p-1.5 rounded-lg bg-slate-900 border border-white/5 text-[11px]";
-        item.innerHTML = `
-            <span class="truncate font-mono text-indigo-300 max-w-[170px]" title="${file.name}">📄 ${file.name}</span>
-            <button onclick="removeWorkspaceFile(${idx})" class="text-slate-500 hover:text-rose-400 px-1"><i class="fa-solid fa-xmark"></i></button>
-        `;
-        list.appendChild(item);
-    });
-}
-
-function autoResizeInput(el) {
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 180) + "px";
-}
-
-function createNewChat() {
-    currentChatId = "chat_" + Date.now();
-    currentMessages = [];
-    renderMessages();
-    
-    const input = document.getElementById("promptInput");
-    if (input) {
-        input.value = "";
-        input.focus();
-    }
-}
 
 function getSessionId() {
     let sid = localStorage.getItem("nexus_session_id");
@@ -166,51 +82,61 @@ async function persistChatToServer(chatObj) {
     } catch (e) {}
 }
 
-function loadChat(chatId) {
-    const chat = chatsHistory.find(c => c.id === chatId);
-    if (!chat) return;
-    currentChatId = chat.id;
-    currentMessages = chat.messages || [];
-    renderMessages();
+function initChatInterface() {
+    renderChatsList();
+    if (chatsHistory.length > 0) {
+        loadChat(chatsHistory[0].id);
+    } else {
+        createNewChat();
+    }
+    syncChatsWithServer();
+
+    const input = document.getElementById("promptInput");
+    if (input) {
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        input.addEventListener("input", () => autoResizeInput(input));
+    }
 }
 
-function deleteChat(e, chatId) {
-    e.stopPropagation();
-    chatsHistory = chatsHistory.filter(c => c.id !== chatId);
-    localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
+function autoResizeInput(el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 180) + "px";
+}
+
+function createNewChat() {
+    currentChatId = "chat_" + Date.now();
+    currentMessages = [];
+    renderMessages();
     
-    if (currentChatId === chatId) {
-        if (chatsHistory.length > 0) {
-            loadChat(chatsHistory[0].id);
-        } else {
-            createNewChat();
-        }
-    } else {
-        renderChatsList();
+    const input = document.getElementById("promptInput");
+    if (input) {
+        input.value = "";
+        input.focus();
     }
 }
 
 function renderChatsList() {
     const list = document.getElementById("chatsHistoryList");
     if (!list) return;
+
     list.innerHTML = "";
-
-    const search = (document.getElementById("searchChatInput")?.value || "").toLowerCase();
-
-    chatsHistory.forEach(c => {
-        if (search && !c.title.toLowerCase().includes(search)) return;
-
-        const active = c.id === currentChatId;
+    chatsHistory.forEach(chat => {
         const item = document.createElement("div");
-        item.className = `group flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all text-xs font-medium ${active ? 'bg-indigo-600/20 text-white border border-indigo-500/30' : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'}`;
-        item.onclick = () => loadChat(c.id);
-
+        const isActive = chat.id === currentChatId;
+        item.className = `group flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs transition-all ${
+            isActive ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-bold" : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
+        }`;
         item.innerHTML = `
-            <div class="flex items-center gap-2 truncate">
-                <i class="fa-regular fa-message text-[11px] ${active ? 'text-indigo-400' : 'text-slate-500'}"></i>
-                <span class="truncate">${escapeHtml(c.title || 'Yeni Sohbet')}</span>
+            <div class="flex items-center gap-2 truncate" onclick="loadChat('${chat.id}')">
+                <i class="fa-regular fa-message text-[10px]"></i>
+                <span class="truncate">${chat.title || "Yeni Sohbet"}</span>
             </div>
-            <button onclick="deleteChat(event, '${c.id}')" class="opacity-0 group-hover:opacity-100 p-1 hover:text-rose-400 text-slate-500 transition-all">
+            <button onclick="deleteChat('${chat.id}', event)" class="opacity-0 group-hover:opacity-100 hover:text-rose-400 p-1 text-slate-500 transition-opacity">
                 <i class="fa-solid fa-trash-can text-[10px]"></i>
             </button>
         `;
@@ -218,29 +144,57 @@ function renderChatsList() {
     });
 }
 
+function loadChat(id) {
+    currentChatId = id;
+    const chat = chatsHistory.find(c => c.id === id);
+    if (chat) {
+        currentMessages = chat.messages || [];
+    }
+    renderChatsList();
+    renderMessages();
+}
+
+async function deleteChat(id, e) {
+    if (e) e.stopPropagation();
+    chatsHistory = chatsHistory.filter(c => c.id !== id);
+    localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
+    try {
+        await fetch(`/api/chats/${id}`, {
+            method: "DELETE",
+            headers: { "X-Session-ID": getSessionId() }
+        });
+    } catch (e) {}
+    if (currentChatId === id) {
+        if (chatsHistory.length > 0) loadChat(chatsHistory[0].id);
+        else createNewChat();
+    } else {
+        renderChatsList();
+    }
+}
+
 function renderMessages() {
     const container = document.getElementById("messagesContainer");
-    const hero = document.getElementById("welcomeHero");
+    const welcome = document.getElementById("welcomeHero");
     if (!container) return;
 
     if (currentMessages.length === 0) {
         container.innerHTML = "";
-        if (hero) hero.classList.remove("hidden");
+        if (welcome) welcome.classList.remove("hidden");
         return;
     }
 
-    if (hero) hero.classList.add("hidden");
+    if (welcome) welcome.classList.add("hidden");
     container.innerHTML = "";
 
-    currentMessages.forEach(m => {
-        const isUser = m.role === "user";
+    currentMessages.forEach((msg, idx) => {
+        const isUser = msg.role === "user";
         const div = document.createElement("div");
-        div.className = `flex gap-3.5 ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in`;
+        div.className = `flex gap-3.5 ${isUser ? "justify-end" : "justify-start"} animate-fade-in`;
 
         if (isUser) {
             div.innerHTML = `
-                <div class="max-w-2xl bg-indigo-600 text-white p-4 rounded-2xl rounded-tr-sm text-sm shadow-xl space-y-1">
-                    <p class="whitespace-pre-wrap leading-relaxed">${escapeHtml(m.content)}</p>
+                <div class="max-w-2xl bg-indigo-600 text-white p-3.5 rounded-2xl rounded-tr-sm text-sm shadow-md font-medium leading-relaxed">
+                    ${escapeHtml(msg.content)}
                 </div>
             `;
         } else {
@@ -249,78 +203,57 @@ function renderMessages() {
                     <i class="fa-solid fa-bolt"></i>
                 </div>
                 <div class="max-w-3xl glass-panel p-4 rounded-2xl rounded-tl-sm text-sm text-slate-100 shadow-xl space-y-2 markdown-body overflow-x-auto w-full">
-                    ${renderMarkdown(m.content)}
+                    ${renderMarkdown(msg.content)}
                 </div>
             `;
         }
         container.appendChild(div);
     });
 
-    highlightCodeBlocks();
     container.scrollTop = container.scrollHeight;
+    highlightCodeBlocks();
 }
 
 async function sendMessage() {
     const input = document.getElementById("promptInput");
-    if (!input) return;
-    const text = input.value.trim();
-    if (!text) return;
+    if (!input || !input.value.trim()) return;
 
+    const userText = input.value.trim();
     input.value = "";
-    autoResizeInput(input);
+    input.style.height = "auto";
 
+    currentMessages.push({ role: "user", content: userText });
+    renderMessages();
+
+    // Auto title chat
     let chatObj = chatsHistory.find(c => c.id === currentChatId);
     if (!chatObj) {
-        chatObj = {
-            id: currentChatId,
-            title: text.substring(0, 30) + (text.length > 30 ? "..." : ""),
-            messages: []
-        };
+        chatObj = { id: currentChatId, title: userText.slice(0, 30), messages: currentMessages, timestamp: Date.now() };
         chatsHistory.unshift(chatObj);
+    } else {
+        chatObj.messages = currentMessages;
     }
-
-    currentMessages.push({ role: "user", content: text });
-    renderMessages();
+    localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
+    persistChatToServer(chatObj);
     renderChatsList();
 
+    // Create assistant message container
     const container = document.getElementById("messagesContainer");
     const aiDiv = document.createElement("div");
     aiDiv.className = "flex gap-3.5 justify-start animate-fade-in";
-
-    if (isArenaMode) {
-        const m2Name = typeof activeModel2 !== "undefined" ? activeModel2 : activeModel;
-        aiDiv.innerHTML = `
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shrink-0 shadow-lg text-white text-xs font-black">
-                <i class="fa-solid fa-swords"></i>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
-                <div class="glass-panel p-4 rounded-2xl text-sm space-y-2 border-indigo-500/30 flex flex-col justify-between">
-                    <div class="text-xs font-bold text-indigo-400 border-b border-white/5 pb-2 flex items-center justify-between">
-                        <span>🤖 Model 1: ${escapeHtml(activeModel)}</span>
-                    </div>
-                    <div id="streamingTarget1" class="markdown-body flex-1 overflow-x-auto"><span class="streaming-cursor"></span></div>
-                </div>
-                <div class="glass-panel p-4 rounded-2xl text-sm space-y-2 border-amber-500/30 flex flex-col justify-between">
-                    <div class="text-xs font-bold text-amber-400 border-b border-white/5 pb-2 flex items-center justify-between">
-                        <span>⚡ Model 2: ${escapeHtml(m2Name)}</span>
-                    </div>
-                    <div id="streamingTarget2" class="markdown-body flex-1 overflow-x-auto"><span class="streaming-cursor"></span></div>
-                </div>
-            </div>
-        `;
-    } else {
-        aiDiv.innerHTML = `
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center shrink-0 shadow-lg text-white text-xs font-black">
-                <i class="fa-solid fa-bolt"></i>
-            </div>
-            <div class="max-w-3xl glass-panel p-4 rounded-2xl rounded-tl-sm text-sm text-slate-100 shadow-xl space-y-2 markdown-body overflow-x-auto w-full" id="streamingTarget">
-                <span class="streaming-cursor"></span>
-            </div>
-        `;
-    }
-
+    aiDiv.innerHTML = `
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center shrink-0 shadow-lg text-white text-xs font-black">
+            <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div class="max-w-3xl glass-panel p-4 rounded-2xl rounded-tl-sm text-sm text-slate-100 shadow-xl space-y-2 markdown-body overflow-x-auto w-full" id="streamingTarget">
+            <span class="streaming-cursor"></span>
+        </div>
+    `;
     container.appendChild(aiDiv);
     container.scrollTop = container.scrollHeight;
+
+    const target = document.getElementById("streamingTarget");
+    let fullResponse = "";
 
     activeAbortController = new AbortController();
     toggleStopButton(true);
@@ -329,148 +262,73 @@ async function sendMessage() {
     if (currentPersonaPrompt) {
         historyPayload.push({ role: "system", content: currentPersonaPrompt });
     }
-
-    if (workspaceFiles.length > 0) {
-        let wsText = "YÜKLENEN PROJE DOSYALARI VE KOD BAĞLAMI:\n\n";
-        workspaceFiles.forEach(f => {
-            wsText += `--- DOSYA: ${f.name} ---\n${f.content}\n\n`;
-        });
-        historyPayload.push({ role: "system", content: wsText });
-    }
-
     historyPayload.push(...currentMessages);
 
-    if (isArenaMode) {
-        let full1 = "", full2 = "";
-        const target1 = document.getElementById("streamingTarget1");
-        const target2 = document.getElementById("streamingTarget2");
-        const m2Name = typeof activeModel2 !== "undefined" ? activeModel2 : activeModel;
+    try {
+        const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...getProviderHeaders()
+            },
+            body: JSON.stringify({
+                model: activeModel,
+                messages: historyPayload,
+                stream: true
+            }),
+            signal: activeAbortController.signal
+        });
 
-        const streamCall = async (modelName, targetEl, callback) => {
-            try {
-                const res = await fetch("/api/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", ...getProviderHeaders() },
-                    body: JSON.stringify({
-                        model: modelName,
-                        messages: historyPayload,
-                        temperature: parseFloat(localStorage.getItem("nexus_temperature") || "0.7"),
-                        stream: true
-                    }),
-                    signal: activeAbortController.signal
-                });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                let acc = "";
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const chunk = decoder.decode(value, { stream: true });
-                    for (const line of chunk.split("\n")) {
-                        if (line.startsWith("data: ")) {
-                            const dataStr = line.slice(6).trim();
-                            if (dataStr === "[DONE]") continue;
-                            const parsed = jsonParseSafe(dataStr);
-                            if (parsed && parsed.content) {
-                                acc += parsed.content;
-                                targetEl.innerHTML = renderMarkdown(acc) + '<span class="streaming-cursor"></span>';
-                                container.scrollTop = container.scrollHeight;
-                            }
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n");
+
+            for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                    const dataStr = line.slice(6).trim();
+                    if (dataStr === "[DONE]") continue;
+                    try {
+                        const parsed = jsonParseSafe(dataStr);
+                        if (parsed && parsed.content) {
+                            fullResponse += parsed.content;
+                            target.innerHTML = renderMarkdown(fullResponse) + '<span class="streaming-cursor"></span>';
+                            container.scrollTop = container.scrollHeight;
+                        } else if (parsed && parsed.error) {
+                            fullResponse += `\n\n> ❌ **Hata:** ${parsed.error}`;
+                            target.innerHTML = renderMarkdown(fullResponse);
                         }
-                    }
-                }
-                targetEl.innerHTML = renderMarkdown(acc);
-                callback(acc);
-            } catch (e) {
-                targetEl.innerHTML = `<span class="text-rose-400">❌ ${e.message}</span>`;
-                callback(`❌ Hata: ${e.message}`);
-            }
-        };
-
-        try {
-            await Promise.all([
-                streamCall(activeModel, target1, r => full1 = r),
-                streamCall(m2Name, target2, r => full2 = r)
-            ]);
-            highlightCodeBlocks();
-            const combinedResp = `**[⚔️ Arena Sonuçları]**\n\n### 🤖 Model 1 (${activeModel}):\n${full1}\n\n---\n\n### ⚡ Model 2 (${m2Name}):\n${full2}`;
-            currentMessages.push({ role: "assistant", content: combinedResp });
-            chatObj.messages = currentMessages;
-            localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
-        } finally {
-            toggleStopButton(false);
-            activeAbortController = null;
-        }
-    } else {
-        const target = document.getElementById("streamingTarget");
-        let fullResponse = "";
-        try {
-            const res = await fetch("/api/chat", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...getProviderHeaders()
-                },
-                body: JSON.stringify({
-                    model: activeModel,
-                    messages: historyPayload,
-                    temperature: parseFloat(localStorage.getItem("nexus_temperature") || "0.7"),
-                    stream: true
-                }),
-                signal: activeAbortController.signal
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.detail || `HTTP ${res.status}`);
-            }
-
-            const reader = res.body.getReader();
-            const decoder = new TextDecoder();
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split("\n");
-
-                for (const line of lines) {
-                    if (line.startsWith("data: ")) {
-                        const dataStr = line.slice(6).trim();
-                        if (dataStr === "[DONE]") continue;
-                        try {
-                            const parsed = jsonParseSafe(dataStr);
-                            if (parsed && parsed.content) {
-                                fullResponse += parsed.content;
-                                target.innerHTML = renderMarkdown(fullResponse) + '<span class="streaming-cursor"></span>';
-                                container.scrollTop = container.scrollHeight;
-                            } else if (parsed && parsed.error) {
-                                fullResponse += `\n\n> ❌ **Hata:** ${parsed.error}`;
-                                target.innerHTML = renderMarkdown(fullResponse);
-                            }
-                        } catch (e) {}
-                    }
+                    } catch (e) {}
                 }
             }
-
-            target.innerHTML = renderMarkdown(fullResponse);
-            highlightCodeBlocks();
-            currentMessages.push({ role: "assistant", content: fullResponse });
-            chatObj.messages = currentMessages;
-            localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
-
-        } catch (e) {
-            if (e.name === "AbortError") {
-                target.innerHTML = renderMarkdown(fullResponse) + '<span class="text-amber-400 text-xs italic block mt-2"> (Durduruldu)</span>';
-            } else {
-                target.innerHTML = `<span class="text-rose-400">❌ İstek Başarısız: ${e.message}</span>`;
-            }
-        } finally {
-            toggleStopButton(false);
-            activeAbortController = null;
         }
+
+        target.innerHTML = renderMarkdown(fullResponse);
+        highlightCodeBlocks();
+        currentMessages.push({ role: "assistant", content: fullResponse });
+        chatObj.messages = currentMessages;
+        localStorage.setItem("nexus_chats", JSON.stringify(chatsHistory));
+        persistChatToServer(chatObj);
+
+    } catch (e) {
+        if (e.name === "AbortError") {
+            target.innerHTML = renderMarkdown(fullResponse) + '<span class="text-amber-400 text-xs italic block mt-2"> (Durduruldu)</span>';
+        } else {
+            target.innerHTML = `<span class="text-rose-400">❌ İstek Başarısız: ${e.message}</span>`;
+        }
+    } finally {
+        toggleStopButton(false);
+        activeAbortController = null;
     }
 }
 
@@ -494,51 +352,76 @@ function toggleStopButton(isStreaming) {
     }
 }
 
-function renderMarkdown(text) {
-    if (typeof marked !== "undefined") {
-        return marked.parse(text || "");
+function renderMarkdown(raw) {
+    if (!raw) return "";
+
+    // Parse <think> reasoning tags
+    let processed = raw;
+    processed = processed.replace(/<think>([\s\S]*?)<\/think>/gi, (match, thinkContent) => {
+        return `<details class="thinking-box" open>
+            <summary class="font-bold cursor-pointer text-indigo-300 flex items-center gap-1.5 select-none mb-1">
+                <i class="fa-solid fa-brain text-xs"></i> <span>${t("thinking")}</span>
+            </summary>
+            <div class="mt-1 text-slate-300 leading-relaxed font-mono text-xs whitespace-pre-wrap">${escapeHtml(thinkContent.trim())}</div>
+        </details>`;
+    });
+
+    if (window.marked) {
+        return window.marked.parse(processed);
     }
-    return escapeHtml(text || "");
+    return escapeHtml(processed).replace(/\n/g, "<br>");
 }
 
 function highlightCodeBlocks() {
-    if (typeof hljs === "undefined") return;
-
     document.querySelectorAll("pre code").forEach(block => {
-        if (!block.dataset.highlighted) {
-            hljs.highlightElement(block);
-            block.dataset.highlighted = "true";
+        if (window.hljs) window.hljs.highlightElement(block);
 
-            const pre = block.parentElement;
-            if (pre && !pre.querySelector(".code-header")) {
-                const header = document.createElement("div");
-                header.className = "code-header flex items-center justify-between px-4 py-1.5 bg-slate-900/90 border-b border-white/10 text-xs text-slate-400 font-mono select-none rounded-t-xl";
-                
-                const lang = (block.className.match(/language-(\w+)/) || [])[1] || "code";
-                header.innerHTML = `
-                    <span class="font-bold text-indigo-400">${lang.toUpperCase()}</span>
-                    <div class="flex items-center gap-2">
-                        ${(lang === 'html' || lang === 'js' || lang === 'css') ? `
-                            <button class="btn-open-sandbox hover:text-emerald-400 transition-all flex items-center gap-1 font-bold">
-                                <i class="fa-solid fa-play text-[10px]"></i> <span>Canlı Çalıştır</span>
-                            </button>
-                        ` : ''}
-                        <button class="btn-copy-code hover:text-white transition-all flex items-center gap-1">
-                            <i class="fa-regular fa-copy text-[10px]"></i> <span>Kopyala</span>
+        // Add Live Preview, Deploy & Copy header if not already added
+        const pre = block.parentElement;
+        if (pre && !pre.querySelector(".code-header")) {
+            const lang = block.className.replace("hljs language-", "").replace("language-", "").trim();
+            const code = block.textContent;
+
+            const header = document.createElement("div");
+            header.className = "code-header flex items-center justify-between px-3 py-1.5 bg-slate-900/90 border-b border-white/10 text-slate-400 text-xs font-mono rounded-t-xl select-none";
+            
+            const isWeb = ["html", "javascript", "js", "svg", "css"].includes(lang.toLowerCase()) || code.includes("<!DOCTYPE") || code.includes("<html") || code.includes("<body") || code.includes("<div") || code.includes("<script");
+            
+            header.innerHTML = `
+                <span class="font-bold uppercase text-[11px] text-indigo-400">${lang || "CODE"}</span>
+                <div class="flex items-center gap-2">
+                    ${isWeb ? `
+                        <button type="button" class="btn-publish-direct px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Tek tıkla internete ve dünyaya aç">
+                            <i class="fa-solid fa-globe text-[10px]"></i> <span>Dünyaya Aç</span>
                         </button>
-                    </div>
-                `;
-                pre.insertBefore(header, block);
-            }
+                        <button type="button" class="btn-open-sandbox px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm">
+                            <i class="fa-solid fa-play text-[10px]"></i> <span>${t("live_preview")}</span>
+                        </button>
+                    ` : ""}
+                    <button type="button" class="btn-copy-code hover:text-white transition-colors text-[11px] flex items-center gap-1.5 px-2 py-1 cursor-pointer">
+                        <i class="fa-regular fa-copy"></i> <span>${t("copy_code")}</span>
+                    </button>
+                </div>
+            `;
+            pre.insertBefore(header, block);
+            pre.className = "rounded-xl border border-white/10 overflow-hidden bg-slate-950/80 my-3";
 
-            const sandboxBtn = block.parentElement.querySelector(".btn-open-sandbox");
+            // Bind listeners directly
+            const publishBtn = header.querySelector(".btn-publish-direct");
+            if (publishBtn) {
+                publishBtn.onclick = (e) => {
+                    e.preventDefault();
+                    publishDirectCode(block.textContent);
+                };
+            }
+            const sandboxBtn = header.querySelector(".btn-open-sandbox");
             if (sandboxBtn) {
                 sandboxBtn.onclick = (e) => {
                     e.preventDefault();
-                    if (typeof openSandbox === "function") openSandbox(block.textContent);
+                    openSandbox(block.textContent);
                 };
             }
-            const copyBtn = block.parentElement.querySelector(".btn-copy-code");
+            const copyBtn = header.querySelector(".btn-copy-code");
             if (copyBtn) {
                 copyBtn.onclick = (e) => {
                     e.preventDefault();
@@ -554,9 +437,9 @@ function copyCodeFromBlock(btn) {
     const code = pre ? pre.querySelector("code") : null;
     if (code) {
         navigator.clipboard.writeText(code.textContent);
-        btn.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> <span>Kopyalandı!</span>`;
+        btn.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> <span>${t("copied")}</span>`;
         setTimeout(() => {
-            btn.innerHTML = `<i class="fa-regular fa-copy"></i> <span>Kopyala</span>`;
+            btn.innerHTML = `<i class="fa-regular fa-copy"></i> <span>${t("copy_code")}</span>`;
         }, 2000);
     }
 }
@@ -578,8 +461,8 @@ async function loadPresets() {
                     <i class="${p.icon} text-indigo-400 text-sm"></i>
                     <span class="text-[10px] font-bold px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">${p.badge}</span>
                 </div>
-                <div class="font-bold text-xs text-white">${p.title_tr || p.title}</div>
-                <div class="text-[11px] text-slate-400 line-clamp-2">${p.desc_tr || p.desc_en}</div>
+                <div class="font-bold text-xs text-white">${currentLang === "tr" ? p.title_tr : p.title}</div>
+                <div class="text-[11px] text-slate-400 line-clamp-2">${currentLang === "tr" ? p.desc_tr : p.desc_en}</div>
             `;
             container.appendChild(card);
         });
@@ -588,16 +471,16 @@ async function loadPresets() {
 
 function selectPreset(preset) {
     currentPersonaPrompt = preset.prompt;
-    if (typeof showToast === "function") showToast(`${preset.title} persona seçildi!`);
+    showToast(`${preset.title} persona seçildi!`);
     const badge = document.getElementById("activePersonaBadge");
     if (badge) {
-        badge.textContent = preset.title_tr || preset.title;
+        badge.textContent = currentLang === "tr" ? preset.title_tr : preset.title;
         badge.classList.remove("hidden");
     }
 }
 
 function escapeHtml(str) {
-    return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 function jsonParseSafe(str) {
@@ -617,86 +500,85 @@ function showToast(msg) {
     }, 2500);
 }
 
-// Packages & Showcase Modal Handlers
-let currentBillingCycle = 'monthly';
 
-function openPackagesModal() {
-    const modal = document.getElementById("packagesModal");
-    if (modal) {
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
+// Settings Modal Handlers
+async function openSettingsModal() {
+    const modal = document.getElementById("settingsModal");
+    if (!modal) return;
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+
+    // Load existing settings
+    ['gemini', 'openai', 'groq', 'anthropic'].forEach(prov => {
+        const input = document.getElementById(`input_key_${prov}`);
+        if (input) {
+            input.value = localStorage.getItem(`nexus_key_${prov}`) || "";
+        }
+    });
+    const ollamaInput = document.getElementById("input_url_ollama");
+    if (ollamaInput) {
+        ollamaInput.value = localStorage.getItem("nexus_url_ollama") || "http://localhost:11434";
     }
+
+    // Also fetch server settings preview
+    try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (data.status === "ok" && data.providers) {
+            Object.keys(data.providers).forEach(prov => {
+                const info = data.providers[prov];
+                const input = document.getElementById(`input_key_${prov}`);
+                if (input && !input.value && info.has_key && info.key_preview) {
+                    input.placeholder = `Sunucuda Kayıtlı (${info.key_preview})`;
+                }
+            });
+        }
+    } catch (e) {}
 }
 
-function closePackagesModal() {
-    const modal = document.getElementById("packagesModal");
+function closeSettingsModal() {
+    const modal = document.getElementById("settingsModal");
     if (modal) {
         modal.classList.add("hidden");
         modal.classList.remove("flex");
     }
 }
 
-function openShowcaseModal() {
-    const modal = document.getElementById("showcaseModal");
-    if (modal) {
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
+async function saveSettings() {
+    const providers = ['gemini', 'openai', 'groq', 'anthropic'];
+    for (const prov of providers) {
+        const input = document.getElementById(`input_key_${prov}`);
+        if (input && input.value.trim()) {
+            const val = input.value.trim();
+            localStorage.setItem(`nexus_key_${prov}`, val);
+            localStorage.setItem(`nexus_${prov}_key`, val);
+            try {
+                await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ provider: prov, api_key: val })
+                });
+            } catch (e) {}
+        }
+    }
+
+    const ollamaInput = document.getElementById("input_url_ollama");
+    if (ollamaInput && ollamaInput.value.trim()) {
+        const url = ollamaInput.value.trim();
+        localStorage.setItem("nexus_url_ollama", url);
+        try {
+            await fetch("/api/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ provider: "ollama", base_url: url })
+            });
+        } catch (e) {}
+    }
+
+    closeSettingsModal();
+    showToast("Ayarlar ve API anahtarları sunucuya kaydedildi!");
+    if (typeof fetchModelsForActiveProvider === "function") {
+        fetchModelsForActiveProvider();
     }
 }
-
-function closeShowcaseModal() {
-    const modal = document.getElementById("showcaseModal");
-    if (modal) {
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-    }
-}
-
-function setBillingCycle(cycle) {
-    currentBillingCycle = cycle;
-    const btnM = document.getElementById("billingBtn-monthly");
-    const btnY = document.getElementById("billingBtn-yearly");
-    const pPro = document.getElementById("price-pro");
-    const pEnt = document.getElementById("price-enterprise");
-    const perPro = document.getElementById("period-pro");
-    const perEnt = document.getElementById("period-enterprise");
-
-    if (cycle === 'yearly') {
-        if (btnM) btnM.className = "px-3 py-1 rounded-lg text-slate-400 font-bold hover:bg-slate-800 transition-all text-xs";
-        if (btnY) btnY.className = "px-3 py-1 rounded-lg text-slate-200 font-bold bg-slate-800 transition-all text-xs flex items-center gap-1";
-        if (pPro) pPro.textContent = "₺239";
-        if (pEnt) pEnt.textContent = "₺1.199";
-        if (perPro) perPro.textContent = "/ ay (yıllık ödeme)";
-        if (perEnt) perEnt.textContent = "/ ay (yıllık ödeme)";
-    } else {
-        if (btnM) btnM.className = "px-3 py-1 rounded-lg text-slate-200 font-bold bg-slate-800 transition-all text-xs";
-        if (btnY) btnY.className = "px-3 py-1 rounded-lg text-slate-400 font-bold hover:bg-slate-800 transition-all text-xs flex items-center gap-1";
-        if (pPro) pPro.textContent = "₺299";
-        if (pEnt) pEnt.textContent = "₺1.499";
-        if (perPro) perPro.textContent = "/ ay";
-        if (perEnt) perEnt.textContent = "/ ay";
-    }
-}
-
-function selectPackageTier(tier) {
-    if (tier === 'community') {
-        showToast("✅ Community Self-Hosted paketini ücretsiz kullanıyorsunuz!");
-        closePackagesModal();
-    } else if (tier === 'pro') {
-        showToast("⚡ Pro Studio Pass talebiniz alındı! Admin panelinden lisans anahtarınızı girebilirsiniz.");
-    } else if (tier === 'enterprise') {
-        showToast("📞 Kurumsal GPU Cluster teklif talebi alındı. Ekibimiz sizinle iletişime geçecektir.");
-    }
-}
-
-// Global scope window exports
-window.toggleArenaMode = toggleArenaMode;
-window.handleWorkspaceFilesUpload = handleWorkspaceFilesUpload;
-window.removeWorkspaceFile = removeWorkspaceFile;
-window.openPackagesModal = openPackagesModal;
-window.closePackagesModal = closePackagesModal;
-window.openShowcaseModal = openShowcaseModal;
-window.closeShowcaseModal = closeShowcaseModal;
-window.setBillingCycle = setBillingCycle;
-window.selectPackageTier = selectPackageTier;
-

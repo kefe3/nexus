@@ -7,7 +7,6 @@ import uuid
 import json
 import subprocess
 import threading
-import shutil
 import re
 from typing import Optional, List, Dict, Any
 
@@ -17,7 +16,7 @@ DEPLOYMENTS_DIR = os.path.join(os.getcwd(), "data", "deployments")
 METADATA_FILE = os.path.join(os.getcwd(), "data", "deployments_meta.json")
 os.makedirs(DEPLOYMENTS_DIR, exist_ok=True)
 
-# Cloudflare Tunnel Manager with Auto-Download Engine
+# Cloudflare Tunnel Manager
 class TunnelManager:
     def __init__(self):
         self.process: Optional[subprocess.Popen] = None
@@ -25,107 +24,58 @@ class TunnelManager:
         self.is_running = False
         self.lock = threading.Lock()
 
-    def get_cloudflared_binary(self) -> Optional[str]:
-        candidates = [
-            "/usr/local/bin/cloudflared",
-            "/usr/bin/cloudflared",
-            "/app/data/cloudflared",
-            "data/cloudflared",
-            os.path.abspath(os.path.join(os.getcwd(), "data", "cloudflared"))
-        ]
-        if sw := shutil.which("cloudflared"):
-            candidates.insert(0, sw)
-
-        for c in candidates:
-            if c and os.path.isfile(c) and os.access(c, os.X_OK):
-                return c
-
-        # Auto-download cloudflared binary to temp file first if missing
-        target_dir = "/app/data" if os.path.isdir("/app/data") else os.path.join(os.getcwd(), "data")
-        os.makedirs(target_dir, exist_ok=True)
-        target_bin = os.path.join(target_dir, "cloudflared")
-        tmp_bin = os.path.join(target_dir, f"cloudflared_{int(time.time())}.tmp")
-        
-        try:
-            print(f"[TunnelManager] Cloudflared binary indiriliyor -> {target_bin}...")
-            import urllib.request
-            dl_url = "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64"
-            urllib.request.urlretrieve(dl_url, tmp_bin)
-            os.chmod(tmp_bin, 0o777)
-            os.replace(tmp_bin, target_bin)
-            if os.path.isfile(target_bin):
-                return target_bin
-        except Exception as e:
-            print(f"[TunnelManager] Cloudflared indirme uyarısı: {e}")
-            if os.path.isfile(tmp_bin):
-                try:
-                    os.chmod(tmp_bin, 0o777)
-                    return tmp_bin
-                except Exception:
-                    pass
-
-        return None
-
     def start_tunnel(self, port: int = 3050):
         with self.lock:
-            if self.is_running and self.public_url and self.process and self.process.poll() is None:
+            if self.is_running and self.public_url:
                 return self.public_url
 
-            cmd_bin = self.get_cloudflared_binary()
-            if not cmd_bin:
-                print("[TunnelManager] HATA: Cloudflared ikili dosyası bulunamadı.")
+            # Check if cloudflared exists
+            has_cf = False
+            cmd_bin = "cloudflared"
+            for bin_path in ["/usr/local/bin/cloudflared", "/usr/bin/cloudflared", "cloudflared"]:
+                if os.path.exists(bin_path) or subprocess.run(f"which {bin_path}", shell=True, capture_output=True).returncode == 0:
+                    cmd_bin = bin_path
+                    has_cf = True
+                    break
+
+            if not has_cf:
                 return None
 
             try:
-                if self.process:
-                    try:
-                        self.process.terminate()
-                        self.process.wait(timeout=2)
-                    except Exception:
-                        try:
-                            self.process.kill()
-                        except Exception:
-                            pass
-
-                self.public_url = None
                 self.process = subprocess.Popen(
                     [cmd_bin, "tunnel", "--url", f"http://127.0.0.1:{port}", "--no-autoupdate"],
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
+                    stderr=subprocess.PIPE,
                     text=True,
                     bufsize=1
                 )
                 self.is_running = True
 
-                # Background non-blocking URL listener
-                def _reader():
-                    while self.is_running and self.process and self.process.stdout:
-                        line = self.process.stdout.readline()
+                # Wait for public URL
+                t0 = time.time()
+                while time.time() - t0 < 10:
+                    line = self.process.stderr.readline()
+                    if not line and self.process.poll() is not None:
+                        break
+                    m = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
+                    if m:
+                        self.public_url = m.group(0)
+                        break
+
+                # Background watcher thread
+                def _watch():
+                    while self.is_running and self.process and self.process.poll() is None:
+                        line = self.process.stderr.readline()
                         if not line:
-                            if self.process.poll() is not None:
-                                break
-                            time.sleep(0.1)
-                            continue
+                            break
                         m = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
                         if m:
                             self.public_url = m.group(0)
-                            print(f"[TunnelManager] 🌐 Canlı Tünel Açıldı: {self.public_url}")
 
-                t = threading.Thread(target=_reader, daemon=True)
-                t.start()
-
-                # Wait up to 12s for public URL to be published
-                t0 = time.time()
-                while time.time() - t0 < 12:
-                    if self.public_url:
-                        return self.public_url
-                    if self.process.poll() is not None:
-                        break
-                    time.sleep(0.2)
-
+                threading.Thread(target=_watch, daemon=True).start()
                 return self.public_url
             except Exception as e:
-                print("[TunnelManager] Tünel başlatma hatası:", e)
+                print("Failed to start cloudflared tunnel:", e)
                 return None
 
     def stop_tunnel(self):
@@ -133,7 +83,6 @@ class TunnelManager:
             if self.process:
                 try:
                     self.process.terminate()
-                    self.process.kill()
                 except Exception:
                     pass
             self.process = None

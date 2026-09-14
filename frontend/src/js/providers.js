@@ -107,21 +107,12 @@ async function initProviderSelector() {
     provSelect.value = activeProvider;
 }
 
-let activeModel2 = localStorage.getItem("nexus_model2") || "";
-
-function switchModel2(val) {
-    activeModel2 = val;
-    localStorage.setItem("nexus_model2", val);
-}
-
 async function fetchModelsForActiveProvider() {
     const select = document.getElementById("modelSelect");
-    const select2 = document.getElementById("modelSelect2");
     if (!select) return;
 
     await initProviderSelector();
     select.innerHTML = '<option value="">Modeller yükleniyor...</option>';
-    if (select2) select2.innerHTML = '<option value="">Modeller yükleniyor...</option>';
 
     try {
         const res = await fetch("/api/models", {
@@ -130,18 +121,14 @@ async function fetchModelsForActiveProvider() {
         const data = await res.json();
         
         select.innerHTML = "";
-        if (select2) select2.innerHTML = "";
-
         if (data.models && data.models.length > 0) {
             let savedModel = localStorage.getItem(`nexus_model_${activeProvider}`) || "";
-            let savedModel2 = localStorage.getItem("nexus_model2") || "";
             
             if (activeProvider === "gemini" && (savedModel.includes("gemini-2.") || savedModel.includes("gemini-1."))) {
                 savedModel = "gemini-3.6-flash";
             }
 
             let found = false;
-            let found2 = false;
             data.models.forEach(m => {
                 const opt = document.createElement("option");
                 opt.value = m.id;
@@ -151,39 +138,21 @@ async function fetchModelsForActiveProvider() {
                     found = true;
                 }
                 select.appendChild(opt);
-
-                if (select2) {
-                    const opt2 = document.createElement("option");
-                    opt2.value = m.id;
-                    opt2.textContent = m.name;
-                    if (m.id === savedModel2) {
-                        opt2.selected = true;
-                        found2 = true;
-                    }
-                    select2.appendChild(opt2);
-                }
             });
 
             if (!found && select.options.length > 0) {
                 select.options[0].selected = true;
             }
-            if (select2 && !found2 && select2.options.length > 1) {
-                select2.options[1].selected = true;
-            }
 
             activeModel = select.value;
-            if (select2) activeModel2 = select2.value;
             localStorage.setItem(`nexus_model_${activeProvider}`, activeModel);
             localStorage.setItem("nexus_model", activeModel);
-            if (select2) localStorage.setItem("nexus_model2", activeModel2);
         } else {
             select.innerHTML = '<option value="default">Model bulunamadı</option>';
-            if (select2) select2.innerHTML = '<option value="default">Model bulunamadı</option>';
         }
     } catch (e) {
         console.error("Fetch models error:", e);
         select.innerHTML = '<option value="default">Bağlantı hatası</option>';
-        if (select2) select2.innerHTML = '<option value="default">Bağlantı hatası</option>';
     }
 }
 
@@ -206,22 +175,6 @@ function switchModel(model) {
     localStorage.setItem("nexus_model", model);
 }
 
-let activeTemperature = parseFloat(localStorage.getItem("nexus_temperature") || "0.7");
-
-function updateTemperature(val) {
-    activeTemperature = parseFloat(val);
-    localStorage.setItem("nexus_temperature", val);
-    const el = document.getElementById("tempVal");
-    if (el) el.textContent = val;
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
     await initProviderSelector();
-    const tempSlider = document.getElementById("tempSlider");
-    if (tempSlider) {
-        tempSlider.value = activeTemperature;
-        const el = document.getElementById("tempVal");
-        if (el) el.textContent = activeTemperature;
-    }
 });
-

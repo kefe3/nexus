@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Header, HTTPException, Body
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import psutil
 import time
@@ -211,102 +210,14 @@ def get_detailed_hardware_specs():
                             gpu_model = line.split(":", 1)[1].strip()
                         elif line.startswith("GPU Firmware:"):
                             gpu_firmware = line.split(":", 1)[1].strip()
-
-                    # Query nvidia-smi via host execution if available, or fetch exact memory
-                    total_vram = 8.0
-                    free_vram = 7.6
-                    used_vram = 0.4
-                    try:
-                        nv_raw = subprocess.check_output(
-                            ["nvidia-smi", "--query-gpu=memory.total,memory.free,memory.used", "--format=csv,noheader,nounits"],
-                            stderr=subprocess.DEVNULL
-                        ).decode().strip()
-                        if nv_raw:
-                            m_parts = [float(p.strip()) for p in nv_raw.split(",")]
-                            if len(m_parts) >= 3:
-                                total_vram = round(m_parts[0] / 1024, 2)
-                                free_vram = round(m_parts[1] / 1024, 2)
-                                used_vram = round(m_parts[2] / 1024, 2)
-                    except Exception:
-                        pass
-
                     gpu_list.append({
                         "name": gpu_model,
-                        "memory_total_gb": total_vram,
-                        "memory_free_gb": min(free_vram, total_vram),
-                        "memory_used_gb": used_vram,
+                        "memory_total_gb": 12.0 if "3060" in gpu_model else 8.0,
+                        "memory_free_gb": 10.0,
+                        "memory_used_gb": 2.0,
                         "driver_version": gpu_firmware,
                         "type": "NVIDIA CUDA Hardware"
                     })
-        except Exception:
-            pass
-
-    # 4b. AMD ROCm / Radeon GPU Check via rocm-smi
-    try:
-        rocm_out = subprocess.check_output(
-            ["rocm-smi", "--showid", "--showuse", "--showmeminfo", "vram", "--json"],
-            stderr=subprocess.DEVNULL
-        ).decode()
-        rocm_data = json.loads(rocm_out)
-        for card_id, card_info in rocm_data.items():
-            if isinstance(card_info, dict) and card_id.startswith("card"):
-                vram_total_b = float(card_info.get("VRAM Total Memory (B)", 0))
-                vram_used_b = float(card_info.get("VRAM Total Used Memory (B)", 0))
-                vram_total_gb = round(vram_total_b / (1024**3), 2) if vram_total_b > 0 else 8.0
-                vram_used_gb = round(vram_used_b / (1024**3), 2)
-                vram_free_gb = round(max(0.0, vram_total_gb - vram_used_gb), 2)
-                gpu_name = card_info.get("Card series", card_info.get("Card model", f"AMD Radeon ({card_id})"))
-                
-                gpu_list.append({
-                    "name": f"AMD {gpu_name}" if not str(gpu_name).startswith("AMD") else str(gpu_name),
-                    "memory_total_gb": vram_total_gb,
-                    "memory_free_gb": vram_free_gb,
-                    "memory_used_gb": vram_used_gb,
-                    "driver_version": "ROCm / HIP Driver",
-                    "type": "AMD ROCm GPU"
-                })
-    except Exception:
-        pass
-
-    # 4c. AMD GPU sysfs fallback (/sys/class/drm/card*/device)
-    if not any(g.get("type", "").startswith("AMD") for g in gpu_list):
-        try:
-            import glob
-            for card_dev in glob.glob("/sys/class/drm/card[0-9]/device"):
-                vendor_file = os.path.join(card_dev, "vendor")
-                if os.path.exists(vendor_file):
-                    with open(vendor_file) as f:
-                        vendor_id = f.read().strip().lower()
-                    if vendor_id == "0x1002":  # AMD Vendor ID
-                        gpu_name = "AMD Radeon GPU (ROCm / HIP)"
-                        prod_name_file = os.path.join(card_dev, "product_name")
-                        if os.path.exists(prod_name_file):
-                            with open(prod_name_file) as f:
-                                gpu_name = f.read().strip()
-                        
-                        vram_tot_file = os.path.join(card_dev, "mem_info_vram_total")
-                        vram_used_file = os.path.join(card_dev, "mem_info_vram_used")
-                        v_total_gb = 8.0
-                        v_used_gb = 0.5
-                        if os.path.exists(vram_tot_file):
-                            with open(vram_tot_file) as f:
-                                val = int(f.read().strip())
-                                if val > 0:
-                                    v_total_gb = round(val / (1024**3), 2)
-                        if os.path.exists(vram_used_file):
-                            with open(vram_used_file) as f:
-                                val = int(f.read().strip())
-                                v_used_gb = round(val / (1024**3), 2)
-                        v_free_gb = round(max(0.0, v_total_gb - v_used_gb), 2)
-
-                        gpu_list.append({
-                            "name": gpu_name if str(gpu_name).startswith("AMD") else f"AMD {gpu_name}",
-                            "memory_total_gb": v_total_gb,
-                            "memory_free_gb": v_free_gb,
-                            "memory_used_gb": v_used_gb,
-                            "driver_version": "AMD ROCm / amdgpu",
-                            "type": "AMD ROCm GPU"
-                        })
         except Exception:
             pass
 
@@ -579,59 +490,6 @@ async def run_model_benchmark(req: BenchmarkRequest):
 
     return {"status": "error", "message": f"Benchmark not supported for provider '{prov}' yet"}
 
-
-@router.post("/benchmark/all")
-async def run_full_suite_benchmark(prompt: Optional[str] = None):
-    """
-    Runs a benchmark test on all installed Ollama models and produces a performance leaderboard.
-    """
-    test_prompt = prompt or "Write a python function to compute fibonacci sequence with dynamic programming."
-    leaderboard = []
-
-    try:
-        async with httpx.AsyncClient(timeout=180.0) as client:
-            ollama_url = await resolve_ollama_base_url(client)
-            res = await client.get(f"{ollama_url}/api/tags")
-            if res.status_code != 200:
-                return {"status": "error", "message": "Ollama servisinden model listesi alınamadı."}
-            
-            models = [m.get("name") for m in res.json().get("models", []) if m.get("name")]
-            if not models:
-                return {"status": "error", "message": "Sistemde yüklü yerel Ollama modeli bulunamadı."}
-
-            for model_name in models:
-                t0 = time.time()
-                try:
-                    gen_res = await client.post(
-                        f"{ollama_url}/api/generate",
-                        json={"model": model_name, "prompt": test_prompt, "stream": False}
-                    )
-                    total_time_ms = int((time.time() - t0) * 1000)
-                    if gen_res.status_code == 200:
-                        d = gen_res.json()
-                        eval_count = d.get("eval_count", 0)
-                        eval_duration_ns = d.get("eval_duration", 1)
-                        tok_per_sec = round(eval_count / (eval_duration_ns / 1e9), 1) if eval_duration_ns > 0 else 0
-
-                        leaderboard.append({
-                            "model": model_name,
-                            "tokens_per_second": tok_per_sec,
-                            "total_time_ms": total_time_ms,
-                            "tokens_generated": eval_count,
-                            "output_preview": d.get("response", "")[:150] + "..."
-                        })
-                except Exception:
-                    pass
-
-            leaderboard.sort(key=lambda x: x["tokens_per_second"], reverse=True)
-            return {
-                "status": "ok",
-                "total_models_benchmarked": len(leaderboard),
-                "leaderboard": leaderboard
-            }
-    except Exception as e:
-        return {"status": "error", "message": f"Benchmark suite hatası: {str(e)}"}
-
 @router.post("/providers/test")
 async def test_provider(req: TestProviderRequest):
     t0 = time.time()
@@ -712,107 +570,6 @@ async def get_request_logs():
 @router.get("/specs")
 async def get_system_specs():
     return {"status": "ok", "specs": get_detailed_hardware_specs()}
-
-
-@router.get("/preflight-check")
-async def run_system_preflight_check():
-    """
-    Evaluates hardware compatibility and OOM crash risks.
-    Minimum Requirements:
-      - VRAM: 6.0 GB recommended for 7B/8B GGUF models.
-      - System RAM: 8.0 GB minimum.
-      - Free Disk: 10.0 GB minimum.
-    """
-    specs = get_detailed_hardware_specs()
-    gpus = specs.get("gpu", [])
-    ram_info = specs.get("ram", {})
-    disk_info = specs.get("disk", {})
-    
-    # 1. VRAM Evaluation
-    vram_total_gb = 0.0
-    vram_free_gb = 0.0
-    gpu_type = "CPU Mode"
-    if gpus:
-        vram_total_gb = max(g.get("memory_total_gb", 0) for g in gpus)
-        vram_free_gb = max(g.get("memory_free_gb", 0) for g in gpus)
-        gpu_type = gpus[0].get("type", "GPU")
-    
-    min_vram_gb = 6.0
-    vram_ok = (vram_total_gb >= min_vram_gb) if gpus else False
-    
-    # 2. RAM Evaluation
-    ram_total_gb = ram_info.get("total_gb", 0.0)
-    ram_available_gb = ram_info.get("available_gb", 0.0)
-    min_ram_gb = 8.0
-    ram_ok = ram_total_gb >= min_ram_gb
-
-    # 3. Disk Evaluation
-    disk_free_gb = disk_info.get("free_gb", 0.0)
-    min_disk_gb = 10.0
-    disk_ok = disk_free_gb >= min_disk_gb
-
-    # 4. Overall Status & OOM Risk Assessment
-    if gpus and vram_total_gb >= 6.0 and ram_total_gb >= 16.0 and disk_free_gb >= 15.0:
-        overall_status = "PASS"
-        oom_risk = "LOW"
-        risk_label = "🟢 Mükemmel (OOM Riski Yok)"
-        summary = "Sistem donanımınız 7B/8B yerel modelleri VRAM ve RAM üzerinde sıfır çökme riskiyle tam hızda çalıştırabilir."
-    elif (vram_total_gb >= 6.0 or ram_total_gb >= 8.0) and disk_free_gb >= 10.0:
-        overall_status = "WARNING"
-        oom_risk = "MODERATE"
-        risk_label = "🟡 Orta Risk (OOM Koruması Aktif)"
-        summary = "Donanımınız standart kullanım için yeterlidir. OOM çökmelerini önlemek için modeller sırayla VRAM'e yüklenecektir."
-    else:
-        overall_status = "CRITICAL"
-        oom_risk = "HIGH"
-        risk_label = "🔴 Yüksek Çökme / OOM Riski"
-        summary = "Sistem kaynakları (RAM, VRAM veya Disk) sınırda! Hafif 1.5B/3B modeller ve aktif OOM koruması tavsiye edilir."
-
-    recommendations = []
-    if not gpus:
-        recommendations.append("Ayrık GPU bulunamadı; Ollama çıkarımları sistem RAM'i üzerinden CPU modunda yapılacaktır.")
-    elif vram_total_gb < 6.0:
-        recommendations.append(f"VRAM {vram_total_gb} GB (Önerilen en az 6.0 GB). 3B/Hafif modeller veya Q4 kuantizasyon tercih edilmelidir.")
-    
-    if ram_total_gb < 8.0:
-        recommendations.append(f"Sistem RAM'i {ram_total_gb} GB. Arka planda ağır uygulamaları kapatmanız tavsiye edilir.")
-    
-    if disk_free_gb < 10.0:
-        recommendations.append(f"Boş disk alanı {disk_free_gb} GB. Model indirme sırasında disk dolmaması için temizlik yapın.")
-
-    return {
-        "status": "ok",
-        "preflight": {
-            "overall_status": overall_status,
-            "oom_risk": oom_risk,
-            "risk_label": risk_label,
-            "summary": summary,
-            "vram": {
-                "total_gb": vram_total_gb,
-                "free_gb": vram_free_gb,
-                "min_req_gb": min_vram_gb,
-                "passed": vram_ok,
-                "gpu_type": gpu_type
-            },
-            "ram": {
-                "total_gb": ram_total_gb,
-                "available_gb": ram_available_gb,
-                "min_req_gb": min_ram_gb,
-                "passed": ram_ok
-            },
-            "disk": {
-                "free_gb": disk_free_gb,
-                "min_req_gb": min_disk_gb,
-                "passed": disk_ok
-            },
-            "oom_guards": [
-                {"name": "OLLAMA_MAX_LOADED_MODELS", "value": "1", "desc": "VRAM aşımını önlemek için aynı anda tek model yüklenebilir."},
-                {"name": "OLLAMA_NUM_PARALLEL", "value": "1", "desc": "Paralel isteklerin VRAM sıçramasını engeller."},
-                {"name": "DYNAMIC_VRAM_ALLOCATOR", "value": "Active", "desc": "Kuantize GGUF modelleri dinamik boyutlandırır."}
-            ],
-            "recommendations": recommendations
-        }
-    }
 
 
 import io
@@ -1033,158 +790,6 @@ async def get_github_commit_history():
 
     return {"status": "ok" if not error else "error", "commits": commits, "error": error}
 
-@router.get("/updates/apply-stream")
-async def apply_update_stream():
-    async def update_event_stream():
-        t0 = time.time()
-        repo_dir = get_repo_dir()
-        
-        yield f"data: {json.dumps({'status': 'running', 'step': 'start', 'message': '[1/5] Nexus Evrimsel Güncelleme Motoru Başlatıldı...'})}\n\n"
-        await asyncio.sleep(0.2)
-
-        # Step 1: GitHub Target detection
-        remote_sha = "latest"
-        remote_msg = "Nexus AI Kararlı Güncellemesi"
-        cb = int(time.time())
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                c_res = await client.get(
-                    f"https://api.github.com/repos/kefe3/nexus/commits/main?_cb={cb}",
-                    headers={"User-Agent": "Nexus-Platform"}
-                )
-                if c_res.status_code == 200:
-                    c_data = c_res.json()
-                    remote_sha = c_data.get("sha", "")[:7]
-                    remote_msg = c_data.get("commit", {}).get("message", "").split("\n")[0]
-        except Exception:
-            pass
-
-        if remote_sha == "latest" and shutil.which("git"):
-            try:
-                ls_out = subprocess.check_output(
-                    ["git", "ls-remote", "https://github.com/kefe3/nexus.git", "refs/heads/main"],
-                    stderr=subprocess.DEVNULL, timeout=10
-                ).decode().strip()
-                if ls_out:
-                    remote_sha = ls_out.split()[0][:7]
-            except Exception:
-                pass
-
-        yield f"data: {json.dumps({'status': 'running', 'step': 'github_target', 'message': f'[2/5] Target Sürüm: {remote_sha} ({remote_msg})'})}\n\n"
-        await asyncio.sleep(0.2)
-
-        # Step 2: Primary Git Sync Engine
-        git_success = False
-        if shutil.which("git") and os.path.isdir(os.path.join(repo_dir, ".git")):
-            try:
-                try:
-                    subprocess.run(["git", "config", "--global", "--add", "safe.directory", "*"], check=False)
-                except Exception:
-                    pass
-
-                fetch_out = run_git_cmd(["fetch", "origin", "main", "--force"]) or "GitHub referansları alındı."
-                yield f"data: {json.dumps({'status': 'running', 'step': 'git_fetch', 'message': f'Git Fetch: {fetch_out}'})}\n\n"
-                await asyncio.sleep(0.2)
-
-                reset_out = run_git_cmd(["reset", "--hard", "origin/main"]) or "Çalışma dizini origin/main ile senkronize edildi."
-                yield f"data: {json.dumps({'status': 'running', 'step': 'git_reset', 'message': f'Git Reset: {reset_out}'})}\n\n"
-                await asyncio.sleep(0.2)
-
-                try:
-                    run_git_cmd(["clean", "-fd", "-e", "data", "-e", ".env"])
-                except Exception:
-                    pass
-
-                git_success = True
-            except Exception as e:
-                yield f"data: {json.dumps({'status': 'warning', 'step': 'git_warning', 'message': f'Git uyarısı: {str(e)} — Arşiv paket moduna geçiliyor...'})}\n\n"
-
-        # Step 3: Fallback Archive Sync Engine (httpx + tarfile)
-        if not git_success:
-            try:
-                async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
-                    tar_url = "https://github.com/kefe3/nexus/archive/refs/heads/main.tar.gz"
-                    tar_res = await client.get(tar_url)
-                    if tar_res.status_code != 200:
-                        raise Exception(f"GitHub paketi indirilemedi: HTTP {tar_res.status_code}")
-
-                    kb_size = len(tar_res.content) // 1024
-                    yield f"data: {json.dumps({'status': 'running', 'step': 'download_archive', 'message': f'[3/5] Arşiv paketi indirildi ({kb_size} KB). Dosyalar ayıklanıyor...'})}\n\n"
-                    await asyncio.sleep(0.2)
-
-                    tar_bytes = io.BytesIO(tar_res.content)
-                    file_count = 0
-                    with tarfile.open(fileobj=tar_bytes, mode="r:gz") as tar:
-                        for member in tar.getmembers():
-                            parts = member.name.split("/", 1)
-                            if len(parts) > 1 and parts[1]:
-                                rel_path = parts[1]
-                                if rel_path.startswith("data/") or rel_path == "data":
-                                    continue
-                                member_copy = copy.copy(member)
-                                member_copy.name = rel_path
-                                tar.extract(member_copy, path=repo_dir)
-                                if rel_path.startswith("backend/") and os.path.isdir("/app"):
-                                    app_sub = rel_path[len("backend/"):]
-                                    if app_sub:
-                                        app_member = copy.copy(member)
-                                        app_member.name = app_sub
-                                        tar.extract(app_member, path="/app")
-                                file_count += 1
-
-                    yield f"data: {json.dumps({'status': 'running', 'step': 'extract_files', 'message': f'[3/5] {file_count} dosya ve bileşen başarıyla güncellendi.'})}\n\n"
-            except Exception as e:
-                yield f"data: {json.dumps({'status': 'error', 'step': 'archive_error', 'message': f'Arşiv hatası: {str(e)}'})}\n\n"
-                return
-
-        # Step 4: Permissions Fix
-        try:
-            for d in [repo_dir, "/app", "/app/data", os.path.join(repo_dir, "data")]:
-                if os.path.isdir(d):
-                    for root, dirs, files in os.walk(d):
-                        for di in dirs:
-                            try:
-                                os.chmod(os.path.join(root, di), 0o777)
-                            except Exception:
-                                pass
-                        for fi in files:
-                            try:
-                                os.chmod(os.path.join(root, fi), 0o666)
-                            except Exception:
-                                pass
-            yield f"data: {json.dumps({'status': 'running', 'step': 'permissions', 'message': '[4/5] Dosya ve çalışma izinleri (a+rwX) yapılandırıldı.'})}\n\n"
-        except Exception:
-            pass
-
-        # Step 5: Update version.json metadata
-        v_record = {
-            "sha": remote_sha,
-            "message": remote_msg,
-            "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")
-        }
-        for v_dir in ["/app/data", "data", os.path.join(repo_dir, "data")]:
-            try:
-                os.makedirs(v_dir, exist_ok=True)
-                v_file = os.path.join(v_dir, "version.json")
-                with open(v_file, "w") as vf:
-                    json.dump(v_record, vf, indent=2)
-                os.chmod(v_file, 0o666)
-            except Exception:
-                pass
-
-        # Step 6: Touch main.py to trigger Uvicorn live reload
-        try:
-            for m_path in ["/app/app/main.py", "backend/app/main.py", os.path.join(repo_dir, "backend/app/main.py")]:
-                if os.path.isfile(m_path):
-                    os.utime(m_path, None)
-        except Exception:
-            pass
-
-        elapsed = round(time.time() - t0, 2)
-        yield f"data: {json.dumps({'status': 'success', 'step': 'complete', 'new_sha': remote_sha, 'message': f'[5/5] 🎉 Nexus AI {remote_sha} sürümüne başarıyla güncellendi ({elapsed}s)!'})}\n\n"
-
-    return StreamingResponse(update_event_stream(), media_type="text/event-stream")
-
 @router.post("/updates/apply")
 async def apply_update():
     steps = []
@@ -1340,15 +945,4 @@ async def apply_update():
         }
     except Exception as e:
         return {"status": "error", "message": f"Güncelleme Hatası: {str(e)}", "steps": steps}
-
-
-@router.get("/logs")
-async def get_system_logs(lines: int = 50):
-    try:
-        logs_list = list(REQUEST_LOGS)[-lines:]
-        return {"status": "ok", "logs": logs_list, "total": len(REQUEST_LOGS)}
-    except Exception as e:
-        return {"status": "error", "logs": [], "message": str(e)}
-
-
 

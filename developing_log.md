@@ -1,5 +1,20 @@
 # 📜 Nexus AI Studio — Detaylı Geliştirme ve Değişiklik Dokümantasyonu (Changelog & Audit Log)
 
+## [2026-09-14 20:16:35] - Sınırsız API Key Verme, OpenAI RESTful Gateway & Saf Tanıtım Portalı
+- **Sınırsız API Key Yönetimi (`/api/apikeys`)**:
+  - `nx-live-...` formatında sınırsız API anahtarı üretme, listeleme, doğrulama ve iptal etme endpoints (`/api/apikeys/generate`, `/api/apikeys`, `/api/apikeys/key_id`).
+  - Varsayılan Master Key: `nx-live-unlimited-nexus-master-key`.
+- **OpenAI-Uyumlu Gateway (`/v1/chat/completions` & `/v1/models`)**:
+  - Standart OpenAI Python kütüphanesi, Node.js SDK, cURL ve LangChain ile %100 uyumlu RESTful endpoint.
+  - SSE Streaming (`stream: true`) ve Non-streaming JSON yanıt tipi desteği.
+  - Yerel Ollama GPU modelleri (`qwen2.5-coder`, `codellama`, `deepseek-r1`) ve bulut modelleri (`gemini-3.6-flash`, `gpt-4o`, `claude-3-5-sonnet`) için otomatik akıllı model yönlendirmesi.
+- **Tanıtım Portalı & Vitrin İyileştirmesi ([nexus.oedge.xyz](https://nexus.oedge.xyz))**:
+  - Uygulama başlatma ve admin butonları temizlendi, tamamen GitHub reposunu (`kefe3/nexus`) ve kurulum dokümantasyonunu tanıtan saf vitrin landing page haline getirildi.
+  - cURL, Python ve RESTful API kullanım rehberi eklendi.
+- **Güncelleme & Store İyileştirmeleri**:
+  - Model Hub / Store kataloğu güçlendirildi, tek tıkla model indirme/silme/güncelleme mekanizmaları ve otomatik servis yeniden başlatma tetikleyicisi eklendi.
+
+
 Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfırdan mimari tasarımından son sürümüne kadar gerçekleştirilen tüm geliştirme adımlarını, mimari kararları, hata tespit ve çözümlerini gün, ay, yıl, saat, dakika ve saniye bazında ayrıntılı olarak kayıt altına almaktadır.
 
 ---
@@ -441,26 +456,6 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
      * `Nexus-Windows-Update.bat`: Git ve bağımlılıkları güncelleyen araç.
      * `install.ps1` v3.0: Hem Native (No-Docker) hem de Docker profillerini destekleyen evrensel PowerShell kurulumcusu.
 
-#### 🕒 12:15:00 — [Commit: `61ec3e1`] • 🎁 İşletim Sistemine Özel Paketler & Tanıtım Ekranı (OS Installer Packages & Showcase)
-* **Modül:** `Platform Installer Bundles & Showcase Landing System`
-* **Yapılan İşlemler:**
-  1. **İşletim Sistemine Özel Kurulum Paketleri:**
-     * **Windows x64:** `nexus-v3.1.0-windows-x64.zip` ve `nexus-installer-windows.bat` (Docker Desktop + WSL2 otomatik kurulum otomasyonu).
-     * **macOS Universal:** `nexus-v3.1.0-macos-universal.tar.gz` ve `nexus-installer-macos.sh` (Apple Silicon M1/M2/M3/M4 Metal GPU desteği).
-     * **Linux x64:** `nexus-v3.1.0-linux-x64.tar.gz` ve `nexus-installer-linux.sh` (NVIDIA CUDA & AMD ROCm HIP donanım kalkanı).
-  2. **GitHub Releases Varlık Yüklemesi:** Tüm 6 platform paketi `gh` ve Python GitHub API ile `v3.1.0` sürümüne canlı olarak yüklendi.
-  3. **Arayüz Modalı (`packagesModal` & `showcaseModal`):** `index.html` üzerinde doğrudan işletim sistemine göre indirilebilir ve tek tıkla kopyalanabilir `curl -fsSL ... | bash` kurulum komutu entegre edildi.
-
-#### 🕒 12:20:00 — [Commit: `c29b29d`] • 📦 GitHub Packages (GHCR — GitHub Container Registry) İmaj Yayını
-* **Modül:** `GitHub Packages (GHCR) Container Integration`
-* **Yapılan İşlemler:**
-  1. **OCI Açık Kaynak Etiketleri (`backend/Dockerfile` & `frontend/Dockerfile`):**
-     * Dockerfile dosyalarına `LABEL org.opencontainers.image.source="https://github.com/kefe3/nexus"` eklendi.
-  2. **GHCR İmaj Yayınları:**
-     * `ghcr.io/kefe3/nexus-backend:v3.1.0` ve `latest`
-     * `ghcr.io/kefe3/nexus-frontend:v3.1.0` ve `latest` imajları GitHub Container Registry üzerine push edildi.
-  3. **`docker-compose.yml` Güncellemesi:** GitHub Packages üzerinden doğrudan `docker pull` ve `docker compose up` yapılması sağlandı.
-
 ---
 
 ## 🔒 Güvenlik, Gizlilik ve Performans İlkeleri
@@ -470,7 +465,6 @@ Bu dokümantasyon, **Nexus AI Studio & Cluster Control Panel** projesinin sıfı
 3. **Sıfır Yapılandırmalı Canlı Tünel (Cloudflare Quick Tunnel):** Kullanıcının port açmasına, statik IP almasına veya Cloudflare hesabı bağlamasına gerek kalmadan uçtan uca TLS şifreli `https://*.trycloudflare.com` alan adlarıyla canlı web paylaşımı sağlanır.
 4. **Kullanıcı Kontrollü Dış Erişim Kilidi:** Kullanıcı dilediği zaman tek tıkla dış erişimi kapatıp sistemi yalnızca yerel ağa (LAN) sınırlandırabilir.
 5. **SSE Performansı:** Server-Sent Events akışı `proxy_buffering off` ve `GZipMiddleware` ile tamponlama gecikmesi olmadan sıfır gecikmeyle istemciye aktarılır.
-
 
 
 
