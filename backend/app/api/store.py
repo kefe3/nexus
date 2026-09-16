@@ -6,14 +6,31 @@ import json
 import os
 import time
 import asyncio
+from app.core.config import settings
+from app.api.settings_api import load_server_settings
 
 router = APIRouter(prefix="/store", tags=["store"])
 
 DATA_DIR = os.path.join(os.getcwd(), "data")
 PLUGINS_FILE = os.path.join(DATA_DIR, "plugins.json")
 SKILLS_FILE = os.path.join(DATA_DIR, "skills.json")
+os.makedirs(DATA_DIR, exist_ok=True)
 
-PLUGINS_CATALOG = [
+def get_ollama_urls() -> List[str]:
+    cfg = load_server_settings()
+    configured_url = cfg.get("ollama_base_url", settings.OLLAMA_BASE_URL)
+    candidates = [
+        configured_url,
+        "http://127.0.0.1:11435",
+        "http://127.0.0.1:11434",
+        "http://host.docker.internal:11434",
+        "http://host.docker.internal:11435",
+        "http://localhost:11434",
+        "http://localhost:11435"
+    ]
+    return list(dict.fromkeys([u.rstrip("/") for u in candidates if u]))
+
+DEFAULT_PLUGINS = [
     {
         "id": "web_search",
         "name": "DuckDuckGo & Serp API Web Arama",
@@ -76,7 +93,7 @@ PLUGINS_CATALOG = [
     }
 ]
 
-SKILLS_CATALOG = [
+DEFAULT_SKILLS = [
     {
         "id": "fullstack_architect",
         "name": "Fullstack Web Mimar Becerisi",
@@ -188,13 +205,65 @@ STORE_MODELS = [
     }
 ]
 
+def load_plugins_data():
+    if os.path.exists(PLUGINS_FILE):
+        try:
+            with open(PLUGINS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return DEFAULT_PLUGINS
+
+def save_plugins_data(data):
+    with open(PLUGINS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def load_skills_data():
+    if os.path.exists(SKILLS_FILE):
+        try:
+            with open(SKILLS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return DEFAULT_SKILLS
+
+def save_skills_data(data):
+    with open(SKILLS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+# Active download tasks tracking
+PULL_TASKS: Dict[str, Dict[str, Any]] = {}
+
 @router.get("/catalog")
 async def get_store_catalog():
+    # Fetch installed Ollama models to update 'installed' state in real-time
+    installed_models = []
+    urls = get_ollama_urls()
+    async with httpx.AsyncClient(timeout=3.0) as client:
+        for b_url in urls:
+            try:
+                res = await client.get(f"{b_url}/api/tags")
+                if res.status_code == 200:
+                    installed_models = [m.get("name") for m in res.json().get("models", [])]
+                    break
+            except Exception:
+                continue
+
+    models_with_status = []
+    for sm in STORE_MODELS:
+        m_copy = dict(sm)
+        m_copy["installed"] = any(
+            sm["name"].lower() == im.lower() or sm["name"].split(":")[0] in im.lower() 
+            for im in installed_models
+        )
+        models_with_status.append(m_copy)
+
     return {
         "status": "ok",
-        "models": STORE_MODELS,
-        "plugins": PLUGINS_CATALOG,
-        "skills": SKILLS_CATALOG
+        "models": models_with_status,
+        "plugins": load_plugins_data(),
+        "skills": load_skills_data(),
+        "active_pulls": PULL_TASKS
     }
 
 class PullModelRequest(BaseModel):
@@ -206,32 +275,95 @@ async def pull_ollama_model(req: PullModelRequest):
     if not model_name:
         raise HTTPException(status_code=400, detail="Model adı boş olamaz.")
         
+    PULL_TASKS[model_name] = {
+        "name": model_name,
+        "status": "downloading",
+        "start_time": time.time(),
+        "progress": 0,
+        "message": "İndirme başlatıldı..."
+    }
+
     async def async_pull():
-        async with httpx.AsyncClient(timeout=1800.0) as client:
-            try:
-                await client.post("http://127.0.0.1:11434/api/pull", json={"name": model_name, "stream": False})
-            except Exception:
-                pass
+        urls = get_ollama_urls()
+        async with httpx.AsyncClient(timeout=3600.0) as client:
+            for b_url in urls:
+                try:
+                    res = await client.post(f"{b_url}/api/pull", json={"name": model_name, "stream": False})
+                    if res.status_code == 200:
+                        PULL_TASKS[model_name] = {
+                            "name": model_name,
+                            "status": "completed",
+                            "finish_time": time.time(),
+                            "message": "Model başarıyla yüklendi!"
+                        }
+                        return
+                except Exception as ex:
+                    pass
+        PULL_TASKS[model_name] = {
+            "name": model_name,
+            "status": "failed",
+            "message": "Model indirilemedi. Lütfen Ollama bağlantısını ve disk alanını kontrol edin."
+        }
                 
     asyncio.create_task(async_pull())
     return {"status": "ok", "message": f"'{model_name}' indirme işlemi arka planda başlatıldı."}
 
+@router.get("/pull/status")
+async def get_pull_status():
+    return {"status": "ok", "tasks": PULL_TASKS}
+
 @router.delete("/delete/{model_name}")
 async def delete_ollama_model(model_name: str):
+    urls = get_ollama_urls()
     async with httpx.AsyncClient(timeout=30.0) as client:
-        try:
-            res = await client.request("DELETE", "http://127.0.0.1:11434/api/delete", json={"name": model_name})
-            if res.status_code == 200:
-                return {"status": "ok", "message": f"'{model_name}' başarıyla silindi."}
-            else:
-                return {"status": "error", "message": f"Silme hatası: HTTP {res.status_code}"}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+        for b_url in urls:
+            try:
+                res = await client.request("DELETE", f"{b_url}/api/delete", json={"name": model_name})
+                if res.status_code == 200:
+                    return {"status": "ok", "message": f"'{model_name}' başarıyla silindi."}
+            except Exception:
+                continue
+    return {"status": "error", "message": f"'{model_name}' silinemedi veya model bulunamadı."}
+
+class ToggleItemRequest(BaseModel):
+    id: str
+
+@router.post("/plugin/toggle")
+async def toggle_plugin(req: ToggleItemRequest):
+    plugins = load_plugins_data()
+    found = False
+    new_state = False
+    for p in plugins:
+        if p["id"] == req.id:
+            p["enabled"] = not p.get("enabled", False)
+            new_state = p["enabled"]
+            found = True
+            break
+    if not found:
+        raise HTTPException(status_code=404, detail="Eklenti bulunamadı.")
+    save_plugins_data(plugins)
+    return {"status": "ok", "id": req.id, "enabled": new_state}
+
+@router.post("/skill/toggle")
+async def toggle_skill(req: ToggleItemRequest):
+    skills = load_skills_data()
+    found = False
+    new_state = False
+    for s in skills:
+        if s["id"] == req.id:
+            s["installed"] = not s.get("installed", False)
+            new_state = s["installed"]
+            found = True
+            break
+    if not found:
+        raise HTTPException(status_code=404, detail="Beceri bulunamadı.")
+    save_skills_data(skills)
+    return {"status": "ok", "id": req.id, "installed": new_state}
 
 @router.get("/hf-search")
 async def search_huggingface(q: str = "gguf"):
     query = q.strip() or "gguf"
-    url = f"https://huggingface.co/api/models?search={query}&filter=gguf&limit=15&full=true"
+    url = f"https://huggingface.co/api/models?search={query}&filter=gguf&limit=20&full=true"
     try:
         async with httpx.AsyncClient(timeout=8.0) as client:
             res = await client.get(url, headers={"User-Agent": "Nexus-Store"})
@@ -239,15 +371,17 @@ async def search_huggingface(q: str = "gguf"):
                 raw = res.json()
                 results = []
                 for item in raw:
+                    mid = item.get("modelId", item.get("id"))
                     results.append({
                         "id": item.get("id"),
-                        "model_id": item.get("modelId", item.get("id")),
+                        "model_id": mid,
+                        "ollama_ref": f"hf.co/{mid}",
                         "likes": item.get("likes", 0),
                         "downloads": item.get("downloads", 0),
                         "tags": item.get("tags", []),
-                        "author": item.get("author", "HuggingFace")
+                        "author": item.get("author", mid.split("/")[0] if "/" in mid else "HuggingFace")
                     })
                 return {"status": "ok", "results": results}
-    except Exception as e:
+    except Exception:
         pass
     return {"status": "error", "results": []}

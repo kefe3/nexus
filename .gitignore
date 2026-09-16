@@ -9,5 +9,7 @@ data/sessions/
 data/*.json
 
 data/cloudflared*
+data/deployments/
+data/chats/
 *.tmp
 *.log
