@@ -1372,26 +1372,42 @@ function setGatewayUrlMode(mode) {
 
 async function checkOrStartTunnel() {
     const baseCode = document.getElementById('gateway-base-url-code');
-    if (baseCode) baseCode.textContent = "Cloudflare Tüneli kontrol ediliyor...";
+    if (baseCode) baseCode.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cloudflare Canlı Tüneli başlatılıyor / kontrol ediliyor...';
     
     try {
-        const res = await fetch('/api/deploy/tunnel/status');
-        const data = await res.json();
+        // Step 1: Check existing status
+        let res = await fetch('/api/deploy/tunnel');
+        let data = await res.json();
+        
         if (data.active && data.url) {
             activeTunnelUrl = data.url;
             updateDynamicGatewayBaseUrl();
-        } else {
-            // Start tunnel
-            if (baseCode) baseCode.textContent = "Cloudflare Tüneli başlatılıyor...";
-            const startRes = await fetch('/api/deploy/tunnel/start', { method: 'POST' });
-            const startData = await startRes.json();
-            if (startData.status === 'ok' && startData.url) {
-                activeTunnelUrl = startData.url;
+            return;
+        }
+
+        // Step 2: Trigger start
+        await fetch('/api/deploy/tunnel/restart', { method: 'POST' });
+
+        // Step 3: Poll for up to 10 seconds (5 attempts x 2s)
+        for (let i = 0; i < 5; i++) {
+            await new Promise(r => setTimeout(r, 2000));
+            res = await fetch('/api/deploy/tunnel');
+            data = await res.json();
+            if (data.active && data.url) {
+                activeTunnelUrl = data.url;
+                updateDynamicGatewayBaseUrl();
+                return;
             }
-            updateDynamicGatewayBaseUrl();
+        }
+        
+        // If still not ready
+        if (baseCode) {
+            baseCode.innerHTML = `<span style="color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Tünel henüz başlatılamadı. Tekrar denemek için "Yeniden Başlat" butonuna basın.</span>`;
         }
     } catch (e) {
-        updateDynamicGatewayBaseUrl();
+        if (baseCode) {
+            baseCode.innerHTML = `<span style="color: #ef4444;">Tünel hatası: ${e.message}</span>`;
+        }
     }
 }
 
@@ -1558,6 +1574,10 @@ window.switchSection = function(sectionId) {
 
 // Initial trigger
 document.addEventListener('DOMContentLoaded', () => {
+    const hostLabel = document.getElementById('gw-auto-host-label');
+    if (hostLabel) {
+        hostLabel.textContent = `Mevcut Host (${window.location.host})`;
+    }
     loadStoreCatalog();
     loadApiKeys();
     updateDynamicGatewayBaseUrl();

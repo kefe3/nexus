@@ -25,21 +25,44 @@ class TunnelManager:
         self.is_running = False
         self.lock = threading.Lock()
 
+    def get_or_download_binary(self) -> Optional[str]:
+        # Search existing paths
+        search_paths = [
+            "/usr/local/bin/cloudflared",
+            "/usr/bin/cloudflared",
+            os.path.join(os.getcwd(), "data", "cloudflared"),
+            "/app/data/cloudflared",
+            "cloudflared"
+        ]
+        for p in search_paths:
+            if os.path.exists(p) and os.access(p, os.X_OK):
+                return p
+            if subprocess.run(f"which {p}", shell=True, capture_output=True).returncode == 0:
+                return p
+
+        # If not found, attempt auto-downloading to data/cloudflared
+        try:
+            target_bin = os.path.join(os.getcwd(), "data", "cloudflared")
+            os.makedirs(os.path.dirname(target_bin), exist_ok=True)
+            if not os.path.exists(target_bin):
+                import urllib.request
+                url = "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64"
+                urllib.request.urlretrieve(url, target_bin)
+                os.chmod(target_bin, 0o755)
+            if os.path.exists(target_bin):
+                return target_bin
+        except Exception as e:
+            print("Failed to auto-download cloudflared:", e)
+        return None
+
     def start_tunnel(self, port: int = 3050):
         with self.lock:
             if self.is_running and self.public_url:
                 return self.public_url
 
-            # Check if cloudflared exists
-            has_cf = False
-            cmd_bin = "cloudflared"
-            for bin_path in ["/usr/local/bin/cloudflared", "/usr/bin/cloudflared", "cloudflared"]:
-                if os.path.exists(bin_path) or subprocess.run(f"which {bin_path}", shell=True, capture_output=True).returncode == 0:
-                    cmd_bin = bin_path
-                    has_cf = True
-                    break
-
-            if not has_cf:
+            cmd_bin = self.get_or_download_binary()
+            if not cmd_bin:
+                print("Cloudflared binary not available.")
                 return None
 
             try:
@@ -52,16 +75,19 @@ class TunnelManager:
                 )
                 self.is_running = True
 
-                # Wait for public URL
+                # Wait up to 15 seconds for public URL
                 t0 = time.time()
-                while time.time() - t0 < 10:
+                while time.time() - t0 < 15:
+                    if self.process.poll() is not None:
+                        break
+                    # Check stderr
                     line = self.process.stderr.readline()
-                    if not line and self.process.poll() is not None:
-                        break
-                    m = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
-                    if m:
-                        self.public_url = m.group(0)
-                        break
+                    if line:
+                        m = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
+                        if m:
+                            self.public_url = m.group(0)
+                            break
+                    time.sleep(0.1)
 
                 # Background watcher thread
                 def _watch():
@@ -204,6 +230,7 @@ async def list_deployments(request: Request):
     }
 
 @router.get("/api/deploy/tunnel")
+@router.get("/api/deploy/tunnel/status")
 @router.get("/api/deploy/studio-tunnel")
 async def get_tunnel_status(request: Request):
     pub_url = tunnel_manager.public_url
@@ -222,8 +249,10 @@ async def get_tunnel_status(request: Request):
         "service": "Cloudflare Quick Tunnel (Zero-Config HTTPS)"
     }
 
+@router.post("/api/deploy/tunnel/start")
 @router.post("/api/deploy/tunnel/restart")
 @router.post("/api/deploy/studio-tunnel/restart")
+@router.post("/api/deploy/studio-tunnel/start")
 async def restart_tunnel():
     tunnel_manager.stop_tunnel()
     pub_url = tunnel_manager.start_tunnel(3050)
