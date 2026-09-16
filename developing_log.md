@@ -1,5 +1,23 @@
 # 📜 Nexus AI Studio — Detaylı Geliştirme ve Değişiklik Dokümantasyonu (Changelog & Audit Log)
 
+## [2026-09-16 21:00:00] - Claymorphism 3D Tasarım Sistemi, Birleşik Model Merkezi & Çift Modlu Benchmark Motoru
+- **Dokunsal Claymorphism Tasarım Dili (v2.2)**:
+  - Hem Kontrol Paneli (`admin.html`) hem de AI Studio (`index.html`, `style.css`) için yumuşak 3D gölgeler (`--clay-shadow`), iç ışık kırılmaları, içbükey gömülü giriş alanları (`.clay-input`), dışbükey dokunsal butonlar (`.clay-btn`) ve cam-panel katmanları uygulandı.
+  - UI/UX hizalama, boşluk ve taşma sorunları tamamen giderildi.
+- **Birleşik Model Merkezi & Mağaza (Unified Hub & Store)**:
+  - Eski dağınık Model Merkezi ve Nexus Store sekmeleri tek bir ana navigasyon sekmesinde birleştirildi.
+  - 4 alt sekme (Yüklü Modeller, Nexus Store, HuggingFace GGUF İndirici, Eklentiler & Yetenekler) oluşturuldu.
+- **Çift Modlu Hız & Benchmark Arenası (LLM & Embedding)**:
+  - `nomic-embed-text`, `bge-m3`, `minilm` vb. embedding modelleri için `/api/embeddings` otomatik yönlendirmesi eklendi; `HTTP 400 - does not support generate` hatası giderildi.
+  - Vektör boyutu (ör. 768 boyutlu Float) ve oluşturma hızı doğru metriklerle telemetriye bağlandı.
+  - Model seçiciye `🧠 [LLM]` ve `📐 [Embedding]` etiketleri eklendi.
+- **Ağ & Gateway Erişim Çubuğu (Multi-Host Gateway)**:
+  - Local Host (`http://localhost:3050`), Cloudflare Canlı Tünel ve Özel Domain / Harici IP için kopyalanabilir dinamik kartlar eklendi.
+  - OpenAI `/v1` Base URL için tek tıkla kopyalama desteği sunuldu.
+- **Canlı Yayın & Tünel Onarımı**:
+  - `deploy.py` modülündeki eksik `secrets` import hatası (500) düzeltildi.
+  - `cloudflared` ikili dosyasının izinleri (`chmod +x`) ve tünel URL dinleyicisi güçlendirildi.
+
 ## [2026-09-14 20:16:35] - Sınırsız API Key Verme, OpenAI RESTful Gateway & Saf Tanıtım Portalı
 - **Sınırsız API Key Yönetimi (`/api/apikeys`)**:
   - `nx-live-...` formatında sınırsız API anahtarı üretme, listeleme, doğrulama ve iptal etme endpoints (`/api/apikeys/generate`, `/api/apikeys`, `/api/apikeys/key_id`).

@@ -1,19 +1,26 @@
 # 🐧 Nexus AI Studio — Linux Edition
 
-High-performance, zero-latency Linux native AI platform with GPU acceleration via `network_mode: host`.
+High-performance, zero-latency Linux native AI platform with GPU hardware acceleration, Claymorphism 3D UI, and OpenAI Gateway.
 
-## 🚀 Quickstart
+## 🚀 Quickstart (1-Line Install)
 
 ```bash
-# 1-Line Universal Linux Install
-curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/linux/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
 ```
 
 ## 🛠️ Manual Docker Launch
 ```bash
-cd linux
+git clone https://github.com/kefe3/nexus.git
+cd nexus
 docker compose up -d
 ```
 
-- **AI Studio:** http://localhost:3050
-- **Control Panel:** http://localhost:3050/admin.html
+## 🌐 Endpoints
+- **AI Studio:** [http://localhost:3050](http://localhost:3050)
+- **Control Panel & Store:** [http://localhost:3050/admin.html](http://localhost:3050/admin.html)
+- **OpenAI Compatible Gateway:** `http://localhost:3050/v1`
+
+## 🗑️ Uninstall
+```bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.sh | bash
+```
