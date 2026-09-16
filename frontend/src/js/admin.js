@@ -323,19 +323,29 @@ async function deleteModel(name) {
 // Populate Benchmark Dropdown
 async function populateBenchmarkModels() {
     const select = document.getElementById('bench-model-select');
+    if (!select) return;
     try {
         const res = await fetch(`${API_BASE}/admin/models`, {
             headers: getOllamaHeaders()
         });
         const data = await res.json();
         select.innerHTML = '<option value="">Model Seçin...</option>';
-        if (data.models) {
+        if (data.models && data.models.length > 0) {
+            let firstGenerativeModel = null;
             data.models.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.name;
-                opt.textContent = `${m.name} (${m.size_gb} GB)`;
+                const isEmbed = m.name.toLowerCase().includes('embed') || m.name.toLowerCase().includes('bge') || m.name.toLowerCase().includes('minilm');
+                const badge = isEmbed ? '📐 [Embedding]' : '🧠 [LLM]';
+                opt.textContent = `${badge} ${m.name} (${m.size_gb} GB)`;
+                if (!isEmbed && !firstGenerativeModel) {
+                    firstGenerativeModel = m.name;
+                }
                 select.appendChild(opt);
             });
+            if (firstGenerativeModel) {
+                select.value = firstGenerativeModel;
+            }
         }
     } catch (e) {}
 }
@@ -363,9 +373,24 @@ async function runBenchmark() {
         const data = await res.json();
         if (data.status === 'ok') {
             container.style.display = 'block';
-            document.getElementById('bench-tok-sec').textContent = `${data.tokens_per_second} tok/s`;
+            const isEmbed = data.model_type === 'embedding';
+            
+            const tokSecLbl = document.querySelector('#bench-tok-sec + .bench-stat-lbl');
+            const totalTokLbl = document.querySelector('#bench-total-tokens + .bench-stat-lbl');
+            
+            if (isEmbed) {
+                document.getElementById('bench-tok-sec').textContent = `${data.tokens_per_second} emb/s`;
+                if (tokSecLbl) tokSecLbl.textContent = 'Vektör / Saniye';
+                document.getElementById('bench-total-tokens').textContent = '1 Vektör';
+                if (totalTokLbl) totalTokLbl.textContent = 'Üretilen Vektör';
+            } else {
+                document.getElementById('bench-tok-sec').textContent = `${data.tokens_per_second} tok/s`;
+                if (tokSecLbl) tokSecLbl.textContent = 'Token / Saniye';
+                document.getElementById('bench-total-tokens').textContent = data.tokens_generated;
+                if (totalTokLbl) totalTokLbl.textContent = 'Üretilen Token';
+            }
+            
             document.getElementById('bench-total-time').textContent = `${data.total_time_ms} ms`;
-            document.getElementById('bench-total-tokens').textContent = data.tokens_generated;
             document.getElementById('bench-preview-text').textContent = data.output_preview;
         } else {
             alert(`Benchmark Hatası: ${data.message}`);
