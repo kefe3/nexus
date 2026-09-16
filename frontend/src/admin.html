@@ -619,23 +619,21 @@
 
             <div class="cp-sidebar-label">MODEL & BENCHMARK</div>
             <div class="cp-nav-item" onclick="switchSection('models')">
-                <div class="cp-nav-left"><i class="fa-solid fa-cubes-stacked" style="color: var(--accent-blue);"></i><span>Model Merkezi</span></div>
-                <span class="nav-badge" id="badge-models-count">-</span>
+                <div class="cp-nav-left"><i class="fa-solid fa-cubes-stacked" style="color: #06b6d4;"></i><span>Model Merkezi & Mağaza</span></div>
+                <span class="nav-badge" id="badge-models-count" style="color: #06b6d4; background: rgba(6, 182, 212, 0.15);">HUB & STORE</span>
             </div>
             <div class="cp-nav-item" onclick="switchSection('benchmark')">
                 <div class="cp-nav-left"><i class="fa-solid fa-stopwatch-20" style="color: var(--accent-amber);"></i><span>Hız & Benchmark</span></div>
                 <span class="nav-badge" style="color: var(--accent-amber);">ARENA</span>
             </div>
 
-            
-            <div class="cp-sidebar-label">NEXUS MAĞAZA & API</div>
-            <div class="cp-nav-item" onclick="switchSection('store')">
-                <div class="cp-nav-left"><i class="fa-solid fa-store" style="color: #ec4899;"></i><span>Nexus Store & HuggingFace</span></div>
-                <span class="nav-badge" style="color: #ec4899; background: rgba(236, 72, 153, 0.15);">HUB</span>
-            </div>
+            <div class="cp-sidebar-label">API & DIŞ ERİŞİM</div>
             <div class="cp-nav-item" onclick="switchSection('apikeys')">
                 <div class="cp-nav-left"><i class="fa-solid fa-key" style="color: #f59e0b;"></i><span>API Key Verme & Gateway</span></div>
                 <span class="nav-badge" style="color: #f59e0b; background: rgba(245, 158, 11, 0.15);">OPENAI V1</span>
+            </div>
+            <div class="cp-nav-item" onclick="switchSection('providers')">
+                <div class="cp-nav-left"><i class="fa-solid fa-network-wired" style="color: var(--accent-purple);"></i><span>Sağlayıcılar & API</span></div>
             </div>
 
             <div class="cp-sidebar-label">YÖNETİM & LOGLAR</div>
@@ -774,54 +772,126 @@
                 </div>
             </section>
 
-            <!-- 3. MODELS SECTION -->
+            <!-- 3. UNIFIED MODEL HUB & STORE SECTION -->
             <section id="sec-models" class="cp-section">
                 <div class="cp-section-header">
                     <div>
-                        <h2 class="cp-section-title">Ollama Model Merkezi</h2>
-                        <p class="cp-section-desc">Sunucunuzdaki yerel modelleri yönetin, yeni modeller indirin veya kaldırın.</p>
+                        <h2 class="cp-section-title"><i class="fa-solid fa-cubes-stacked" style="color: #06b6d4;"></i> Model Merkezi & Nexus Store</h2>
+                        <p class="cp-section-desc">Yüklü yerel modellerinizi yönetin, Hugging Face GGUF depolarından indirin, eklenti ve ajan becerilerini yapılandırın.</p>
                     </div>
                 </div>
 
-                <!-- Pull Model Form -->
-                <div class="glass-panel">
-                    <h3 class="glass-panel-title"><span><i class="fa-solid fa-cloud-arrow-down" style="color: var(--accent-cyan); margin-right: 8px;"></i> Yeni Model İndir (Pull Model)</span></h3>
-                    <div class="form-row">
-                        <input type="text" id="input-pull-name" class="custom-input" placeholder="Model adı girin (örn: deepseek-r1:8b, qwen2.5-coder:7b, llama3.2)">
-                        <button class="btn-action" id="btn-pull-submit" onclick="pullModel()"><i class="fa-solid fa-download"></i> İndir</button>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-                        <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Önerilen Modeller:</span>
-                        <span class="quick-tag" onclick="setPullName('deepseek-r1:8b')">deepseek-r1:8b (Akıl Yürütme)</span>
-                        <span class="quick-tag" onclick="setPullName('qwen2.5-coder:7b')">qwen2.5-coder:7b (Kodlama)</span>
-                        <span class="quick-tag" onclick="setPullName('qwen2.5:7b')">qwen2.5:7b (Genel Chat)</span>
-                        <span class="quick-tag" onclick="setPullName('deepseek-coder-v2:16b')">deepseek-coder-v2:16b (Uzman)</span>
-                        <span class="quick-tag" onclick="setPullName('llama3.2:3b')">llama3.2:3b (Hafif)</span>
-                        <span class="quick-tag" onclick="setPullName('codellama:7b')">codellama:7b</span>
-                    </div>
-                    <div id="pull-status-box" style="display: none; margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 0.85rem;"></div>
+                <!-- Unified Sub-tab Navigation -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-secondary active" id="tab-btn-installed" onclick="switchModelHubTab('installed')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-list-check" style="color: var(--accent-green);"></i> Yüklü Modeller (<span id="tab-installed-count">0</span>)
+                    </button>
+                    <button class="btn btn-secondary" id="tab-btn-store-models" onclick="switchModelHubTab('store-models')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-store" style="color: #ec4899;"></i> Popüler Model Mağazası
+                    </button>
+                    <button class="btn btn-secondary" id="tab-btn-hf" onclick="switchModelHubTab('hf')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-face-smile" style="color: #f59e0b;"></i> Hugging Face GGUF Hub
+                    </button>
+                    <button class="btn btn-secondary" id="tab-btn-plugins-skills" onclick="switchModelHubTab('plugins-skills')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-plug" style="color: #a855f7;"></i> Eklentiler & Beceriler
+                    </button>
                 </div>
 
-                <!-- Installed Models Table -->
-                <div class="glass-panel">
-                    <h3 class="glass-panel-title">
-                        <span><i class="fa-solid fa-list-check" style="color: var(--accent-green); margin-right: 8px;"></i> Yüklü Yerel Modeller</span>
-                        <span class="badge-size" id="installed-count-badge">0 Model</span>
-                    </h3>
-                    <table class="custom-table">
-                        <thead>
-                            <tr>
-                                <th>Model Adı</th>
-                                <th>Parametre / Boyut</th>
-                                <th>Kuantizasyon</th>
-                                <th>Format</th>
-                                <th style="text-align: right;">İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody id="installed-models-tbody">
-                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
-                        </tbody>
-                    </table>
+                <!-- TAB 1: YÜKLÜ MODELLER & HIZLI PULL -->
+                <div id="hub-tab-installed" class="hub-subtab">
+                    <!-- Pull Model Form -->
+                    <div class="glass-panel" style="margin-bottom: 20px;">
+                        <h3 class="glass-panel-title"><span><i class="fa-solid fa-cloud-arrow-down" style="color: var(--accent-cyan); margin-right: 8px;"></i> Hızlı Model İndir (Ollama Pull)</span></h3>
+                        <div class="form-row">
+                            <input type="text" id="input-pull-name" class="custom-input" placeholder="Model adı girin (örn: deepseek-r1:8b, qwen2.5-coder:7b, llama3.2)">
+                            <button class="btn-action" id="btn-pull-submit" onclick="pullModel()"><i class="fa-solid fa-download"></i> İndir</button>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Önerilenler:</span>
+                            <span class="quick-tag" onclick="setPullName('deepseek-r1:8b')">deepseek-r1:8b (Akıl Yürütme)</span>
+                            <span class="quick-tag" onclick="setPullName('qwen2.5-coder:7b')">qwen2.5-coder:7b (Kodlama)</span>
+                            <span class="quick-tag" onclick="setPullName('llama3.2:3b')">llama3.2:3b (Hızlı)</span>
+                            <span class="quick-tag" onclick="setPullName('codellama:7b')">codellama:7b</span>
+                        </div>
+                        <div id="pull-status-box" style="display: none; margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 0.85rem;"></div>
+                    </div>
+
+                    <!-- Installed Models Table -->
+                    <div class="glass-panel">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                            <h3 class="glass-panel-title" style="margin: 0;">
+                                <span><i class="fa-solid fa-list-check" style="color: var(--accent-green); margin-right: 8px;"></i> Sunucuda Kurulu Yerel Modeller</span>
+                                <span class="badge-size" id="installed-count-badge">0 Model</span>
+                            </h3>
+                            <button class="btn-action" style="padding: 6px 12px; font-size: 0.78rem;" onclick="fetchInstalledModels()"><i class="fa-solid fa-rotate"></i> Yenile</button>
+                        </div>
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Model Adı</th>
+                                    <th>Parametre / Boyut</th>
+                                    <th>Kuantizasyon</th>
+                                    <th>Format</th>
+                                    <th style="text-align: right;">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="installed-models-tbody">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 2: POPÜLER MODEL MAĞAZASI -->
+                <div id="hub-tab-store-models" class="hub-subtab" style="display: none;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                        <h3 style="font-size: 1rem; font-weight: 800; margin: 0; color: var(--text-primary);"><i class="fa-solid fa-fire" style="color: #ef4444;"></i> Popüler Nexus Model Kataloğu</h3>
+                        <span style="font-size: 0.78rem; color: var(--text-secondary);">Tek tıkla donanımınıza uygun açık kaynaklı modelleri kurun</span>
+                    </div>
+                    <div id="store-models-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 3: HUGGING FACE GGUF HUB -->
+                <div id="hub-tab-hf" class="hub-subtab" style="display: none;">
+                    <div style="background: linear-gradient(135deg, rgba(255, 210, 0, 0.08), rgba(245, 158, 11, 0.12)); border: 1px solid rgba(245, 158, 11, 0.3); padding: 18px; border-radius: 16px; margin-bottom: 24px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <h4 style="margin: 0; color: #f59e0b; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-face-smile" style="color: #f59e0b; font-size: 1.2rem;"></i> Hugging Face GGUF Model İndirici & Canlı Arama
+                            </h4>
+                            <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 3px 8px; border-radius: 10px; font-weight: 700;">HF &bull; GGUF ENTEGRASYONU</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 14px;">
+                            Hugging Face üzerindeki on binlerce GGUF modelini doğrudan arayın veya model deposunu (Örn: <code>Qwen/Qwen2.5-Coder-7B-GGUF</code>) yazıp tek tıkla Ollama / Nexus motoruna indirin:
+                        </p>
+                        <div style="display: flex; gap: 10px; max-width: 750px; flex-wrap: wrap;">
+                            <input type="text" id="hf-model-input" placeholder="Model ara veya GGUF adı girin (Örn: deepseek-r1, llama-3.2, Qwen/Qwen2.5-Coder-7B-GGUF)" style="flex: 1; min-width: 280px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(245, 158, 11, 0.4); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem;">
+                            <button class="btn btn-secondary" onclick="searchHuggingFaceUI()" style="border-radius: 10px; padding: 10px 16px; font-weight: 700; border-color: rgba(245, 158, 11, 0.5); color: #f59e0b;">
+                                <i class="fa-solid fa-magnifying-glass"></i> HF'de Ara
+                            </button>
+                            <button class="btn btn-primary" onclick="pullCustomModel()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 10px; padding: 10px 18px; font-weight: 700;">
+                                <i class="fa-solid fa-cloud-arrow-down"></i> Direkt İndir
+                            </button>
+                        </div>
+                        <div id="hf-status-msg" style="margin-top: 10px; font-size: 0.85rem; color: #10b981; font-weight: 600; display: none;"></div>
+                        
+                        <!-- HuggingFace Live Search Results -->
+                        <div id="hf-search-results" style="display: none; margin-top: 16px; max-height: 280px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: EKLENTİLER & BECERİLER -->
+                <div id="hub-tab-plugins-skills" class="hub-subtab" style="display: none;">
+                    <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; color: #10b981;"><i class="fa-solid fa-plug"></i> Sistem Eklentileri (Plugins)</h3>
+                    <div id="store-plugins-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                        <!-- Rendered by JS -->
+                    </div>
+
+                    <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; color: #a855f7;"><i class="fa-solid fa-brain"></i> Ajan Becerileri & Prompt Şablonları (Skills)</h3>
+                    <div id="store-skills-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                        <!-- Rendered by JS -->
+                    </div>
                 </div>
             </section>
 
@@ -1413,85 +1483,6 @@
                         </div>
                     </div>
 
-                </div>
-            </section>
-
-        
-            <!-- ==================== STORE & HUGGINGFACE SECTION ==================== -->
-            <section id="sec-store" class="cp-section">
-                <div class="cp-section-header">
-                    <div>
-                        <h2 class="cp-section-title"><i class="fa-solid fa-store" style="color: #ec4899;"></i> Nexus Store & HuggingFace Hub</h2>
-                        <p class="cp-section-desc">Yapay zeka modelleri, Hugging Face GGUF depoları, eklentiler ve ajan becerileri mağazası.</p>
-                    </div>
-                </div>
-
-                <!-- Sub-tab Navigation -->
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px;">
-                    <button class="btn btn-secondary active" id="tab-btn-models" onclick="switchStoreTab('models')" style="border-radius: 20px; font-weight: 700;">
-                        <i class="fa-solid fa-cubes" style="color: #06b6d4;"></i> Modeller & HuggingFace
-                    </button>
-                    <button class="btn btn-secondary" id="tab-btn-plugins" onclick="switchStoreTab('plugins')" style="border-radius: 20px; font-weight: 700;">
-                        <i class="fa-solid fa-plug" style="color: #10b981;"></i> Eklentiler (Plugins)
-                    </button>
-                    <button class="btn btn-secondary" id="tab-btn-skills" onclick="switchStoreTab('skills')" style="border-radius: 20px; font-weight: 700;">
-                        <i class="fa-solid fa-brain" style="color: #a855f7;"></i> Beceriler (Skills)
-                    </button>
-                </div>
-
-                <!-- Store Tab 1: Models & HuggingFace -->
-                <div id="store-tab-models" class="store-subtab">
-                    <!-- HuggingFace Direct Installer Banner -->
-                    <div style="background: linear-gradient(135deg, rgba(255, 210, 0, 0.08), rgba(245, 158, 11, 0.12)); border: 1px solid rgba(245, 158, 11, 0.3); padding: 18px; border-radius: 16px; margin-bottom: 24px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                            <h4 style="margin: 0; color: #f59e0b; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                                <i class="fa-solid fa-face-smile" style="color: #f59e0b; font-size: 1.2rem;"></i> Hugging Face GGUF Model İndirici & Arama
-                            </h4>
-                            <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 3px 8px; border-radius: 10px; font-weight: 700;">GGUF ENTEGRASYONU</span>
-                        </div>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 14px;">
-                            Hugging Face üzerindeki herhangi bir GGUF modelini arayın veya model adını (Örn: <code>Qwen/Qwen2.5-Coder-7B-GGUF</code>) yazıp tek tıkla Ollama / Nexus motoruna indirin:
-                        </p>
-                        <div style="display: flex; gap: 10px; max-width: 750px; flex-wrap: wrap;">
-                            <input type="text" id="hf-model-input" placeholder="Model ara veya GGUF adı girin (Örn: deepseek-r1, llama-3.2, Qwen/Qwen2.5-Coder-7B-GGUF)" style="flex: 1; min-width: 280px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(245, 158, 11, 0.4); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem;">
-                            <button class="btn btn-secondary" onclick="searchHuggingFaceUI()" style="border-radius: 10px; padding: 10px 16px; font-weight: 700; border-color: rgba(245, 158, 11, 0.5); color: #f59e0b;">
-                                <i class="fa-solid fa-magnifying-glass"></i> HF'de Ara
-                            </button>
-                            <button class="btn btn-primary" onclick="pullCustomModel()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 10px; padding: 10px 18px; font-weight: 700;">
-                                <i class="fa-solid fa-cloud-arrow-down"></i> Direkt İndir
-                            </button>
-                        </div>
-                        <div id="hf-status-msg" style="margin-top: 10px; font-size: 0.85rem; color: #10b981; font-weight: 600; display: none;"></div>
-                        
-                        <!-- HuggingFace Live Search Results -->
-                        <div id="hf-search-results" style="display: none; margin-top: 16px; max-height: 280px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;"></div>
-                    </div>
-
-                    <!-- Store Model Cards Grid -->
-                    <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 16px; color: var(--text-primary);"><i class="fa-solid fa-fire" style="color: #ef4444;"></i> Popüler Nexus Model Mağazası</h3>
-                    <div id="store-models-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
-                        <!-- Rendered by JS -->
-                    </div>
-                </div>
-
-                <!-- Store Tab 2: Plugins -->
-                <div id="store-tab-plugins" class="store-subtab" style="display: none;">
-                    <div style="margin-bottom: 16px; color: var(--text-secondary); font-size: 0.85rem;">
-                        Ajanların ve yapay zekanın kullanabileceği sistem araçlarını ve eklentilerini tek tıkla açıp kapatın.
-                    </div>
-                    <div id="store-plugins-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
-                        <!-- Rendered by JS -->
-                    </div>
-                </div>
-
-                <!-- Store Tab 3: Skills -->
-                <div id="store-tab-skills" class="store-subtab" style="display: none;">
-                    <div style="margin-bottom: 16px; color: var(--text-secondary); font-size: 0.85rem;">
-                        Özel uzmanlık alanlarına göre optimize edilmiş prompt ve akıl yürütme becerilerini yönetin.
-                    </div>
-                    <div id="store-skills-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
-                        <!-- Rendered by JS -->
-                    </div>
                 </div>
             </section>
 

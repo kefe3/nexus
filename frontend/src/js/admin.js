@@ -221,7 +221,14 @@ async function fetchInstalledModels() {
 
         tbody.innerHTML = '';
         if (data.models && data.models.length > 0) {
-            document.getElementById('installed-count-badge').textContent = `${data.models.length} Model`;
+            const countStr = `${data.models.length} Model`;
+            const badge1 = document.getElementById('installed-count-badge');
+            const badge2 = document.getElementById('tab-installed-count');
+            const badgeNav = document.getElementById('badge-models-count');
+            if (badge1) badge1.textContent = countStr;
+            if (badge2) badge2.textContent = data.models.length;
+            if (badgeNav) badgeNav.textContent = data.models.length;
+
             data.models.forEach(m => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -1057,14 +1064,24 @@ let activeGatewayMode = 'auto'; // 'auto' | 'tunnel' | 'custom'
 let customGatewayBase = '';
 let activeTunnelUrl = '';
 
-function switchStoreTab(tab) {
-    document.querySelectorAll('.store-subtab').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('#sec-store .btn-secondary').forEach(el => el.classList.remove('active'));
+function switchModelHubTab(tab) {
+    document.querySelectorAll('.hub-subtab').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('#sec-models .btn-secondary').forEach(el => el.classList.remove('active'));
     
-    const targetTab = document.getElementById('store-tab-' + tab);
+    const targetTab = document.getElementById('hub-tab-' + tab);
     const targetBtn = document.getElementById('tab-btn-' + tab);
     if (targetTab) targetTab.style.display = 'block';
     if (targetBtn) targetBtn.classList.add('active');
+
+    if (tab === 'installed') {
+        fetchInstalledModels();
+    } else if (tab === 'store-models' || tab === 'plugins-skills') {
+        loadStoreCatalog();
+    }
+}
+
+function switchStoreTab(tab) {
+    switchModelHubTab(tab);
 }
 
 async function loadStoreCatalog() {
@@ -1564,7 +1581,8 @@ window.switchSection = function(sectionId) {
         if (sec) sec.classList.add('active');
     }
     
-    if (sectionId === 'store') {
+    if (sectionId === 'models' || sectionId === 'store') {
+        fetchInstalledModels();
         loadStoreCatalog();
     } else if (sectionId === 'apikeys') {
         loadApiKeys();
