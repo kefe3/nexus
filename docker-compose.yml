@@ -1,7 +1,7 @@
 services:
   backend:
     build:
-      context: ./backend
+      context: ./nexus/backend
     container_name: nexus-backend
     restart: unless-stopped
     network_mode: host
@@ -11,18 +11,18 @@ services:
       - DEFAULT_PROVIDER=ollama
       - OLLAMA_BASE_URL=http://127.0.0.1:11435
     volumes:
-      - ./backend:/app
+      - ./nexus/backend:/app
       - ./:/repo
-      - ./data:/app/data
+      - ./nexus/data:/app/data
 
   frontend:
     build:
-      context: ./frontend
+      context: ./nexus/frontend
     container_name: nexus-frontend
     restart: unless-stopped
     network_mode: host
     volumes:
-      - ./frontend/src:/usr/share/nginx/html
-      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nexus/frontend/src:/usr/share/nginx/html
+      - ./nexus/frontend/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - backend

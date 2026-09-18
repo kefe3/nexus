@@ -41,6 +41,10 @@ echo    çalıştırabilirsiniz.
 echo  ===================================================================
 echo.
 
-cd backend
+if exist "nexus\backend" (
+    cd nexus\backend
+) else if exist "backend" (
+    cd backend
+)
 python -m uvicorn app.main:app --host 0.0.0.0 --port 3050 --log-level info
 pause

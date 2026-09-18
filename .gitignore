@@ -7,6 +7,8 @@ node_modules/
 *.log
 data/sessions/
 data/deployments/
+nexus/data/sessions/
+nexus/data/deployments/
 backend/data/sessions/
 backend/data/deployments/
 *.tmp

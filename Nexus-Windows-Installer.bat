@@ -58,8 +58,11 @@ if not exist "venv" (
 echo.
 echo [3/5] Nexus AI kütüphaneleri (FastAPI, Uvicorn, Psutil, HTTPX) kuruluyor...
 call venv\Scripts\activate.bat
-python -m pip install --upgrade pip --quiet
-python -m pip install -r backend\requirements.txt
+if exist "nexus\backend\requirements.txt" (
+    python -m pip install -r nexus\backend\requirements.txt
+) else (
+    python -m pip install -r backend\requirements.txt
+)
 if %errorlevel% neq 0 (
     echo [X] Kütüphane kurulumunda hata oluştu!
     pause
