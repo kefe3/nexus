@@ -12,75 +12,50 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-control: #070b14;
-            --sidebar-bg: #0b111e;
-            --clay-surface: #111827;
-            --clay-card-bg: rgba(17, 24, 39, 0.82);
-            --clay-border: rgba(255, 255, 255, 0.08);
+            --bg-control: #06080d;
+            --sidebar-bg: #090d15;
+            --card-bg: rgba(14, 20, 32, 0.75);
+            --card-border: rgba(255, 255, 255, 0.07);
             --accent-cyan: #00f2fe;
-            --accent-blue: #38bdf8;
-            --accent-purple: #a855f7;
-            --accent-green: #10b981;
-            --accent-amber: #f59e0b;
-            --accent-red: #ef4444;
-            --accent-pink: #ec4899;
-            --text-main: #f8fafc;
+            --accent-blue: #4facfe;
+            --accent-purple: #8a2be2;
+            --accent-green: #00f5a0;
+            --accent-amber: #ffb300;
+            --accent-red: #ff416c;
+            --text-main: #f1f5f9;
             --text-muted: #94a3b8;
-            --text-secondary: #94a3b8;
-            --clay-shadow: 8px 12px 28px rgba(0, 0, 0, 0.5), -4px -4px 16px rgba(255, 255, 255, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.12), inset -2px -2px 4px rgba(0, 0, 0, 0.4);
-            --clay-shadow-sm: 4px 6px 16px rgba(0, 0, 0, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.02), inset 1px 1px 2px rgba(255, 255, 255, 0.1), inset -1px -1px 3px rgba(0, 0, 0, 0.3);
-            --clay-shadow-inset: inset 3px 3px 6px rgba(0, 0, 0, 0.6), inset -1px -1px 3px rgba(255, 255, 255, 0.05);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; }
 
         body.control-panel-body {
             background-color: var(--bg-control);
             background-image: 
-                radial-gradient(circle at 10% 15%, rgba(0, 242, 254, 0.07) 0%, transparent 45%),
-                radial-gradient(circle at 90% 85%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 60%);
+                radial-gradient(circle at 5% 10%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 95% 90%, rgba(138, 43, 226, 0.06) 0%, transparent 40%),
+                linear-gradient(to bottom, rgba(255,255,255,0.01) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px;
             color: var(--text-main);
             font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 0;
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            letter-spacing: -0.2px;
         }
 
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar {
-            width: 7px;
-            height: 7px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-cyan);
-        }
-
-        /* Top Clay Header */
+        /* Top Header */
         .cp-header {
-            height: 68px;
-            background: rgba(11, 17, 30, 0.85);
-            backdrop-filter: blur(24px);
-            border-bottom: 1px solid var(--clay-border);
+            height: 64px;
+            background: rgba(9, 13, 21, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--card-border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 2rem;
+            padding: 0 1.75rem;
             z-index: 100;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
         }
 
         .cp-logo-group {
@@ -90,17 +65,17 @@
         }
 
         .cp-logo-badge {
-            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
             color: #04060c;
             font-weight: 900;
             font-size: 0.82rem;
-            padding: 6px 14px;
-            border-radius: 12px;
-            letter-spacing: 0.6px;
+            padding: 5px 12px;
+            border-radius: 8px;
+            letter-spacing: 0.8px;
             display: flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 4px 14px rgba(0, 242, 254, 0.35), inset 1px 1px 2px rgba(255,255,255,0.4);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
         }
 
         .cp-title {
@@ -119,40 +94,38 @@
         }
 
         .btn-studio-switch {
-            background: rgba(0, 242, 254, 0.1);
-            border: 1px solid rgba(0, 242, 254, 0.3);
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(79, 172, 254, 0.08));
+            border: 1px solid rgba(0, 242, 254, 0.35);
             color: var(--accent-cyan);
             font-weight: 700;
             font-size: 0.85rem;
-            padding: 8px 18px;
-            border-radius: 14px;
+            padding: 8px 16px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
             text-decoration: none;
-            box-shadow: var(--clay-shadow-sm);
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.25s ease;
         }
 
         .btn-studio-switch:hover {
-            background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(56, 189, 248, 0.2));
-            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.35), inset 1px 1px 2px rgba(255,255,255,0.3);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(79, 172, 254, 0.15));
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+            transform: translateY(-1px);
         }
 
         .status-pill {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.25);
+            gap: 7px;
+            background: rgba(0, 245, 160, 0.08);
+            border: 1px solid rgba(0, 245, 160, 0.25);
             color: var(--accent-green);
             font-size: 0.78rem;
             font-weight: 700;
-            padding: 7px 14px;
-            border-radius: 24px;
-            box-shadow: var(--clay-shadow-sm);
+            padding: 6px 12px;
+            border-radius: 20px;
         }
 
         .pulse-dot {
@@ -165,39 +138,37 @@
         }
 
         @keyframes pulse-animation {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 245, 160, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(0, 245, 160, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 245, 160, 0); }
         }
 
-        /* Main Workspace */
+        /* Main Layout */
         .cp-workspace {
             display: flex;
             flex: 1;
-            height: calc(100vh - 68px);
+            height: calc(100vh - 64px);
             overflow: hidden;
         }
 
-        /* Clay Sidebar */
+        /* Sidebar Navigation */
         .cp-sidebar {
-            width: 260px;
+            width: 250px;
             background: var(--sidebar-bg);
-            border-right: 1px solid var(--clay-border);
-            padding: 1.25rem 0.9rem;
+            border-right: 1px solid var(--card-border);
+            padding: 1.25rem 0.85rem;
             display: flex;
             flex-direction: column;
             gap: 6px;
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
-            overflow-y: auto;
         }
 
         .cp-sidebar-label {
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             font-weight: 800;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.9px;
-            padding: 10px 14px 4px 14px;
+            letter-spacing: 0.8px;
+            padding: 8px 12px 4px 12px;
             margin-top: 6px;
         }
 
@@ -205,29 +176,25 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 11px 15px;
-            border-radius: 14px;
+            padding: 11px 14px;
+            border-radius: 10px;
             color: var(--text-muted);
             font-size: 0.88rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s;
             border: 1px solid transparent;
-            margin-bottom: 2px;
         }
 
         .cp-nav-item:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.04);
-            transform: translateX(2px);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .cp-nav-item.active {
             color: #fff;
-            background: linear-gradient(135deg, rgba(0, 242, 254, 0.16), rgba(56, 189, 248, 0.06));
-            border-color: rgba(0, 242, 254, 0.35);
-            box-shadow: 4px 6px 16px rgba(0, 0, 0, 0.35), inset 1px 1px 2px rgba(255, 255, 255, 0.15), inset -1px -1px 3px rgba(0, 0, 0, 0.3);
-            font-weight: 700;
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.16), rgba(79, 172, 254, 0.05));
+            border-color: rgba(0, 242, 254, 0.3);
         }
 
         .cp-nav-left {
@@ -245,11 +212,10 @@
         .nav-badge {
             font-size: 0.7rem;
             font-family: 'JetBrains Mono', monospace;
-            padding: 3px 8px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.07);
+            padding: 2px 7px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
             color: #cbd5e1;
-            box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         /* Content Area */
@@ -261,7 +227,7 @@
 
         .cp-section {
             display: none;
-            max-width: 1320px;
+            max-width: 1280px;
             margin: 0 auto;
             animation: fadeIn 0.25s ease;
         }
@@ -280,51 +246,19 @@
             display: flex;
             align-items: flex-end;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 14px;
         }
 
         .cp-section-title {
-            font-size: 1.55rem;
+            font-size: 1.5rem;
             font-weight: 800;
             letter-spacing: -0.4px;
             margin: 0 0 4px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .cp-section-desc {
             color: var(--text-muted);
             font-size: 0.88rem;
             margin: 0;
-        }
-
-        /* Clay Cards & Panels */
-        .cp-card, .glass-panel, .metric-card, .provider-card {
-            background: var(--clay-card-bg);
-            border: 1px solid var(--clay-border);
-            border-radius: 20px;
-            padding: 1.5rem;
-            position: relative;
-            backdrop-filter: blur(20px);
-            box-shadow: var(--clay-shadow);
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .cp-card:hover, .metric-card:hover, .provider-card:hover {
-            border-color: rgba(255, 255, 255, 0.14);
-            box-shadow: 10px 16px 32px rgba(0, 0, 0, 0.55), -4px -4px 18px rgba(255, 255, 255, 0.04), inset 1px 1px 2px rgba(255, 255, 255, 0.15), inset -2px -2px 4px rgba(0, 0, 0, 0.4);
-            transform: translateY(-2px);
-        }
-
-        .glass-panel-title {
-            font-size: 1.1rem;
-            font-weight: 800;
-            margin: 0 0 1.25rem 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
 
         /* Metric Grid */
@@ -335,36 +269,44 @@
             margin-bottom: 1.75rem;
         }
 
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.35rem;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(14px);
+        }
+
         .metric-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3px;
             background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
-            border-radius: 20px 20px 0 0;
             opacity: 0.9;
         }
 
         .metric-label {
-            font-size: 0.78rem;
-            font-weight: 800;
+            font-size: 0.8rem;
+            font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.7px;
+            letter-spacing: 0.6px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
         .metric-value {
-            font-size: 2.1rem;
+            font-size: 2rem;
             font-weight: 800;
             margin: 10px 0 4px 0;
             font-family: 'JetBrains Mono', monospace;
             color: #fff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
         .metric-sub {
@@ -373,191 +315,159 @@
         }
 
         .progress-bar-bg {
-            background: rgba(0, 0, 0, 0.45);
-            border-radius: 10px;
-            height: 8px;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 6px;
+            height: 6px;
             margin-top: 12px;
             overflow: hidden;
-            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.6);
         }
 
         .progress-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
-            border-radius: 10px;
+            border-radius: 6px;
             transition: width 0.4s ease;
-            box-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
         }
 
-        /* Clay Tables */
-        .custom-table, .port-table {
+        /* Glass Panels & Tables */
+        .glass-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-bottom: 1.75rem;
+            backdrop-filter: blur(14px);
+        }
+
+        .glass-panel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0 0 1.25rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .custom-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 6px;
+            border-collapse: collapse;
             font-size: 0.88rem;
         }
 
-        .custom-table th, .port-table th {
+        .custom-table th {
             text-align: left;
-            padding: 10px 14px;
-            color: var(--text-muted);
-            font-weight: 800;
-            text-transform: uppercase;
-            font-size: 0.72rem;
-            letter-spacing: 0.7px;
-            border: none;
-        }
-
-        .custom-table td, .port-table td {
             padding: 12px 14px;
-            background: rgba(0, 0, 0, 0.25);
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.3);
-            vertical-align: middle;
+            color: var(--text-muted);
+            font-weight: 700;
+            border-bottom: 1px solid var(--card-border);
+            text-transform: uppercase;
+            font-size: 0.74rem;
+            letter-spacing: 0.6px;
         }
 
-        .custom-table tr td:first-child, .port-table tr td:first-child {
-            border-top-left-radius: 12px;
-            border-bottom-left-radius: 12px;
+        .custom-table td {
+            padding: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
-        .custom-table tr td:last-child, .port-table tr td:last-child {
-            border-top-right-radius: 12px;
-            border-bottom-right-radius: 12px;
+        .custom-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
         }
 
-        .custom-table tr:hover td, .port-table tr:hover td {
-            background: rgba(255, 255, 255, 0.035);
-        }
-
-        /* Badges */
         .badge-model {
             background: rgba(0, 242, 254, 0.12);
             color: var(--accent-cyan);
             border: 1px solid rgba(0, 242, 254, 0.3);
-            padding: 4px 10px;
-            border-radius: 10px;
+            padding: 4px 9px;
+            border-radius: 6px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.82rem;
             font-weight: 700;
-            box-shadow: 0 2px 8px rgba(0, 242, 254, 0.15);
         }
 
         .badge-size {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.07);
             color: #e2e8f0;
-            padding: 4px 10px;
-            border-radius: 10px;
+            padding: 3px 8px;
+            border-radius: 6px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
             font-weight: 600;
-            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.1);
         }
 
-        /* Clay Inputs & Buttons */
+        /* Inputs & Buttons */
         .form-row {
             display: flex;
             gap: 12px;
             margin-bottom: 1rem;
         }
 
-        .custom-input, input[type="text"], input[type="password"], select.custom-input {
-            background: rgba(4, 8, 16, 0.85);
-            border: 1px solid var(--clay-border);
-            border-radius: 14px;
-            padding: 12px 16px;
+        .custom-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 11px 16px;
             color: #fff;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 0.9rem;
             outline: none;
-            box-shadow: var(--clay-shadow-inset);
-            transition: all 0.25s ease;
+            transition: all 0.2s;
         }
 
-        .custom-input:focus, input[type="text"]:focus, input[type="password"]:focus {
+        .custom-input:focus {
             border-color: var(--accent-cyan);
-            box-shadow: var(--clay-shadow-inset), 0 0 14px rgba(0, 242, 254, 0.25);
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
         }
 
-        /* Tactile Clay Buttons */
-        .btn, .btn-action, .btn-primary, .btn-secondary, .btn-danger {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+        .btn-action {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #050811;
             font-weight: 700;
             border: none;
-            border-radius: 14px;
-            padding: 10px 18px;
+            border-radius: 10px;
+            padding: 11px 20px;
             cursor: pointer;
-            font-size: 0.85rem;
-            display: inline-flex;
+            font-size: 0.88rem;
+            display: flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            user-select: none;
-            text-decoration: none;
+            transition: all 0.2s;
         }
 
-        .btn-action, .btn-primary {
-            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
-            color: #04060c;
-            box-shadow: 4px 6px 16px rgba(0, 242, 254, 0.3), inset 1px 1px 2px rgba(255, 255, 255, 0.4), inset -2px -2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-action:hover, .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 6px 10px 22px rgba(0, 242, 254, 0.45), inset 1px 1px 2px rgba(255, 255, 255, 0.5);
-        }
-
-        .btn-action:active, .btn-primary:active {
-            transform: translateY(1px) scale(0.98);
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4), inset 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #e2e8f0;
-            box-shadow: var(--clay-shadow-sm);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.09);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            color: #fff;
-        }
-
-        .btn-secondary.active {
-            background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(56, 189, 248, 0.08));
-            border-color: rgba(0, 242, 254, 0.4);
-            color: var(--accent-cyan);
-            box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.15), inset -1px -1px 3px rgba(0, 0, 0, 0.3);
+        .btn-action:hover {
+            opacity: 0.94;
+            transform: translateY(-1px);
+            box-shadow: 0 0 18px rgba(0, 242, 254, 0.45);
         }
 
         .btn-danger {
-            background: rgba(239, 68, 68, 0.15);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.35);
-            box-shadow: 3px 4px 12px rgba(239, 68, 68, 0.2), inset 1px 1px 2px rgba(255, 255, 255, 0.15);
+            background: rgba(255, 65, 108, 0.15);
+            color: #ff4b2b;
+            border: 1px solid rgba(255, 65, 108, 0.35);
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: all 0.2s;
         }
 
         .btn-danger:hover {
-            background: rgba(239, 68, 68, 0.25);
-            box-shadow: 4px 8px 18px rgba(239, 68, 68, 0.35);
-            transform: translateY(-2px);
+            background: rgba(255, 65, 108, 0.35);
+            box-shadow: 0 0 10px rgba(255, 65, 108, 0.4);
         }
 
         .quick-tag {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-muted);
-            padding: 6px 14px;
-            border-radius: 12px;
+            padding: 5px 12px;
+            border-radius: 8px;
             font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
             font-family: 'JetBrains Mono', monospace;
-            box-shadow: var(--clay-shadow-sm);
         }
 
         .quick-tag:hover {
@@ -569,25 +479,23 @@
 
         /* Benchmark Arena Box */
         .benchmark-card {
-            background: rgba(8, 12, 22, 0.9);
+            background: rgba(10, 15, 25, 0.9);
             border: 1px solid rgba(0, 242, 254, 0.25);
-            border-radius: 18px;
+            border-radius: 12px;
             padding: 1.5rem;
             margin-top: 1rem;
-            box-shadow: var(--clay-shadow);
         }
 
         .bench-stat-badge {
             background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--clay-border);
-            padding: 12px 16px;
-            border-radius: 14px;
+            border: 1px solid var(--card-border);
+            padding: 10px 14px;
+            border-radius: 10px;
             text-align: center;
-            box-shadow: var(--clay-shadow-inset);
         }
 
         .bench-stat-val {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
             color: var(--accent-cyan);
@@ -597,14 +505,14 @@
             font-size: 0.72rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-top: 3px;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
         }
 
         .log-terminal {
-            background: #03060c;
-            border: 1px solid var(--clay-border);
-            border-radius: 16px;
+            background: #04060b;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
             padding: 1.25rem;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.84rem;
@@ -612,7 +520,6 @@
             overflow-y: auto;
             color: #94a3b8;
             line-height: 1.6;
-            box-shadow: var(--clay-shadow-inset);
         }
 
         .log-line {
@@ -626,11 +533,11 @@
         }
 
         .log-time { color: #475569; }
-        .log-tag { font-weight: 700; padding: 2px 7px; border-radius: 6px; font-size: 0.74rem; }
-        .log-tag.success { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .log-tag.error { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .log-tag { font-weight: 700; padding: 2px 7px; border-radius: 5px; font-size: 0.74rem; }
+        .log-tag.success { background: rgba(0, 245, 160, 0.15); color: var(--accent-green); border: 1px solid rgba(0, 245, 160, 0.3); }
+        .log-tag.error { background: rgba(255, 65, 108, 0.15); color: var(--accent-red); border: 1px solid rgba(255, 65, 108, 0.3); }
 
-        /* Provider Cards Grid */
+        /* Provider Cards */
         .provider-cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -638,11 +545,11 @@
         }
 
         .provider-card {
-            background: var(--clay-card-bg);
-            border: 1px solid var(--clay-border);
-            border-radius: 18px;
-            padding: 1.4rem;
-            box-shadow: var(--clay-shadow);
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.35rem;
+            backdrop-filter: blur(14px);
         }
 
         .provider-header {
@@ -656,7 +563,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            font-weight: 800;
+            font-weight: 700;
             font-size: 1rem;
         }
     </style>
@@ -712,21 +619,23 @@
 
             <div class="cp-sidebar-label">MODEL & BENCHMARK</div>
             <div class="cp-nav-item" onclick="switchSection('models')">
-                <div class="cp-nav-left"><i class="fa-solid fa-cubes-stacked" style="color: #06b6d4;"></i><span>Model Merkezi & Mağaza</span></div>
-                <span class="nav-badge" id="badge-models-count" style="color: #06b6d4; background: rgba(6, 182, 212, 0.15);">HUB & STORE</span>
+                <div class="cp-nav-left"><i class="fa-solid fa-cubes-stacked" style="color: var(--accent-blue);"></i><span>Model Merkezi</span></div>
+                <span class="nav-badge" id="badge-models-count">-</span>
             </div>
             <div class="cp-nav-item" onclick="switchSection('benchmark')">
                 <div class="cp-nav-left"><i class="fa-solid fa-stopwatch-20" style="color: var(--accent-amber);"></i><span>Hız & Benchmark</span></div>
                 <span class="nav-badge" style="color: var(--accent-amber);">ARENA</span>
             </div>
 
-            <div class="cp-sidebar-label">API & DIŞ ERİŞİM</div>
+            
+            <div class="cp-sidebar-label">NEXUS MAĞAZA & API</div>
+            <div class="cp-nav-item" onclick="switchSection('store')">
+                <div class="cp-nav-left"><i class="fa-solid fa-store" style="color: #ec4899;"></i><span>Nexus Store & HuggingFace</span></div>
+                <span class="nav-badge" style="color: #ec4899; background: rgba(236, 72, 153, 0.15);">HUB</span>
+            </div>
             <div class="cp-nav-item" onclick="switchSection('apikeys')">
                 <div class="cp-nav-left"><i class="fa-solid fa-key" style="color: #f59e0b;"></i><span>API Key Verme & Gateway</span></div>
                 <span class="nav-badge" style="color: #f59e0b; background: rgba(245, 158, 11, 0.15);">OPENAI V1</span>
-            </div>
-            <div class="cp-nav-item" onclick="switchSection('providers')">
-                <div class="cp-nav-left"><i class="fa-solid fa-network-wired" style="color: var(--accent-purple);"></i><span>Sağlayıcılar & API</span></div>
             </div>
 
             <div class="cp-sidebar-label">YÖNETİM & LOGLAR</div>
@@ -865,126 +774,54 @@
                 </div>
             </section>
 
-            <!-- 3. UNIFIED MODEL HUB & STORE SECTION -->
+            <!-- 3. MODELS SECTION -->
             <section id="sec-models" class="cp-section">
                 <div class="cp-section-header">
                     <div>
-                        <h2 class="cp-section-title"><i class="fa-solid fa-cubes-stacked" style="color: #06b6d4;"></i> Model Merkezi & Nexus Store</h2>
-                        <p class="cp-section-desc">Yüklü yerel modellerinizi yönetin, Hugging Face GGUF depolarından indirin, eklenti ve ajan becerilerini yapılandırın.</p>
+                        <h2 class="cp-section-title">Ollama Model Merkezi</h2>
+                        <p class="cp-section-desc">Sunucunuzdaki yerel modelleri yönetin, yeni modeller indirin veya kaldırın.</p>
                     </div>
                 </div>
 
-                <!-- Unified Sub-tab Navigation -->
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px; flex-wrap: wrap;">
-                    <button class="btn btn-secondary active" id="tab-btn-installed" onclick="switchModelHubTab('installed')" style="border-radius: 20px; font-weight: 700;">
-                        <i class="fa-solid fa-list-check" style="color: var(--accent-green);"></i> Yüklü Modeller (<span id="tab-installed-count">0</span>)
-                    </button>
-                    <button class="btn btn-secondary" id="tab-btn-store-models" onclick="switchModelHubTab('store-models')" style="border-radius: 20px; font-weight: 700;">
-                        <i class="fa-solid fa-store" style="color: #ec4899;"></i> Popüler Model Mağazası
-                    </button>
-                    <button class="btn btn-secondary" id="tab-btn-hf" onclick="switchModelHubTab('hf')" style="border-radius: 20px; font-weight: 700;">
-                        <i class="fa-solid fa-face-smile" style="color: #f59e0b;"></i> Hugging Face GGUF Hub
-                    </button>
-                    <button class="btn btn-secondary" id="tab-btn-plugins-skills" onclick="switchModelHubTab('plugins-skills')" style="border-radius: 20px; font-weight: 700;">
-                        <i class="fa-solid fa-plug" style="color: #a855f7;"></i> Eklentiler & Beceriler
-                    </button>
+                <!-- Pull Model Form -->
+                <div class="glass-panel">
+                    <h3 class="glass-panel-title"><span><i class="fa-solid fa-cloud-arrow-down" style="color: var(--accent-cyan); margin-right: 8px;"></i> Yeni Model İndir (Pull Model)</span></h3>
+                    <div class="form-row">
+                        <input type="text" id="input-pull-name" class="custom-input" placeholder="Model adı girin (örn: deepseek-r1:8b, qwen2.5-coder:7b, llama3.2)">
+                        <button class="btn-action" id="btn-pull-submit" onclick="pullModel()"><i class="fa-solid fa-download"></i> İndir</button>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Önerilen Modeller:</span>
+                        <span class="quick-tag" onclick="setPullName('deepseek-r1:8b')">deepseek-r1:8b (Akıl Yürütme)</span>
+                        <span class="quick-tag" onclick="setPullName('qwen2.5-coder:7b')">qwen2.5-coder:7b (Kodlama)</span>
+                        <span class="quick-tag" onclick="setPullName('qwen2.5:7b')">qwen2.5:7b (Genel Chat)</span>
+                        <span class="quick-tag" onclick="setPullName('deepseek-coder-v2:16b')">deepseek-coder-v2:16b (Uzman)</span>
+                        <span class="quick-tag" onclick="setPullName('llama3.2:3b')">llama3.2:3b (Hafif)</span>
+                        <span class="quick-tag" onclick="setPullName('codellama:7b')">codellama:7b</span>
+                    </div>
+                    <div id="pull-status-box" style="display: none; margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 0.85rem;"></div>
                 </div>
 
-                <!-- TAB 1: YÜKLÜ MODELLER & HIZLI PULL -->
-                <div id="hub-tab-installed" class="hub-subtab">
-                    <!-- Pull Model Form -->
-                    <div class="glass-panel" style="margin-bottom: 20px;">
-                        <h3 class="glass-panel-title"><span><i class="fa-solid fa-cloud-arrow-down" style="color: var(--accent-cyan); margin-right: 8px;"></i> Hızlı Model İndir (Ollama Pull)</span></h3>
-                        <div class="form-row">
-                            <input type="text" id="input-pull-name" class="custom-input" placeholder="Model adı girin (örn: deepseek-r1:8b, qwen2.5-coder:7b, llama3.2)">
-                            <button class="btn-action" id="btn-pull-submit" onclick="pullModel()"><i class="fa-solid fa-download"></i> İndir</button>
-                        </div>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-                            <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Önerilenler:</span>
-                            <span class="quick-tag" onclick="setPullName('deepseek-r1:8b')">deepseek-r1:8b (Akıl Yürütme)</span>
-                            <span class="quick-tag" onclick="setPullName('qwen2.5-coder:7b')">qwen2.5-coder:7b (Kodlama)</span>
-                            <span class="quick-tag" onclick="setPullName('llama3.2:3b')">llama3.2:3b (Hızlı)</span>
-                            <span class="quick-tag" onclick="setPullName('codellama:7b')">codellama:7b</span>
-                        </div>
-                        <div id="pull-status-box" style="display: none; margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 0.85rem;"></div>
-                    </div>
-
-                    <!-- Installed Models Table -->
-                    <div class="glass-panel">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                            <h3 class="glass-panel-title" style="margin: 0;">
-                                <span><i class="fa-solid fa-list-check" style="color: var(--accent-green); margin-right: 8px;"></i> Sunucuda Kurulu Yerel Modeller</span>
-                                <span class="badge-size" id="installed-count-badge">0 Model</span>
-                            </h3>
-                            <button class="btn-action" style="padding: 6px 12px; font-size: 0.78rem;" onclick="fetchInstalledModels()"><i class="fa-solid fa-rotate"></i> Yenile</button>
-                        </div>
-                        <table class="custom-table">
-                            <thead>
-                                <tr>
-                                    <th>Model Adı</th>
-                                    <th>Parametre / Boyut</th>
-                                    <th>Kuantizasyon</th>
-                                    <th>Format</th>
-                                    <th style="text-align: right;">İşlem</th>
-                                </tr>
-                            </thead>
-                            <tbody id="installed-models-tbody">
-                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TAB 2: POPÜLER MODEL MAĞAZASI -->
-                <div id="hub-tab-store-models" class="hub-subtab" style="display: none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                        <h3 style="font-size: 1rem; font-weight: 800; margin: 0; color: var(--text-primary);"><i class="fa-solid fa-fire" style="color: #ef4444;"></i> Popüler Nexus Model Kataloğu</h3>
-                        <span style="font-size: 0.78rem; color: var(--text-secondary);">Tek tıkla donanımınıza uygun açık kaynaklı modelleri kurun</span>
-                    </div>
-                    <div id="store-models-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
-                        <!-- Rendered by JS -->
-                    </div>
-                </div>
-
-                <!-- TAB 3: HUGGING FACE GGUF HUB -->
-                <div id="hub-tab-hf" class="hub-subtab" style="display: none;">
-                    <div style="background: linear-gradient(135deg, rgba(255, 210, 0, 0.08), rgba(245, 158, 11, 0.12)); border: 1px solid rgba(245, 158, 11, 0.3); padding: 18px; border-radius: 16px; margin-bottom: 24px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                            <h4 style="margin: 0; color: #f59e0b; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                                <i class="fa-solid fa-face-smile" style="color: #f59e0b; font-size: 1.2rem;"></i> Hugging Face GGUF Model İndirici & Canlı Arama
-                            </h4>
-                            <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 3px 8px; border-radius: 10px; font-weight: 700;">HF &bull; GGUF ENTEGRASYONU</span>
-                        </div>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 14px;">
-                            Hugging Face üzerindeki on binlerce GGUF modelini doğrudan arayın veya model deposunu (Örn: <code>Qwen/Qwen2.5-Coder-7B-GGUF</code>) yazıp tek tıkla Ollama / Nexus motoruna indirin:
-                        </p>
-                        <div style="display: flex; gap: 10px; max-width: 750px; flex-wrap: wrap;">
-                            <input type="text" id="hf-model-input" placeholder="Model ara veya GGUF adı girin (Örn: deepseek-r1, llama-3.2, Qwen/Qwen2.5-Coder-7B-GGUF)" style="flex: 1; min-width: 280px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(245, 158, 11, 0.4); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem;">
-                            <button class="btn btn-secondary" onclick="searchHuggingFaceUI()" style="border-radius: 10px; padding: 10px 16px; font-weight: 700; border-color: rgba(245, 158, 11, 0.5); color: #f59e0b;">
-                                <i class="fa-solid fa-magnifying-glass"></i> HF'de Ara
-                            </button>
-                            <button class="btn btn-primary" onclick="pullCustomModel()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 10px; padding: 10px 18px; font-weight: 700;">
-                                <i class="fa-solid fa-cloud-arrow-down"></i> Direkt İndir
-                            </button>
-                        </div>
-                        <div id="hf-status-msg" style="margin-top: 10px; font-size: 0.85rem; color: #10b981; font-weight: 600; display: none;"></div>
-                        
-                        <!-- HuggingFace Live Search Results -->
-                        <div id="hf-search-results" style="display: none; margin-top: 16px; max-height: 280px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;"></div>
-                    </div>
-                </div>
-
-                <!-- TAB 4: EKLENTİLER & BECERİLER -->
-                <div id="hub-tab-plugins-skills" class="hub-subtab" style="display: none;">
-                    <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; color: #10b981;"><i class="fa-solid fa-plug"></i> Sistem Eklentileri (Plugins)</h3>
-                    <div id="store-plugins-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                        <!-- Rendered by JS -->
-                    </div>
-
-                    <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; color: #a855f7;"><i class="fa-solid fa-brain"></i> Ajan Becerileri & Prompt Şablonları (Skills)</h3>
-                    <div id="store-skills-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
-                        <!-- Rendered by JS -->
-                    </div>
+                <!-- Installed Models Table -->
+                <div class="glass-panel">
+                    <h3 class="glass-panel-title">
+                        <span><i class="fa-solid fa-list-check" style="color: var(--accent-green); margin-right: 8px;"></i> Yüklü Yerel Modeller</span>
+                        <span class="badge-size" id="installed-count-badge">0 Model</span>
+                    </h3>
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Model Adı</th>
+                                <th>Parametre / Boyut</th>
+                                <th>Kuantizasyon</th>
+                                <th>Format</th>
+                                <th style="text-align: right;">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="installed-models-tbody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
@@ -1579,66 +1416,90 @@
                 </div>
             </section>
 
-            <!-- ==================== API KEYS & GATEWAY SECTION ==================== -->
+        
+            <!-- ==================== STORE & HUGGINGFACE SECTION ==================== -->
+            <section id="sec-store" class="cp-section">
+                <div class="cp-section-header">
+                    <div>
+                        <h2 class="cp-section-title"><i class="fa-solid fa-store" style="color: #ec4899;"></i> Nexus Store & HuggingFace Hub</h2>
+                        <p class="cp-section-desc">Yapay zeka modelleri, Hugging Face GGUF depoları, eklentiler ve ajan becerileri mağazası.</p>
+                    </div>
+                </div>
+
+                <!-- Sub-tab Navigation -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px;">
+                    <button class="btn btn-secondary active" id="tab-btn-models" onclick="switchStoreTab('models')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-cubes" style="color: #06b6d4;"></i> Modeller & HuggingFace
+                    </button>
+                    <button class="btn btn-secondary" id="tab-btn-plugins" onclick="switchStoreTab('plugins')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-plug" style="color: #10b981;"></i> Eklentiler (Plugins)
+                    </button>
+                    <button class="btn btn-secondary" id="tab-btn-skills" onclick="switchStoreTab('skills')" style="border-radius: 20px; font-weight: 700;">
+                        <i class="fa-solid fa-brain" style="color: #a855f7;"></i> Beceriler (Skills)
+                    </button>
+                </div>
+
+                <!-- Store Tab 1: Models & HuggingFace -->
+                <div id="store-tab-models" class="store-subtab">
+                    <!-- HuggingFace Direct Installer Banner -->
+                    <div style="background: linear-gradient(135deg, rgba(255, 210, 0, 0.08), rgba(245, 158, 11, 0.12)); border: 1px solid rgba(245, 158, 11, 0.3); padding: 18px; border-radius: 16px; margin-bottom: 24px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <h4 style="margin: 0; color: #f59e0b; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-face-smile" style="color: #f59e0b; font-size: 1.2rem;"></i> Hugging Face Model İndirici & Arama
+                            </h4>
+                            <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 3px 8px; border-radius: 10px; font-weight: 700;">GGUF ENTEGRASYONU</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 14px;">
+                            Hugging Face üzerindeki herhangi bir GGUF modelini (Örn: <code>TheBloke/Llama-2-7B-GGUF</code> veya <code>Qwen/Qwen2.5-Coder-7B-GGUF</code>) yazın ve 1-tıkla Nexus kütüphanesine indirin:
+                        </p>
+                        <div style="display: flex; gap: 10px; max-width: 700px;">
+                            <input type="text" id="hf-model-input" placeholder="Hugging Face Model Adı (Örn: deepseek-r1 veya Qwen/Qwen2.5-Coder-7B-GGUF)" style="flex: 1; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(245, 158, 11, 0.4); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem;">
+                            <button class="btn btn-primary" onclick="pullCustomModel()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 10px; padding: 10px 18px; font-weight: 700;">
+                                <i class="fa-solid fa-cloud-arrow-down"></i> Modeli İndir
+                            </button>
+                        </div>
+                        <div id="hf-status-msg" style="margin-top: 10px; font-size: 0.85rem; color: #10b981; font-weight: 600; display: none;"></div>
+                    </div>
+
+                    <!-- Store Model Cards Grid -->
+                    <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 16px; color: var(--text-primary);"><i class="fa-solid fa-fire" style="color: #ef4444;"></i> Popüler Nexus Model Mağazası</h3>
+                    <div id="store-models-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Store Tab 2: Plugins -->
+                <div id="store-tab-plugins" class="store-subtab" style="display: none;">
+                    <div id="store-plugins-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Store Tab 3: Skills -->
+                <div id="store-tab-skills" class="store-subtab" style="display: none;">
+                    <div id="store-skills-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== API KEYS SECTION ==================== -->
             <section id="sec-apikeys" class="cp-section">
                 <div class="cp-section-header">
                     <div>
-                        <h2 class="cp-section-title"><i class="fa-solid fa-key" style="color: #f59e0b;"></i> Nexus API Key Verme & OpenAI Gateway</h2>
-                        <p class="cp-section-desc">Yerel ve bulut modellerinizi OpenAI standart RESTful API olarak hem yerel ağa hem de tüm dünyaya açın.</p>
+                        <h2 class="cp-section-title"><i class="fa-solid fa-key" style="color: #f59e0b;"></i> Nexus API Key Verme & Gateway</h2>
+                        <p class="cp-section-desc">Tüm modeller için sınırsız OpenAI RESTful API anahtarı üretin, yönetin ve entegre edin.</p>
                     </div>
-                    <button class="btn btn-primary" onclick="generateApiKeyUI()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; font-weight: 700; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);">
+                    <button class="btn btn-primary" onclick="generateApiKeyUI()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; font-weight: 700;">
                         <i class="fa-solid fa-plus"></i> Sınırsız API Key Oluştur
                     </button>
                 </div>
 
-                <!-- Gateway Network & Endpoint Mode Selector -->
-                <div class="cp-card" style="margin-bottom: 20px; padding: 20px; border-left: 4px solid #f59e0b;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
-                        <h3 style="font-size: 0.95rem; font-weight: 800; margin: 0; color: #fff; display: flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-globe" style="color: #38bdf8;"></i> Ağ & Gateway Erişim Adresi
-                        </h3>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button class="btn btn-secondary active" id="btn-gw-mode-auto" onclick="setGatewayUrlMode('auto')" style="font-size: 0.78rem; padding: 5px 12px; border-radius: 12px; font-weight: 700;">
-                                <i class="fa-solid fa-desktop"></i> <span id="gw-auto-host-label">Mevcut Host</span>
-                            </button>
-                            <button class="btn btn-secondary" id="btn-gw-mode-tunnel" onclick="setGatewayUrlMode('tunnel')" style="font-size: 0.78rem; padding: 5px 12px; border-radius: 12px; font-weight: 700;">
-                                <i class="fa-solid fa-cloud"></i> Cloudflare Canlı Tünel
-                            </button>
-                            <button class="btn btn-secondary" id="btn-gw-mode-custom" onclick="setGatewayUrlMode('custom')" style="font-size: 0.78rem; padding: 5px 12px; border-radius: 12px; font-weight: 700;">
-                                <i class="fa-solid fa-link"></i> Özel Domain / Harici IP
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Custom URL input row (hidden by default) -->
-                    <div id="custom-gw-url-container" style="display: none; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
-                        <label style="font-size: 0.78rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 6px;">Harici Domain veya Statik IP Adresiniz (Örn: https://ai.sirketiniz.com veya http://88.250.12.34:3050):</label>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="text" id="custom-gw-url-input" placeholder="https://nexus.benimdomainim.com" style="flex: 1; background: #000; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-family: 'JetBrains Mono'; font-size: 0.85rem;">
-                            <button class="btn btn-primary" onclick="applyCustomGatewayUrl()" style="padding: 8px 16px; font-size: 0.8rem; font-weight: 700; background: #38bdf8; color: #04060c; border: none; border-radius: 8px;">Uygula</button>
-                        </div>
-                    </div>
-
-                    <!-- Active Gateway URL Banner -->
-                    <div style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Aktif OpenAI Base URL:</span>
-                            <div style="font-size: 0.95rem; font-family: 'JetBrains Mono'; font-weight: 800; color: #38bdf8; margin-top: 2px;" id="gateway-base-url-code">https://.../v1</div>
-                        </div>
-                        <button class="btn btn-secondary" onclick="copyGatewayBaseUrl()" style="padding: 6px 12px; font-size: 0.78rem; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
-                            <i class="fa-solid fa-copy"></i> URL'yi Kopyala
-                        </button>
-                    </div>
-                </div>
-
                 <!-- API Keys Table -->
                 <div class="cp-card" style="margin-bottom: 24px; padding: 20px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                        <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin: 0;">
-                            <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Üretilen API Anahtarları
-                        </h3>
-                        <span style="font-size: 0.78rem; color: var(--text-secondary);">Tüm modellerde sınırsız ve eşzamanlı geçerlidir</span>
-                    </div>
+                    <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 16px; color: var(--text-primary);">
+                        <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Aktif API Anahtarlarınız
+                    </h3>
                     <div style="overflow-x: auto;">
                         <table class="port-table" style="width: 100%;">
                             <thead>
@@ -1659,75 +1520,51 @@
                     </div>
                 </div>
 
-                <!-- Integration Code Snippets & App Configurations -->
-                <div class="cp-card" style="padding: 20px; margin-bottom: 24px;">
+                <!-- Integration Code Snippets -->
+                <div class="cp-card" style="padding: 20px;">
                     <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 16px; color: var(--text-primary);">
-                        <i class="fa-solid fa-code" style="color: #3b82f6;"></i> İstemci & IDE Entegrasyon Kılavuzu (Cursor, VSCode, Python, Node)
+                        <i class="fa-solid fa-code" style="color: #3b82f6;"></i> Entegrasyon & Kullanım Kılavuzu
                     </h3>
-
-                    <!-- Integration Tabs -->
-                    <div style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 10px; flex-wrap: wrap;">
-                        <button class="btn btn-secondary active" id="tab-code-curl" onclick="switchCodeTab('curl')" style="font-size: 0.78rem; padding: 5px 12px; border-radius: 8px;">cURL</button>
-                        <button class="btn btn-secondary" id="tab-code-python" onclick="switchCodeTab('python')" style="font-size: 0.78rem; padding: 5px 12px; border-radius: 8px;">Python (OpenAI SDK)</button>
-                        <button class="btn btn-secondary" id="tab-code-node" onclick="switchCodeTab('node')" style="font-size: 0.78rem; padding: 5px 12px; border-radius: 8px;">Node.js / TypeScript</button>
-                        <button class="btn btn-secondary" id="tab-code-cursor" onclick="switchCodeTab('cursor')" style="font-size: 0.78rem; padding: 5px 12px; border-radius: 8px;">Cursor / VSCode Roo / Cline</button>
+                    
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                        <div style="font-size: 0.85rem; font-weight: 700; color: #f59e0b; margin-bottom: 8px;">
+                            <i class="fa-solid fa-plug"></i> Base URL: <code style="background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; color: #fff;">https://nexus.oedge.xyz/v1</code>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
+                            Ürettiğiniz herhangi bir Nexus API anahtarını <code>Authorization: Bearer nx-live-...</code> başlığı ile cURL, Python <code>openai</code> paketine veya Node.js istemcisine geçebilirsiniz.
+                        </p>
                     </div>
 
-                    <!-- 1. cURL -->
-                    <div id="snippet-container-curl" class="code-snippet-pane">
-                        <pre id="gateway-curl-snippet" style="background: #000; padding: 14px; border-radius: 8px; font-size: 0.8rem; color: #38bdf8; overflow-x: auto; line-height: 1.5;"></pre>
-                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                        <!-- cURL -->
+                        <div style="background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px;">
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #10b981; margin-bottom: 8px;"><i class="fa-solid fa-terminal"></i> cURL İstek Örneği</div>
+                            <pre style="background: #000; padding: 10px; border-radius: 6px; font-size: 0.75rem; color: #38bdf8; overflow-x: auto;">curl https://nexus.oedge.xyz/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen2.5-coder:7b",
+    "messages": [{"role": "user", "content": "Merhaba!"}]
+  }'</pre>
+                        </div>
 
-                    <!-- 2. Python -->
-                    <div id="snippet-container-python" class="code-snippet-pane" style="display: none;">
-                        <pre id="gateway-python-snippet" style="background: #000; padding: 14px; border-radius: 8px; font-size: 0.8rem; color: #a78bfa; overflow-x: auto; line-height: 1.5;"></pre>
-                    </div>
+                        <!-- Python -->
+                        <div style="background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px;">
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #3b82f6; margin-bottom: 8px;"><i class="fa-brands fa-python"></i> Python OpenAI SDK</div>
+                            <pre style="background: #000; padding: 10px; border-radius: 6px; font-size: 0.75rem; color: #a78bfa; overflow-x: auto;">from openai import OpenAI
 
-                    <!-- 3. Node.js -->
-                    <div id="snippet-container-node" class="code-snippet-pane" style="display: none;">
-                        <pre id="gateway-node-snippet" style="background: #000; padding: 14px; border-radius: 8px; font-size: 0.8rem; color: #34d399; overflow-x: auto; line-height: 1.5;"></pre>
-                    </div>
+client = OpenAI(
+    base_url="https://nexus.oedge.xyz/v1",
+    api_key="YOUR_API_KEY"
+)
 
-                    <!-- 4. Cursor / Roo / Cline / NextChat -->
-                    <div id="snippet-container-cursor" class="code-snippet-pane" style="display: none;">
-                        <div style="background: #000; padding: 16px; border-radius: 8px; font-size: 0.82rem; color: #e2e8f0; line-height: 1.6;">
-                            <div style="font-weight: 800; color: #f59e0b; margin-bottom: 8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Cursor, Roo-Code, Cline veya NextChat Yapılandırması:</div>
-                            <ul style="padding-left: 20px; margin-bottom: 0;">
-                                <li><strong>Model Provider:</strong> <code>OpenAI Compatible</code> veya <code>Custom OpenAI</code></li>
-                                <li><strong>Base URL:</strong> <code class="cursor-gw-base-url" style="color: #38bdf8;">https://.../v1</code></li>
-                                <li><strong>API Key:</strong> <code style="color: #10b981;">nx-live-...</code> (Yukarıdaki tablodan oluşturduğunuz anahtar)</li>
-                                <li><strong>Model ID:</strong> <code>qwen2.5-coder:7b</code>, <code>deepseek-r1</code>, <code>gemini-3.6-flash</code> veya <code>gpt-4o</code></li>
-                            </ul>
+res = client.chat.completions.create(
+    model="qwen2.5-coder:7b",
+    messages=[{"role": "user", "content": "Merhaba!"}]
+)
+print(res.choices[0].message.content)</pre>
                         </div>
                     </div>
-                </div>
-
-                <!-- Live Gateway Test Console -->
-                <div class="cp-card" style="padding: 20px; border-top: 3px solid #10b981;">
-                    <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 12px; color: var(--text-primary);">
-                        <i class="fa-solid fa-bolt" style="color: #10b981;"></i> Canlı API Gateway Test Konsolu
-                    </h3>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 14px;">
-                        Oluşturduğunuz anahtarla doğrudan <code>/v1/chat/completions</code> rotasına canlı istek gönderip doğruluğunu test edin:
-                    </p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                        <div>
-                            <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Test API Anahtarı:</label>
-                            <input type="text" id="gw-test-key" placeholder="nx-live-..." style="width: 100%; background: #000; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-family: 'JetBrains Mono'; font-size: 0.8rem;">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Hedef Model:</label>
-                            <input type="text" id="gw-test-model" value="qwen2.5-coder:7b" style="width: 100%; background: #000; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-family: 'JetBrains Mono'; font-size: 0.8rem;">
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 12px;">
-                        <label style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 4px;">Kullanıcı Mesajı:</label>
-                        <input type="text" id="gw-test-prompt" value="Merhaba! Nexus Gateway testi başarılı mı?" style="width: 100%; background: #000; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;">
-                    </div>
-                    <button class="btn btn-primary" onclick="runGatewayTestUI()" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; padding: 8px 18px; border-radius: 8px;">
-                        <i class="fa-solid fa-paper-plane"></i> Test İsteği Gönder
-                    </button>
-                    <div id="gw-test-result-box" style="display: none; margin-top: 14px; background: #000; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono'; font-size: 0.8rem; color: #38bdf8; max-height: 200px; overflow-y: auto;"></div>
                 </div>
             </section>
 

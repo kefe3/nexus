@@ -1,22 +1,19 @@
 # 📜 Nexus AI Studio — Detaylı Geliştirme ve Değişiklik Dokümantasyonu (Changelog & Audit Log)
 
-## [2026-09-16 21:00:00] - Claymorphism 3D Tasarım Sistemi, Birleşik Model Merkezi & Çift Modlu Benchmark Motoru
-- **Dokunsal Claymorphism Tasarım Dili (v2.2)**:
-  - Hem Kontrol Paneli (`admin.html`) hem de AI Studio (`index.html`, `style.css`) için yumuşak 3D gölgeler (`--clay-shadow`), iç ışık kırılmaları, içbükey gömülü giriş alanları (`.clay-input`), dışbükey dokunsal butonlar (`.clay-btn`) ve cam-panel katmanları uygulandı.
-  - UI/UX hizalama, boşluk ve taşma sorunları tamamen giderildi.
-- **Birleşik Model Merkezi & Mağaza (Unified Hub & Store)**:
-  - Eski dağınık Model Merkezi ve Nexus Store sekmeleri tek bir ana navigasyon sekmesinde birleştirildi.
-  - 4 alt sekme (Yüklü Modeller, Nexus Store, HuggingFace GGUF İndirici, Eklentiler & Yetenekler) oluşturuldu.
-- **Çift Modlu Hız & Benchmark Arenası (LLM & Embedding)**:
-  - `nomic-embed-text`, `bge-m3`, `minilm` vb. embedding modelleri için `/api/embeddings` otomatik yönlendirmesi eklendi; `HTTP 400 - does not support generate` hatası giderildi.
-  - Vektör boyutu (ör. 768 boyutlu Float) ve oluşturma hızı doğru metriklerle telemetriye bağlandı.
-  - Model seçiciye `🧠 [LLM]` ve `📐 [Embedding]` etiketleri eklendi.
-- **Ağ & Gateway Erişim Çubuğu (Multi-Host Gateway)**:
-  - Local Host (`http://localhost:3050`), Cloudflare Canlı Tünel ve Özel Domain / Harici IP için kopyalanabilir dinamik kartlar eklendi.
-  - OpenAI `/v1` Base URL için tek tıkla kopyalama desteği sunuldu.
-- **Canlı Yayın & Tünel Onarımı**:
-  - `deploy.py` modülündeki eksik `secrets` import hatası (500) düzeltildi.
-  - `cloudflared` ikili dosyasının izinleri (`chmod +x`) ve tünel URL dinleyicisi güçlendirildi.
+## [2026-09-18 22:15:00] - Nexus AI Studio v3.2.0 (Stabil Sürüm, Model/Eklenti Mağazası, Tam Ayrıştırma & Panel Optimizasyonu)
+- **Sürüm Yükseltmesi (v3.2.0)**:
+  - Backend `Settings.VERSION` ve sistem sürüm göstergeleri `3.2.0` olarak güncellendi.
+  - Dokümantasyon (`README.md`, `linux/README.md`, `windows/README.md`) v3.2.0 mimari detayları ve özellikleriyle yenilendi.
+- **Model, Beceri & Eklenti Mağazası Entegrasyonu (`/api/store/*`)**:
+  - GGUF ve Ollama modelleri, otonom ajan yetenekleri ve sistem eklentileri için katalog endpoint'leri ve arayüzü eklendi.
+  - Tek tıkla model indirme (`/api/store/pull`), HuggingFace GGUF indirme ve model silme (`/api/store/delete/{name}`) desteği.
+- **Sınırsız OpenAI Uyumlu API Gateway & Anahtar Yönetimi**:
+  - `/v1/chat/completions` ve `/v1/models` üzerinden Python `openai`, LangChain, cURL ve harici LLM istemcileriyle %100 uyumluluk.
+  - Control Panel üzerinden sınırsız `nx-live-...` anahtarı üretme, anlık kota takibi ve iptal etme.
+- **Control Panel Glitch & Arayüz İyileştirmeleri**:
+  - Sekmeler arası geçişlerde (`switchSection`) oluşan event handler çakışmaları ve fonksiyon sarmalama hataları giderildi.
+  - Donanım telemetrisi (Chart.js) sekmeler arası geçişte boyutlandırma bozulmalarına karşı `.resize()` güvencesine alındı.
+  - KAMA AI harici servis olarak bağımsız depoya taşındı, Nexus çekirdeği tamamen saf ve bağımsız AI Studio olarak yalınlaştırıldı.
 
 ## [2026-09-14 20:16:35] - Sınırsız API Key Verme, OpenAI RESTful Gateway & Saf Tanıtım Portalı
 - **Sınırsız API Key Yönetimi (`/api/apikeys`)**:

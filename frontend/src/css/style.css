@@ -3,29 +3,17 @@
 :root {
     --bg-main: #06090e;
     --bg-surface: #0d131f;
-    --bg-card: rgba(17, 24, 39, 0.85);
-    
-    /* Claymorphism Tokens */
-    --clay-surface: #111827;
-    --clay-border: rgba(255, 255, 255, 0.09);
-    --clay-shadow: 8px 12px 28px rgba(0, 0, 0, 0.55), -4px -4px 16px rgba(255, 255, 255, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.12), inset -2px -2px 4px rgba(0, 0, 0, 0.4);
-    --clay-shadow-sm: 4px 6px 16px rgba(0, 0, 0, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.02), inset 1px 1px 2px rgba(255, 255, 255, 0.1), inset -1px -1px 3px rgba(0, 0, 0, 0.3);
-    --clay-shadow-inset: inset 3px 3px 6px rgba(0, 0, 0, 0.6), inset -1px -1px 3px rgba(255, 255, 255, 0.05);
-    --clay-shadow-glow: 0 0 24px rgba(0, 242, 254, 0.25), 6px 8px 20px rgba(0, 0, 0, 0.4), inset 1px 1px 2px rgba(255, 255, 255, 0.3);
-
+    --bg-card: rgba(18, 24, 38, 0.7);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-glow: rgba(99, 102, 241, 0.3);
     --accent-primary: #6366f1;
-    --accent-cyan: #00f2fe;
+    --accent-cyan: #06b6d4;
     --accent-emerald: #10b981;
-    --accent-purple: #a855f7;
-    --accent-amber: #f59e0b;
 }
 
 body {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     background-color: var(--bg-main);
-    background-image: 
-        radial-gradient(circle at 15% 15%, rgba(0, 242, 254, 0.05) 0%, transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.06) 0%, transparent 50%);
     color: #f1f5f9;
 }
 
@@ -33,77 +21,18 @@ code, pre {
     font-family: 'JetBrains Mono', monospace;
 }
 
-/* Claymorphic Glass Panel */
+/* Glassmorphism */
 .glass-panel {
     background: var(--bg-card);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--clay-border);
-    box-shadow: var(--clay-shadow-sm);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
 }
 
 .glass-dropdown {
     background: rgba(13, 19, 31, 0.95);
-    backdrop-filter: blur(24px);
-    border: 1px solid var(--clay-border);
-    box-shadow: var(--clay-shadow);
-}
-
-/* Claymorphic Card */
-.clay-card {
-    background: var(--clay-surface);
-    border: 1px solid var(--clay-border);
-    border-radius: 18px;
-    box-shadow: var(--clay-shadow);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.clay-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 10px 16px 32px rgba(0, 0, 0, 0.6), -4px -4px 16px rgba(255, 255, 255, 0.05), inset 1px 1px 2px rgba(255, 255, 255, 0.18);
-}
-
-/* Claymorphic Inset Field */
-.clay-input {
-    background: rgba(6, 9, 14, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: var(--clay-shadow-inset);
-    color: #f1f5f9;
-    transition: all 0.2s ease;
-}
-
-.clay-input:focus {
-    border-color: rgba(0, 242, 244, 0.5);
-    box-shadow: var(--clay-shadow-inset), 0 0 12px rgba(0, 242, 254, 0.2);
-}
-
-/* Claymorphic Buttons */
-.clay-btn {
-    border-radius: 14px;
-    box-shadow: var(--clay-shadow-sm);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    font-weight: 700;
-}
-
-.clay-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 6px 10px 22px rgba(0, 0, 0, 0.45), inset 1px 1px 2px rgba(255, 255, 255, 0.2);
-}
-
-.clay-btn:active {
-    transform: translateY(1px) scale(0.98);
-    box-shadow: var(--clay-shadow-inset);
-}
-
-.clay-btn-primary {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: #ffffff;
-    box-shadow: 4px 6px 18px rgba(16, 185, 129, 0.35), inset 1px 1px 2px rgba(255, 255, 255, 0.3), inset -2px -2px 4px rgba(0, 0, 0, 0.25);
-}
-
-.clay-btn-primary:hover {
-    background: linear-gradient(135deg, #34d399, #10b981);
-    box-shadow: 6px 10px 24px rgba(16, 185, 129, 0.5), inset 1px 1px 2px rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
 }
 
 /* Streaming Cursor */
@@ -111,11 +40,10 @@ code, pre {
     display: inline-block;
     width: 6px;
     height: 15px;
-    background: #00f2fe;
+    background: #6366f1;
     margin-left: 4px;
     vertical-align: middle;
     animation: blink 0.8s infinite;
-    box-shadow: 0 0 8px #00f2fe;
 }
 
 @keyframes blink {
@@ -125,14 +53,13 @@ code, pre {
 
 /* Thinking accordion */
 .thinking-box {
-    background: rgba(99, 102, 241, 0.08);
+    background: rgba(99, 102, 241, 0.06);
     border-left: 3px solid #6366f1;
-    border-radius: 0.85rem;
+    border-radius: 0.75rem;
     padding: 0.875rem 1rem;
     margin-bottom: 1rem;
     font-size: 0.85rem;
     color: #94a3b8;
-    box-shadow: var(--clay-shadow-inset);
 }
 
 /* Custom Scrollbars */
@@ -141,14 +68,14 @@ code, pre {
     height: 6px;
 }
 ::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
+    background: transparent;
 }
 ::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 242, 254, 0.4);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 /* Markdown styling */
@@ -158,14 +85,14 @@ code, pre {
 .markdown-body p { margin-bottom: 0.75rem; line-height: 1.65; }
 .markdown-body ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 0.75rem; }
 .markdown-body ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 0.75rem; }
-.markdown-body blockquote { border-left: 3px solid #00f2fe; padding-left: 1rem; color: #94a3b8; font-style: italic; background: rgba(0, 242, 254, 0.05); padding: 8px 12px; border-radius: 8px; }
+.markdown-body blockquote { border-left: 3px solid #06b6d4; padding-left: 1rem; color: #94a3b8; font-style: italic; }
 .markdown-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-.markdown-body th, .markdown-body td { border: 1px solid rgba(255,255,255,0.1); padding: 0.6rem 0.85rem; }
-.markdown-body th { background: rgba(255,255,255,0.06); font-weight: 700; }
+.markdown-body th, .markdown-body td { border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 0.75rem; }
+.markdown-body th { background: rgba(255,255,255,0.05); }
 
 /* Animation fade in */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in {

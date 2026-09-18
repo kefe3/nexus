@@ -1,0 +1,62 @@
+[
+  {
+    "id": "web_search",
+    "name": "DuckDuckGo & Serp API Web Arama",
+    "icon": "fa-solid fa-globe",
+    "category": "Arama & Bilgi",
+    "badge": "CANLI ARAMA",
+    "description": "Yapay zekanın internette anlık arama yaparak en güncel haberleri ve bilgileri getirmesini sağlar.",
+    "installed": true,
+    "enabled": true
+  },
+  {
+    "id": "code_sandbox",
+    "name": "Canlı HTML/JS/CSS Sandbox Executör",
+    "icon": "fa-solid fa-code",
+    "category": "Kod Geliştirme",
+    "badge": "INTERAKTIF",
+    "description": "AI tarafından yazılan web uygulamalarını tarayıcı içinde canlı çalıştırır ve önizler.",
+    "installed": true,
+    "enabled": true
+  },
+  {
+    "id": "vision_ocr",
+    "name": "Görsel Çözümleme & OCR OCR Engine",
+    "icon": "fa-solid fa-eye",
+    "category": "Görsel & Medya",
+    "badge": "VISION AI",
+    "description": "Görsellerdeki metinleri, diyagramları ve arayüz tasarımlarını analiz eder.",
+    "installed": true,
+    "enabled": true
+  },
+  {
+    "id": "data_analyst",
+    "name": "Python Pandas Data Analyst",
+    "icon": "fa-solid fa-chart-line",
+    "category": "Veri Analizi",
+    "badge": "PYTHON EXEC",
+    "description": "CSV, JSON ve Excel verilerini analiz eder, grafikler ve istatistiksel raporlar üretir.",
+    "installed": false,
+    "enabled": true
+  },
+  {
+    "id": "vector_memory",
+    "name": "Vektör Veritabanı & Uzun Süreli Hafıza",
+    "icon": "fa-solid fa-brain",
+    "category": "Hafıza",
+    "badge": "RAG MEMORY",
+    "description": "Kullanıcı tercihlerini ve geçmiş sohbetleri vektör indeksinde saklayarak hatırlar.",
+    "installed": true,
+    "enabled": true
+  },
+  {
+    "id": "speech_synth",
+    "name": "Gerçek Zamanlı Ses Sentezleyici (TTS/STT)",
+    "icon": "fa-solid fa-microphone",
+    "category": "Ses Modu",
+    "badge": "REALTIME",
+    "description": "Sesli sohbet ve Speech-to-Text ile doğal konuşma etkileşimi sağlar.",
+    "installed": true,
+    "enabled": true
+  }
+]

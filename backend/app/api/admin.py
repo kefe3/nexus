@@ -1,8 +1,3 @@
-import io
-import json
-import shutil
-import tarfile
-import copy
 from fastapi import APIRouter, Header, HTTPException, Body
 from pydantic import BaseModel
 import psutil
@@ -461,41 +456,11 @@ async def run_model_benchmark(req: BenchmarkRequest):
     t0 = time.time()
     prov = req.provider.lower()
     prompt = req.prompt or "Write a python quicksort function."
-    is_embed_model = "embed" in req.model.lower() or "bge" in req.model.lower() or "minilm" in req.model.lower()
     
     if prov == "ollama":
         try:
             async with httpx.AsyncClient(timeout=90.0) as client:
                 ollama_url = await resolve_ollama_base_url(client)
-                
-                # If it's explicitly an embedding model, test via embeddings endpoint directly
-                if is_embed_model:
-                    emb_res = await client.post(
-                        f"{ollama_url}/api/embeddings",
-                        json={"model": req.model, "prompt": prompt}
-                    )
-                    total_time_ms = int((time.time() - t0) * 1000)
-                    if emb_res.status_code == 200:
-                        d = emb_res.json()
-                        vec = d.get("embedding", [])
-                        dim = len(vec)
-                        tok_per_sec = round(1 / (max(total_time_ms, 1) / 1000.0), 2)
-                        log_api_request("ollama", req.model, total_time_ms, 1, "success")
-                        return {
-                            "status": "ok",
-                            "model": req.model,
-                            "model_type": "embedding",
-                            "provider": "ollama",
-                            "total_time_ms": total_time_ms,
-                            "tokens_generated": 1,
-                            "tokens_per_second": tok_per_sec,
-                            "prompt_eval_count": 1,
-                            "output_preview": f"📐 Embedding Vektörü Başarıyla Üretildi ({dim} Boyutlu Float Vektör, Süre: {total_time_ms} ms)\n\nÖrnek Vektör: {str(vec[:8])[:-1]} ... ]"
-                        }
-                    else:
-                        return {"status": "error", "message": f"Embedding Hatası ({ollama_url}): HTTP {emb_res.status_code} - {emb_res.text}"}
-
-                # Otherwise test generative LLM
                 res = await client.post(
                     f"{ollama_url}/api/generate",
                     json={"model": req.model, "prompt": prompt, "stream": False}
@@ -511,7 +476,6 @@ async def run_model_benchmark(req: BenchmarkRequest):
                     return {
                         "status": "ok",
                         "model": req.model,
-                        "model_type": "llm",
                         "provider": "ollama",
                         "total_time_ms": total_time_ms,
                         "tokens_generated": eval_count,
@@ -519,31 +483,6 @@ async def run_model_benchmark(req: BenchmarkRequest):
                         "prompt_eval_count": d.get("prompt_eval_count", 0),
                         "output_preview": d.get("response", "")[:300] + "..."
                     }
-                elif "does not support generate" in res.text or res.status_code == 400:
-                    # Fallback to embeddings endpoint
-                    emb_res = await client.post(
-                        f"{ollama_url}/api/embeddings",
-                        json={"model": req.model, "prompt": prompt}
-                    )
-                    total_time_ms = int((time.time() - t0) * 1000)
-                    if emb_res.status_code == 200:
-                        d = emb_res.json()
-                        vec = d.get("embedding", [])
-                        dim = len(vec)
-                        tok_per_sec = round(1 / (max(total_time_ms, 1) / 1000.0), 2)
-                        log_api_request("ollama", req.model, total_time_ms, 1, "success")
-                        return {
-                            "status": "ok",
-                            "model": req.model,
-                            "model_type": "embedding",
-                            "provider": "ollama",
-                            "total_time_ms": total_time_ms,
-                            "tokens_generated": 1,
-                            "tokens_per_second": tok_per_sec,
-                            "prompt_eval_count": 1,
-                            "output_preview": f"📐 Embedding Vektörü Başarıyla Üretildi ({dim} Boyutlu Float Vektör, Süre: {total_time_ms} ms)\n\nÖrnek Vektör: {str(vec[:8])[:-1]} ... ]"
-                        }
-                    return {"status": "error", "message": f"HTTP {res.status_code} ({ollama_url}): {res.text}"}
                 else:
                     return {"status": "error", "message": f"HTTP {res.status_code} ({ollama_url}): {res.text}"}
         except Exception as e:
@@ -633,12 +572,18 @@ async def get_system_specs():
     return {"status": "ok", "specs": get_detailed_hardware_specs()}
 
 
+import io
+import json
+import shutil
+import tarfile
+import copy
+
 def get_repo_dir():
     candidates = ["/repo", ".", "..", "/app/..", "/app"]
     for c in candidates:
         if os.path.isdir(os.path.join(c, ".git")):
             return os.path.abspath(c)
-    return os.path.abspath(os.getcwd())
+    return "."
 
 def run_git_cmd(args, custom_dir=None):
     repo_dir = custom_dir or get_repo_dir()

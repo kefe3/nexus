@@ -78,7 +78,14 @@ function switchSection(secId) {
     const targetSec = document.getElementById(`sec-${secId}`);
     if (targetSec) targetSec.classList.add('active');
 
-    if (secId === 'overview') fetchOverview();
+    if (secId === 'overview') {
+        fetchOverview();
+        if (telemetryChart) {
+            setTimeout(() => {
+                try { telemetryChart.resize(); } catch(e){}
+            }, 50);
+        }
+    }
     if (secId === 'specs') fetchSpecs();
     if (secId === 'system') checkUpdates();
     if (secId === 'vram') fetchRunningModels();
@@ -87,7 +94,10 @@ function switchSection(secId) {
     if (secId === 'deployments') fetchDeployments();
     if (secId === 'providers') testAllProviders();
     if (secId === 'logs') fetchLogs();
+    if (secId === 'store') loadStoreCatalog();
+    if (secId === 'apikeys') loadApiKeys();
 }
+window.switchSection = switchSection;
 
 // Fetch Overview System Metrics
 async function fetchOverview() {
@@ -221,14 +231,7 @@ async function fetchInstalledModels() {
 
         tbody.innerHTML = '';
         if (data.models && data.models.length > 0) {
-            const countStr = `${data.models.length} Model`;
-            const badge1 = document.getElementById('installed-count-badge');
-            const badge2 = document.getElementById('tab-installed-count');
-            const badgeNav = document.getElementById('badge-models-count');
-            if (badge1) badge1.textContent = countStr;
-            if (badge2) badge2.textContent = data.models.length;
-            if (badgeNav) badgeNav.textContent = data.models.length;
-
+            document.getElementById('installed-count-badge').textContent = `${data.models.length} Model`;
             data.models.forEach(m => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -323,29 +326,19 @@ async function deleteModel(name) {
 // Populate Benchmark Dropdown
 async function populateBenchmarkModels() {
     const select = document.getElementById('bench-model-select');
-    if (!select) return;
     try {
         const res = await fetch(`${API_BASE}/admin/models`, {
             headers: getOllamaHeaders()
         });
         const data = await res.json();
         select.innerHTML = '<option value="">Model Seçin...</option>';
-        if (data.models && data.models.length > 0) {
-            let firstGenerativeModel = null;
+        if (data.models) {
             data.models.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.name;
-                const isEmbed = m.name.toLowerCase().includes('embed') || m.name.toLowerCase().includes('bge') || m.name.toLowerCase().includes('minilm');
-                const badge = isEmbed ? '📐 [Embedding]' : '🧠 [LLM]';
-                opt.textContent = `${badge} ${m.name} (${m.size_gb} GB)`;
-                if (!isEmbed && !firstGenerativeModel) {
-                    firstGenerativeModel = m.name;
-                }
+                opt.textContent = `${m.name} (${m.size_gb} GB)`;
                 select.appendChild(opt);
             });
-            if (firstGenerativeModel) {
-                select.value = firstGenerativeModel;
-            }
         }
     } catch (e) {}
 }
@@ -373,24 +366,9 @@ async function runBenchmark() {
         const data = await res.json();
         if (data.status === 'ok') {
             container.style.display = 'block';
-            const isEmbed = data.model_type === 'embedding';
-            
-            const tokSecLbl = document.querySelector('#bench-tok-sec + .bench-stat-lbl');
-            const totalTokLbl = document.querySelector('#bench-total-tokens + .bench-stat-lbl');
-            
-            if (isEmbed) {
-                document.getElementById('bench-tok-sec').textContent = `${data.tokens_per_second} emb/s`;
-                if (tokSecLbl) tokSecLbl.textContent = 'Vektör / Saniye';
-                document.getElementById('bench-total-tokens').textContent = '1 Vektör';
-                if (totalTokLbl) totalTokLbl.textContent = 'Üretilen Vektör';
-            } else {
-                document.getElementById('bench-tok-sec').textContent = `${data.tokens_per_second} tok/s`;
-                if (tokSecLbl) tokSecLbl.textContent = 'Token / Saniye';
-                document.getElementById('bench-total-tokens').textContent = data.tokens_generated;
-                if (totalTokLbl) totalTokLbl.textContent = 'Üretilen Token';
-            }
-            
+            document.getElementById('bench-tok-sec').textContent = `${data.tokens_per_second} tok/s`;
             document.getElementById('bench-total-time').textContent = `${data.total_time_ms} ms`;
+            document.getElementById('bench-total-tokens').textContent = data.tokens_generated;
             document.getElementById('bench-preview-text').textContent = data.output_preview;
         } else {
             alert(`Benchmark Hatası: ${data.message}`);
@@ -606,7 +584,7 @@ async function fetchDeployments() {
             if (cpLink) cpLink.style.display = 'none';
 
             if (qrImg) {
-                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin)}`;
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=http://192.168.0.188:3050`;
                 qrImg.style.opacity = '0.35';
                 qrImg.style.filter = 'grayscale(100%)';
             }
@@ -1085,28 +1063,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== STORE & API KEYS MODULE ====================
 
-let activeGatewayMode = 'auto'; // 'auto' | 'tunnel' | 'custom'
-let customGatewayBase = '';
-let activeTunnelUrl = '';
-
-function switchModelHubTab(tab) {
-    document.querySelectorAll('.hub-subtab').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('#sec-models .btn-secondary').forEach(el => el.classList.remove('active'));
+function switchStoreTab(tab) {
+    document.querySelectorAll('.store-subtab').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('#sec-store .btn-secondary').forEach(el => el.classList.remove('active'));
     
-    const targetTab = document.getElementById('hub-tab-' + tab);
+    const targetTab = document.getElementById('store-tab-' + tab);
     const targetBtn = document.getElementById('tab-btn-' + tab);
     if (targetTab) targetTab.style.display = 'block';
     if (targetBtn) targetBtn.classList.add('active');
-
-    if (tab === 'installed') {
-        fetchInstalledModels();
-    } else if (tab === 'store-models' || tab === 'plugins-skills') {
-        loadStoreCatalog();
-    }
-}
-
-function switchStoreTab(tab) {
-    switchModelHubTab(tab);
 }
 
 async function loadStoreCatalog() {
@@ -1118,17 +1082,12 @@ async function loadStoreCatalog() {
         // Render Models
         const modelsGrid = document.getElementById('store-models-grid');
         if (modelsGrid && data.models) {
-            modelsGrid.innerHTML = data.models.map(m => {
-                const isInstalled = m.installed;
-                return `
-                <div class="cp-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid ${m.color || '#6366f1'}; position: relative;">
+            modelsGrid.innerHTML = data.models.map(m => `
+                <div class="cp-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid ${m.color || '#6366f1'};">
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.08); color: ${m.color || '#6366f1'}; border: 1px solid rgba(255,255,255,0.1);">${m.badge}</span>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                ${isInstalled ? '<span style="font-size: 0.7rem; font-weight: 800; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 6px; border-radius: 6px;"><i class="fa-solid fa-check"></i> YÜKLÜ</span>' : ''}
-                                <span style="font-size: 0.75rem; color: var(--text-secondary); font-family: 'JetBrains Mono';">${m.size}</span>
-                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-family: 'JetBrains Mono';">${m.size}</span>
                         </div>
                         <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
                             <i class="${m.icon}" style="color: ${m.color};"></i> ${m.display_name}
@@ -1136,35 +1095,34 @@ async function loadStoreCatalog() {
                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.4;">${m.desc}</p>
                     </div>
                     <div style="display: flex; gap: 8px; margin-top: 8px;">
-                        <button class="btn btn-primary" onclick="pullStoreModel('${m.name}')" style="flex: 1; border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; background: ${isInstalled ? 'linear-gradient(135deg, #059669, #10b981)' : `linear-gradient(135deg, ${m.color}, #4f46e5)`}; border: none;">
-                            <i class="fa-solid ${isInstalled ? 'fa-rotate' : 'fa-download'}"></i> ${isInstalled ? 'Yeniden İndir' : 'İndir & Yükle'}
+                        <button class="btn btn-primary" onclick="pullStoreModel('${m.name}')" style="flex: 1; border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; background: linear-gradient(135deg, ${m.color}, #4f46e5); border: none;">
+                            <i class="fa-solid fa-download"></i> İndir / Yükle
                         </button>
-                        ${isInstalled ? `
-                        <button class="btn btn-secondary" onclick="deleteStoreModel('${m.name}')" style="border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; color: #ef4444; border-color: rgba(239,68,68,0.3);" title="Sil">
+                        <button class="btn btn-secondary" onclick="deleteStoreModel('${m.name}')" style="border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; color: #ef4444;" title="Sil">
                             <i class="fa-solid fa-trash"></i>
-                        </button>` : ''}
+                        </button>
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
         }
 
         // Render Plugins
         const pluginsGrid = document.getElementById('store-plugins-grid');
         if (pluginsGrid && data.plugins) {
             pluginsGrid.innerHTML = data.plugins.map(p => `
-                <div class="cp-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid ${p.enabled ? '#10b981' : '#64748b'};">
+                <div class="cp-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">${p.badge}</span>
                             <span style="font-size: 0.75rem; color: var(--text-secondary);">${p.category}</span>
                         </div>
                         <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
-                            <i class="${p.icon}" style="color: ${p.enabled ? '#10b981' : '#94a3b8'};"></i> ${p.name}
+                            <i class="${p.icon}" style="color: #10b981;"></i> ${p.name}
                         </h4>
                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 12px 0;">${p.description}</p>
                     </div>
-                    <button class="btn ${p.enabled ? 'btn-primary' : 'btn-secondary'}" onclick="togglePluginUI('${p.id}')" style="border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; ${p.enabled ? 'background: #10b981; color: #04060c; border: none;' : 'color: #94a3b8;'}">
-                        <i class="fa-solid ${p.enabled ? 'fa-toggle-on' : 'fa-toggle-off'}"></i> ${p.enabled ? 'Etkinleştirildi (Açık)' : 'Devre Dışı (Kapalı)'}
+                    <button class="btn btn-secondary" style="border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; color: #10b981; border-color: rgba(16, 185, 129, 0.3);">
+                        <i class="fa-solid fa-check"></i> Aktif Entegre
                     </button>
                 </div>
             `).join('');
@@ -1174,19 +1132,19 @@ async function loadStoreCatalog() {
         const skillsGrid = document.getElementById('store-skills-grid');
         if (skillsGrid && data.skills) {
             skillsGrid.innerHTML = data.skills.map(s => `
-                <div class="cp-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid ${s.installed ? '#a855f7' : '#64748b'};">
+                <div class="cp-card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3);">${s.badge}</span>
                             <span style="font-size: 0.75rem; color: var(--text-secondary);">${s.author}</span>
                         </div>
                         <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
-                            <i class="${s.icon}" style="color: ${s.installed ? '#a855f7' : '#94a3b8'};"></i> ${s.name}
+                            <i class="${s.icon}" style="color: #a855f7;"></i> ${s.name}
                         </h4>
                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 12px 0;">${s.description}</p>
                     </div>
-                    <button class="btn ${s.installed ? 'btn-primary' : 'btn-secondary'}" onclick="toggleSkillUI('${s.id}')" style="border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; ${s.installed ? 'background: #a855f7; color: #fff; border: none;' : 'color: #94a3b8;'}">
-                        <i class="fa-solid ${s.installed ? 'fa-check' : 'fa-plus'}"></i> ${s.installed ? 'Aktif Ajan Becerisi' : 'Beceriyi Yükle'}
+                    <button class="btn btn-secondary" style="border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; color: #a855f7; border-color: rgba(168, 85, 247, 0.3);">
+                        <i class="fa-solid fa-check-double"></i> Yüklü Beceri
                     </button>
                 </div>
             `).join('');
@@ -1194,36 +1152,6 @@ async function loadStoreCatalog() {
 
     } catch (e) {
         console.error("Store catalog error:", e);
-    }
-}
-
-async function togglePluginUI(pluginId) {
-    try {
-        const res = await fetch('/api/store/plugin/toggle', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: pluginId })
-        });
-        if (res.ok) {
-            loadStoreCatalog();
-        }
-    } catch (e) {
-        alert("Eklenti değiştirme hatası: " + e);
-    }
-}
-
-async function toggleSkillUI(skillId) {
-    try {
-        const res = await fetch('/api/store/skill/toggle', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: skillId })
-        });
-        if (res.ok) {
-            loadStoreCatalog();
-        }
-    } catch (e) {
-        alert("Beceri değiştirme hatası: " + e);
     }
 }
 
@@ -1242,53 +1170,8 @@ async function pullStoreModel(name) {
         });
         const data = await res.json();
         alert(data.message || `'${name}' indirme işlemi başlatıldı.`);
-        setTimeout(loadStoreCatalog, 2000);
     } catch (e) {
         alert("Model indirme hatası: " + e);
-    }
-}
-
-async function searchHuggingFaceUI() {
-    const input = document.getElementById('hf-model-input');
-    const resultsBox = document.getElementById('hf-search-results');
-    if (!input || !resultsBox) return;
-
-    const q = input.value.trim();
-    if (!q) {
-        alert("Lütfen aramak için bir model adı veya anahtar kelime girin.");
-        return;
-    }
-
-    resultsBox.style.display = 'block';
-    resultsBox.innerHTML = `<div style="text-align: center; color: #f59e0b; padding: 12px;"><i class="fa-solid fa-spinner fa-spin"></i> Hugging Face GGUF modelleri taranıyor...</div>`;
-
-    try {
-        const res = await fetch(`/api/store/hf-search?q=${encodeURIComponent(q)}`);
-        const data = await res.json();
-        if (data.status === 'ok' && data.results && data.results.length > 0) {
-            resultsBox.innerHTML = `
-                <div style="font-size: 0.8rem; font-weight: 700; color: #fff; margin-bottom: 8px;">HF Arama Sonuçları (${data.results.length} GGUF Modeli):</div>
-                <div style="display: grid; gap: 8px;">
-                    ${data.results.map(r => `
-                        <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                            <div>
-                                <div style="font-weight: 800; font-size: 0.85rem; color: #f59e0b; font-family: 'JetBrains Mono';">${r.model_id}</div>
-                                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">
-                                    <i class="fa-solid fa-heart" style="color: #ec4899;"></i> ${r.likes} beğeni &bull; <i class="fa-solid fa-download"></i> ${r.downloads} indirme
-                                </div>
-                            </div>
-                            <button class="btn btn-primary" onclick="pullStoreModel('${r.ollama_ref}')" style="background: #f59e0b; color: #04060c; font-weight: 700; padding: 6px 14px; border-radius: 6px; font-size: 0.78rem; border: none;">
-                                <i class="fa-solid fa-cloud-arrow-down"></i> Ollama'ya Yükle
-                            </button>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        } else {
-            resultsBox.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 12px;">Hugging Face üzerinde "${q}" için uygun GGUF model bulunamadı.</div>`;
-        }
-    } catch (e) {
-        resultsBox.innerHTML = `<div style="color: #ef4444; padding: 12px;">HF Arama Hatası: ${e}</div>`;
     }
 }
 
@@ -1332,7 +1215,7 @@ async function loadApiKeys() {
         tableBody.innerHTML = data.keys.map(k => `
             <tr>
                 <td style="font-weight: 700; color: #fff;">${k.name}</td>
-                <td><code style="background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 6px; color: #38bdf8; font-family: 'JetBrains Mono'; cursor: pointer;" title="Kopyala" onclick="navigator.clipboard.writeText('${k.key_preview}'); alert('Anahtar önizlemesi kopyalandı.');">${k.key_preview}</code></td>
+                <td><code style="background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 6px; color: #38bdf8; font-family: 'JetBrains Mono';">${k.key_preview}</code></td>
                 <td><span style="font-size: 0.75rem; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 8px; border-radius: 10px; font-weight: 700;">${k.rate_limit.toUpperCase()}</span></td>
                 <td style="font-family: 'JetBrains Mono'; font-weight: 700; color: #f59e0b;">${k.requests_count} İstek</td>
                 <td style="font-size: 0.8rem; color: var(--text-secondary);">${k.created_at}</td>
@@ -1345,19 +1228,13 @@ async function loadApiKeys() {
             </tr>
         `).join('');
 
-        // Also pre-fill test key if empty
-        const testKeyInput = document.getElementById('gw-test-key');
-        if (testKeyInput && !testKeyInput.value && data.keys.length > 0) {
-            testKeyInput.value = "nx-live-unlimited-nexus-master-key";
-        }
-
     } catch (e) {
         console.error("API keys loading error:", e);
     }
 }
 
 async function generateApiKeyUI() {
-    const name = prompt("Yeni API Key için İstemci / Tanım Adı girin (Örn: Cursor IDE, VSCode Roo, Mobil Uygulama):", "Sınırsız Uygulama Key");
+    const name = prompt("Yeni API Key için İstemci / Tanım Adı girin:", "Sınırsız Uygulama Key");
     if (name === null) return;
     
     try {
@@ -1369,8 +1246,6 @@ async function generateApiKeyUI() {
         const data = await res.json();
         if (data.key) {
             prompt("✅ Yeni Sınırsız Nexus API Key Üretildi! Bu anahtarı kopyalayıp saklayın:", data.key);
-            const testKeyInput = document.getElementById('gw-test-key');
-            if (testKeyInput) testKeyInput.value = data.key;
             loadApiKeys();
         } else {
             alert("Hata: " + (data.message || "Key üretilemedi."));
@@ -1392,237 +1267,14 @@ async function revokeApiKeyUI(keyId) {
     }
 }
 
-// Gateway URL Modes & Switcher
-function setGatewayUrlMode(mode) {
-    activeGatewayMode = mode;
-    document.querySelectorAll('#btn-gw-mode-auto, #btn-gw-mode-tunnel, #btn-gw-mode-custom').forEach(b => b.classList.remove('active'));
-    
-    const btn = document.getElementById(`btn-gw-mode-${mode}`);
-    if (btn) btn.classList.add('active');
-
-    const customContainer = document.getElementById('custom-gw-url-container');
-    if (customContainer) {
-        customContainer.style.display = mode === 'custom' ? 'block' : 'none';
-    }
-
-    if (mode === 'tunnel') {
-        checkOrStartTunnel();
-    } else {
-        updateDynamicGatewayBaseUrl();
-    }
-}
-
-async function checkOrStartTunnel() {
-    const baseCode = document.getElementById('gateway-base-url-code');
-    if (baseCode) baseCode.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cloudflare Canlı Tüneli başlatılıyor / kontrol ediliyor...';
-    
-    try {
-        // Step 1: Check existing status
-        let res = await fetch('/api/deploy/tunnel');
-        let data = await res.json();
-        
-        if (data.active && data.url) {
-            activeTunnelUrl = data.url;
-            updateDynamicGatewayBaseUrl();
-            return;
-        }
-
-        // Step 2: Trigger start
-        await fetch('/api/deploy/tunnel/restart', { method: 'POST' });
-
-        // Step 3: Poll for up to 10 seconds (5 attempts x 2s)
-        for (let i = 0; i < 5; i++) {
-            await new Promise(r => setTimeout(r, 2000));
-            res = await fetch('/api/deploy/tunnel');
-            data = await res.json();
-            if (data.active && data.url) {
-                activeTunnelUrl = data.url;
-                updateDynamicGatewayBaseUrl();
-                return;
-            }
-        }
-        
-        // If still not ready
-        if (baseCode) {
-            baseCode.innerHTML = `<span style="color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Tünel henüz başlatılamadı. Tekrar denemek için "Yeniden Başlat" butonuna basın.</span>`;
-        }
-    } catch (e) {
-        if (baseCode) {
-            baseCode.innerHTML = `<span style="color: #ef4444;">Tünel hatası: ${e.message}</span>`;
-        }
-    }
-}
-
-function applyCustomGatewayUrl() {
-    const input = document.getElementById('custom-gw-url-input');
-    if (!input || !input.value.trim()) {
-        alert("Lütfen geçerli bir URL girin (Örn: https://ai.domain.com veya http://88.250.x.x:3050)");
-        return;
-    }
-    customGatewayBase = input.value.trim().replace(/\/v1\/?$/, '').replace(/\/$/, '');
-    updateDynamicGatewayBaseUrl();
-}
-
-function getActiveGatewayBaseUrl() {
-    if (activeGatewayMode === 'custom' && customGatewayBase) {
-        return `${customGatewayBase}/v1`;
-    }
-    if (activeGatewayMode === 'tunnel' && activeTunnelUrl) {
-        return `${activeTunnelUrl}/v1`;
-    }
-    return `${window.location.origin}/v1`;
-}
-
-function copyGatewayBaseUrl() {
-    const url = getActiveGatewayBaseUrl();
-    navigator.clipboard.writeText(url);
-    alert(`Base URL kopyalandı:\n${url}`);
-}
-
-function switchCodeTab(tab) {
-    document.querySelectorAll('.code-snippet-pane').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('#tab-code-curl, #tab-code-python, #tab-code-node, #tab-code-cursor').forEach(b => b.classList.remove('active'));
-
-    const targetPane = document.getElementById(`snippet-container-${tab}`);
-    const targetBtn = document.getElementById(`tab-code-${tab}`);
-    if (targetPane) targetPane.style.display = 'block';
-    if (targetBtn) targetBtn.classList.add('active');
-}
-
-function updateDynamicGatewayBaseUrl() {
-    const v1Url = getActiveGatewayBaseUrl();
-
-    const baseCode = document.getElementById('gateway-base-url-code');
-    const curlSnippet = document.getElementById('gateway-curl-snippet');
-    const pythonSnippet = document.getElementById('gateway-python-snippet');
-    const nodeSnippet = document.getElementById('gateway-node-snippet');
-    const cursorEls = document.querySelectorAll('.cursor-gw-base-url');
-
-    if (baseCode) {
-        baseCode.textContent = v1Url;
-    }
-    cursorEls.forEach(el => el.textContent = v1Url);
-
-    if (curlSnippet) {
-        curlSnippet.textContent = `curl ${v1Url}/chat/completions \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "qwen2.5-coder:7b",
-    "messages": [{"role": "user", "content": "Merhaba!"}]
-  }'`;
-    }
-
-    if (pythonSnippet) {
-        pythonSnippet.textContent = `from openai import OpenAI
-
-client = OpenAI(
-    base_url="${v1Url}",
-    api_key="YOUR_API_KEY"
-)
-
-res = client.chat.completions.create(
-    model="qwen2.5-coder:7b",
-    messages=[{"role": "user", "content": "Merhaba!"}]
-)
-print(res.choices[0].message.content)`;
-    }
-
-    if (nodeSnippet) {
-        nodeSnippet.textContent = `import OpenAI from "openai";
-
-const openai = new OpenAI({
-    baseURL: "${v1Url}",
-    apiKey: "YOUR_API_KEY"
-});
-
-const response = await openai.chat.completions.create({
-    model: "qwen2.5-coder:7b",
-    messages: [{ role: "user", content: "Merhaba!" }]
-});
-
-console.log(response.choices[0].message.content);`;
-    }
-}
-
-// Live Gateway Test Execution
-async function runGatewayTestUI() {
-    const key = (document.getElementById('gw-test-key')?.value || '').trim();
-    const model = (document.getElementById('gw-test-model')?.value || 'qwen2.5-coder:7b').trim();
-    const promptText = (document.getElementById('gw-test-prompt')?.value || 'Merhaba!').trim();
-    const resultBox = document.getElementById('gw-test-result-box');
-
-    if (!key) {
-        alert("Lütfen test etmek için bir API anahtarı girin.");
-        return;
-    }
-    if (!resultBox) return;
-
-    resultBox.style.display = 'block';
-    resultBox.innerHTML = `<div style="color: #f59e0b;"><i class="fa-solid fa-spinner fa-spin"></i> ${getActiveGatewayBaseUrl()}/chat/completions adresine istek gönderiliyor (${model})...</div>`;
-
-    try {
-        const res = await fetch(`${getActiveGatewayBaseUrl()}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${key}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [{ role: 'user', content: promptText }],
-                stream: false
-            })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-            const content = data.choices?.[0]?.message?.content || JSON.stringify(data);
-            resultBox.innerHTML = `
-                <div style="color: #10b981; font-weight: 800; margin-bottom: 6px;"><i class="fa-solid fa-check-circle"></i> HTTP ${res.status} OK — Başarılı Yanıt Alındı:</div>
-                <div style="color: #e2e8f0; white-space: pre-wrap; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px;">${content}</div>
-                <div style="color: #64748b; font-size: 0.72rem; margin-top: 6px;">Model: ${data.model} | ID: ${data.id} | Token: ${data.usage?.total_tokens || 0}</div>
-            `;
-        } else {
-            resultBox.innerHTML = `
-                <div style="color: #ef4444; font-weight: 800;"><i class="fa-solid fa-triangle-exclamation"></i> HTTP ${res.status} Hata:</div>
-                <div style="color: #fca5a5; white-space: pre-wrap; margin-top: 4px;">${JSON.stringify(data, null, 2)}</div>
-            `;
-        }
-    } catch (e) {
-        resultBox.innerHTML = `<div style="color: #ef4444;"><i class="fa-solid fa-circle-xmark"></i> Bağlantı Hatası: ${e.message}</div>`;
-    }
-}
-
-// Hook into section switching
-const originalSwitchSection = window.switchSection;
-window.switchSection = function(sectionId) {
-    if (typeof originalSwitchSection === 'function') {
-        originalSwitchSection(sectionId);
-    } else {
-        document.querySelectorAll('.cp-section').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.cp-nav-item').forEach(el => el.classList.remove('active'));
-        const sec = document.getElementById('sec-' + sectionId);
-        if (sec) sec.classList.add('active');
-    }
-    
-    if (sectionId === 'models' || sectionId === 'store') {
-        fetchInstalledModels();
-        loadStoreCatalog();
-    } else if (sectionId === 'apikeys') {
-        loadApiKeys();
-        updateDynamicGatewayBaseUrl();
-    }
-};
-
 // Initial trigger
 document.addEventListener('DOMContentLoaded', () => {
-    const hostLabel = document.getElementById('gw-auto-host-label');
-    if (hostLabel) {
-        hostLabel.textContent = `Mevcut Host (${window.location.host})`;
-    }
     loadStoreCatalog();
     loadApiKeys();
-    updateDynamicGatewayBaseUrl();
+    
+    const targetSec = localStorage.getItem('nexus_admin_sec') || (window.location.hash ? window.location.hash.replace('#sec-', '').replace('#', '') : '');
+    if (targetSec) {
+        localStorage.removeItem('nexus_admin_sec');
+        setTimeout(() => switchSection(targetSec), 150);
+    }
 });
-

@@ -1,0 +1,14 @@
+{
+  "keys": [
+    {
+      "id": "key_d472108699ea",
+      "key": "nx-live-bcc10f598b8da78adc05b6a83204930f97f567d4f37f49ce",
+      "name": "Sınırsız Uygulama Key",
+      "rate_limit": "unlimited",
+      "created_at": "2026-09-16 17:27:02",
+      "status": "active",
+      "requests_count": 7,
+      "last_used": "2026-09-16 17:44:12"
+    }
+  ]
+}

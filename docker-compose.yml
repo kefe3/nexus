@@ -14,7 +14,6 @@ services:
       - ./backend:/app
       - ./:/repo
       - ./data:/app/data
-      - /usr/local/bin/cloudflared:/usr/local/bin/cloudflared:ro
 
   frontend:
     build:

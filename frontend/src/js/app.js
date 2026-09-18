@@ -1,12 +1,38 @@
 // Nexus AI Studio — Main Controller Engine
-// NOTE: activeProvider, activeModel, getProviderHeaders(), fetchModelsForActiveProvider()
-// are defined in providers.js (loaded before this file). Do NOT redeclare them here.
 let currentChatId = null;
 let chatsHistory = JSON.parse(localStorage.getItem("nexus_chats") || "[]");
 let currentMessages = [];
 let activeAbortController = null;
 let currentPersonaPrompt = "";
-// currentLang, setLanguage(), applyTranslations(), t() are defined in i18n.js
+let activeProvider = "ollama";
+let activeModel = "qwen2.5-coder:7b";
+let currentLang = "tr";
+
+function getProviderHeaders() {
+    return {
+        "X-Provider": "ollama",
+        "X-Session-ID": getSessionId()
+    };
+}
+
+function fetchModelsForActiveProvider() {
+    activeModel = "qwen2.5-coder:7b";
+    activeProvider = "ollama";
+}
+
+function applyTranslations() {}
+function setLanguage(lang) {
+    currentLang = lang;
+}
+function t(key) {
+    const tr = {
+        thinking: "Düşünce Adımları",
+        live_preview: "Canlı Önizleme",
+        copy_code: "Kodu Kopyala",
+        copied: "Kopyalandı!"
+    };
+    return tr[key] || key;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     initChatInterface();
@@ -243,8 +269,7 @@ async function sendMessage() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                ...getProviderHeaders(),
-                "X-Session-ID": getSessionId()
+                ...getProviderHeaders()
             },
             body: JSON.stringify({
                 model: activeModel,

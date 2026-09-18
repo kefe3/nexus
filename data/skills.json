@@ -1,0 +1,38 @@
+[
+  {
+    "id": "fullstack_architect",
+    "name": "Fullstack Web Mimar Becerisi",
+    "icon": "fa-solid fa-layer-group",
+    "badge": "Awwwards UI",
+    "author": "Nexus AI Team",
+    "description": "Tailwind CSS ve modern JS ile sıfır eksikli tek dosya canlı web uygulaması oluşturur.",
+    "installed": true
+  },
+  {
+    "id": "deep_reasoner",
+    "name": "DeepSeek-R1 Derin Akıl Yürütücü",
+    "icon": "fa-solid fa-brain",
+    "badge": "Math & Logic",
+    "author": "Nexus AI Team",
+    "description": "<think> bloklarında matematiksel ve algoritma problemlerini adım adım çözer.",
+    "installed": true
+  },
+  {
+    "id": "devops_master",
+    "name": "DevOps & Cloud Server Specialist",
+    "icon": "fa-solid fa-server",
+    "badge": "Docker & K8s",
+    "author": "Nexus AI Team",
+    "description": "Docker, Nginx, Kubernetes ve CI/CD betikleri üretir ve yapılandırır.",
+    "installed": true
+  },
+  {
+    "id": "growth_copywriter",
+    "name": "Yaratıcı Reklam & SEO Metin Yazarı",
+    "icon": "fa-solid fa-pen-nib",
+    "badge": "SEO & Growth",
+    "author": "Nexus AI Team",
+    "description": "Dönüşümü yüksek landing sayfa metinleri ve viral reklam yazıları yazar.",
+    "installed": true
+  }
+]

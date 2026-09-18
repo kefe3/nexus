@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 import os
@@ -8,7 +8,6 @@ import json
 import subprocess
 import threading
 import re
-import secrets
 from typing import Optional, List, Dict, Any
 
 router = APIRouter(tags=["deploy"])
@@ -25,44 +24,21 @@ class TunnelManager:
         self.is_running = False
         self.lock = threading.Lock()
 
-    def get_or_download_binary(self) -> Optional[str]:
-        # Search existing paths
-        search_paths = [
-            "/usr/local/bin/cloudflared",
-            "/usr/bin/cloudflared",
-            os.path.join(os.getcwd(), "data", "cloudflared"),
-            "/app/data/cloudflared",
-            "cloudflared"
-        ]
-        for p in search_paths:
-            if os.path.exists(p) and os.access(p, os.X_OK):
-                return p
-            if subprocess.run(f"which {p}", shell=True, capture_output=True).returncode == 0:
-                return p
-
-        # If not found, attempt auto-downloading to data/cloudflared
-        try:
-            target_bin = os.path.join(os.getcwd(), "data", "cloudflared")
-            os.makedirs(os.path.dirname(target_bin), exist_ok=True)
-            if not os.path.exists(target_bin):
-                import urllib.request
-                url = "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64"
-                urllib.request.urlretrieve(url, target_bin)
-                os.chmod(target_bin, 0o755)
-            if os.path.exists(target_bin):
-                return target_bin
-        except Exception as e:
-            print("Failed to auto-download cloudflared:", e)
-        return None
-
     def start_tunnel(self, port: int = 3050):
         with self.lock:
             if self.is_running and self.public_url:
                 return self.public_url
 
-            cmd_bin = self.get_or_download_binary()
-            if not cmd_bin:
-                print("Cloudflared binary not available.")
+            # Check if cloudflared exists
+            has_cf = False
+            cmd_bin = "cloudflared"
+            for bin_path in ["/usr/local/bin/cloudflared", "/usr/bin/cloudflared", "cloudflared"]:
+                if os.path.exists(bin_path) or subprocess.run(f"which {bin_path}", shell=True, capture_output=True).returncode == 0:
+                    cmd_bin = bin_path
+                    has_cf = True
+                    break
+
+            if not has_cf:
                 return None
 
             try:
@@ -75,19 +51,16 @@ class TunnelManager:
                 )
                 self.is_running = True
 
-                # Wait up to 15 seconds for public URL
+                # Wait for public URL
                 t0 = time.time()
-                while time.time() - t0 < 15:
-                    if self.process.poll() is not None:
-                        break
-                    # Check stderr
+                while time.time() - t0 < 10:
                     line = self.process.stderr.readline()
-                    if line:
-                        m = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
-                        if m:
-                            self.public_url = m.group(0)
-                            break
-                    time.sleep(0.1)
+                    if not line and self.process.poll() is not None:
+                        break
+                    m = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
+                    if m:
+                        self.public_url = m.group(0)
+                        break
 
                 # Background watcher thread
                 def _watch():
@@ -135,43 +108,33 @@ def save_metadata(meta: Dict[str, Any]):
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
 class PublishRequest(BaseModel):
-    html: Optional[str] = None
-    html_code: Optional[str] = None
+    html: str
     title: Optional[str] = "Nexus AI Generated App"
 
 @router.post("/api/deploy/publish")
-async def publish_artifact(req: PublishRequest, request: Request):
-    html_code = req.html_code or req.html
-    if not html_code or not html_code.strip():
-        raise HTTPException(status_code=400, detail="HTML içeriği boş olamaz.")
-    req.html_code = html_code
+async def publish_deployment(req: PublishRequest):
+    html_content = req.html.strip()
+    if not html_content:
+        raise HTTPException(status_code=400, detail="HTML content is empty")
 
-    deploy_id = f"art-{secrets.token_hex(6)}"
-    created_at = time.strftime("%Y-%m-%d %H:%M:%S")
+    deploy_id = uuid.uuid4().hex[:8]
     file_path = os.path.join(DEPLOYMENTS_DIR, f"{deploy_id}.html")
 
-    # Save artifact HTML
     with open(file_path, "w", encoding="utf-8") as f:
-        f.write(req.html_code)
-
-    pub_url = tunnel_manager.public_url
-    base_host = request.headers.get("host", "localhost:3050")
-    scheme = request.url.scheme or "http"
-    local_base = f"{scheme}://{base_host}"
-
-    rec = {
-        "id": deploy_id,
-        "title": req.title,
-        "created_at": created_at,
-        "file_size": len(req.html_code),
-        "views": 0,
-        "local_path": f"/share/{deploy_id}",
-        "local_url": f"{local_base}/share/{deploy_id}",
-        "public_url": f"{pub_url}/share/{deploy_id}" if pub_url else f"{local_base}/share/{deploy_id}"
-    }
+        f.write(html_content)
 
     meta = load_metadata()
-    meta[deploy_id] = rec
+    pub_url = tunnel_manager.public_url
+    if not pub_url:
+        pub_url = tunnel_manager.start_tunnel(8500)
+
+    meta[deploy_id] = {
+        "id": deploy_id,
+        "title": req.title,
+        "size_bytes": len(html_content.encode("utf-8")),
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "views": 0
+    }
     save_metadata(meta)
 
     return {
@@ -179,8 +142,8 @@ async def publish_artifact(req: PublishRequest, request: Request):
         "id": deploy_id,
         "title": req.title,
         "local_path": f"/share/{deploy_id}",
-        "local_url": f"{local_base}/share/{deploy_id}",
-        "public_url": f"{pub_url}/share/{deploy_id}" if pub_url else f"{local_base}/share/{deploy_id}",
+        "local_url": f"http://192.168.0.188:3050/share/{deploy_id}",
+        "public_url": f"{pub_url}/share/{deploy_id}" if pub_url else f"http://192.168.0.188:3050/share/{deploy_id}",
         "tunnel_active": bool(pub_url),
         "tunnel_base": pub_url or ""
     }
@@ -208,19 +171,15 @@ async def serve_share_page(deploy_id: str):
     return HTMLResponse(content=content, status_code=200)
 
 @router.get("/api/deploy/list")
-async def list_deployments(request: Request):
+async def list_deployments():
     meta = load_metadata()
     pub_url = tunnel_manager.public_url
-    base_host = request.headers.get("host", "localhost:3050")
-    scheme = request.url.scheme or "http"
-    local_base = f"{scheme}://{base_host}"
-
     items = []
     for k, v in meta.items():
         items.append({
             **v,
-            "local_url": f"{local_base}/share/{k}",
-            "public_url": f"{pub_url}/share/{k}" if pub_url else f"{local_base}/share/{k}"
+            "local_url": f"http://192.168.0.188:3050/share/{k}",
+            "public_url": f"{pub_url}/share/{k}" if pub_url else f"http://192.168.0.188:3050/share/{k}"
         })
     return {
         "status": "ok",
@@ -230,29 +189,22 @@ async def list_deployments(request: Request):
     }
 
 @router.get("/api/deploy/tunnel")
-@router.get("/api/deploy/tunnel/status")
 @router.get("/api/deploy/studio-tunnel")
-async def get_tunnel_status(request: Request):
+async def get_tunnel_status():
     pub_url = tunnel_manager.public_url
-    base_host = request.headers.get("host", "localhost:3050")
-    scheme = request.url.scheme or "http"
-    local_base = f"{scheme}://{base_host}"
-
     return {
         "status": "ok",
         "active": bool(pub_url),
         "url": pub_url or "",
         "public_studio_url": pub_url or "",
         "public_admin_url": f"{pub_url}/admin.html" if pub_url else "",
-        "local_studio_url": local_base,
-        "local_admin_url": f"{local_base}/admin.html",
+        "local_studio_url": "http://192.168.0.188:3050",
+        "local_admin_url": "http://192.168.0.188:3050/admin.html",
         "service": "Cloudflare Quick Tunnel (Zero-Config HTTPS)"
     }
 
-@router.post("/api/deploy/tunnel/start")
 @router.post("/api/deploy/tunnel/restart")
 @router.post("/api/deploy/studio-tunnel/restart")
-@router.post("/api/deploy/studio-tunnel/start")
 async def restart_tunnel():
     tunnel_manager.stop_tunnel()
     pub_url = tunnel_manager.start_tunnel(3050)
