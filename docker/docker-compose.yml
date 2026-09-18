@@ -9,7 +9,7 @@ services:
       - HOST=0.0.0.0
       - PORT=8500
       - DEFAULT_PROVIDER=ollama
-      - OLLAMA_BASE_URL=http://127.0.0.1:11435
+      - OLLAMA_BASE_URL=http://127.0.0.1:11434
     volumes:
       - ../nexus/backend:/app
       - ../:/repo
