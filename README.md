@@ -71,21 +71,21 @@
 
 ### 🐧 Linux & macOS (Auto-Installs Docker & All Dependencies)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/installation/install.sh | bash
 ```
 
 ### 🪟 Windows (PowerShell)
 ```powershell
-irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/kefe3/nexus/main/installation/install.ps1 | iex
 ```
 
 ### 🗑️ Uninstallation (1-Line Quick Removal)
 ```bash
 # Linux / macOS
-curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/installation/uninstall.sh | bash
 
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.ps1 | iex
+irm https://raw.githubusercontent.com/kefe3/nexus/main/installation/uninstall.ps1 | iex
 ```
 
 ---
@@ -138,28 +138,28 @@ irm https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.ps1 | iex
 ### 🐧 Linux & macOS (Docker Dahil Her Şeyi Otomatik Kurar)
 Terminalinizi açın ve aşağıdaki komutu yapıştırın:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/installation/install.sh | bash
 ```
 
-### 🪟 Windows (1-Click Native & Docker Options)
-**Option 1: PowerShell 1-Line Universal Setup (Native or Docker)**
+### 🪟 Windows (1-Click Native & Docker Seçenekleri)
+**Seçenek 1: PowerShell Tek Komutla Evrensel Kurulum (Native veya Docker)**
 ```powershell
-irm https://raw.githubusercontent.com/kefe3/nexus/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/kefe3/nexus/main/installation/install.ps1 | iex
 ```
 
-**Option 2: 1-Click Native Windows Batch Launchers (No Docker Required!)**
-1. Download or clone: `git clone https://github.com/kefe3/nexus.git`
-2. Double click **`Nexus-Windows-Installer.bat`** (or `install.bat`) to install Python venv & desktop shortcut.
-3. Double click **`Nexus-Windows-Start.bat`** (or `start.bat`) to launch anytime!
-4. To stop: Double click **`Nexus-Windows-Stop.bat`** (or `stop.bat`).
+**Seçenek 2: Tek Tıkla Windows Batch Başlatıcılar (Docker Gerektirmez!)**
+1. Depoyu indirin veya klonlayın: `git clone https://github.com/kefe3/nexus.git`
+2. Python venv ve masaüstü kısayolu için **`installation/install.bat`** (veya `windows/Nexus-Windows-Installer.bat`) çift tıklayın.
+3. Başlatmak için **`windows/Nexus-Windows-Start.bat`** (veya `windows/start.bat`) çift tıklayın!
+4. Durdurmak için: **`windows/Nexus-Windows-Stop.bat`** (veya `windows/stop.bat`).
 
 ### 🗑️ Sistemi Kaldırma (Tek Komutla Temiz Kaldırma)
 ```bash
 # Linux / macOS
-curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/installation/uninstall.sh | bash
 
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/kefe3/nexus/main/uninstall.ps1 | iex
+irm https://raw.githubusercontent.com/kefe3/nexus/main/installation/uninstall.ps1 | iex
 ```
 
 Tarayıcınızdan **`http://localhost:3050`** (AI Studio) veya **`http://localhost:3050/admin.html`** (Kontrol Paneli) adresine gidin!

@@ -147,9 +147,9 @@ fi
 # 6. Adım 1/4: Konteynerlerin ve Ağların Durdurulması
 echo -e "\n${CYAN}🛑 1/4 Nexus Konteynerleri ve Ağları durduruluyor...${NC}"
 if command -v docker >/dev/null 2>&1; then
-    if [ -n "$FOUND_INSTALL_DIR" ] && [ -f "$FOUND_INSTALL_DIR/docker-compose.yml" ]; then
+    if [ -n "$FOUND_INSTALL_DIR" ]; then
         cd "$FOUND_INSTALL_DIR"
-        $DOCKER_CMD compose down --remove-orphans 2>/dev/null || $DOCKER_CMD-compose down --remove-orphans 2>/dev/null || true
+        $DOCKER_CMD compose -f "$FOUND_INSTALL_DIR/docker/docker-compose.yml" down --remove-orphans 2>/dev/null || $DOCKER_CMD compose -f "$FOUND_INSTALL_DIR/docker-compose.yml" down --remove-orphans 2>/dev/null || $DOCKER_CMD-compose down --remove-orphans 2>/dev/null || true
     fi
 
     for c in nexus-frontend nexus-backend nexus-ollama nexus-ai-frontend nexus-ai-backend; do

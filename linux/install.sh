@@ -42,7 +42,7 @@ INSTALL_DIR="${NEXUS_DIR:-$HOME/nexus}"
 IS_ALREADY_INSTALLED=false
 IS_RUNNING=false
 
-if [ -d "$INSTALL_DIR" ] && [ -f "$INSTALL_DIR/docker-compose.yml" ]; then
+if [ -d "$INSTALL_DIR" ] && { [ -f "$INSTALL_DIR/docker/docker-compose.yml" ] || [ -f "$INSTALL_DIR/docker-compose.yml" ]; }; then
     IS_ALREADY_INSTALLED=true
 fi
 
@@ -237,17 +237,23 @@ if [ -S /var/run/docker.sock ]; then
     $SUDO chmod 666 /var/run/docker.sock 2>/dev/null || true
 fi
 
+# Docker compose dosyasını belirle
+COMPOSE_FILE="$INSTALL_DIR/docker/docker-compose.yml"
+if [ ! -f "$COMPOSE_FILE" ]; then
+    COMPOSE_FILE="$INSTALL_DIR/docker-compose.yml"
+fi
+
 # Konteynerleri sessiz ve temiz inşa et
 echo -e "${YELLOW}  -> ⚙️ Gereken eksik kütüphane ve bağımlılıklar kuruluyor...${NC}"
-DOCKER_BUILDKIT=1 $DOCKER_COMPOSE build -q >/dev/null 2>&1 || $DOCKER_COMPOSE build >/dev/null 2>&1 || true
+DOCKER_BUILDKIT=1 $DOCKER_COMPOSE -f "$COMPOSE_FILE" build -q >/dev/null 2>&1 || DOCKER_BUILDKIT=1 $DOCKER_COMPOSE -f "$COMPOSE_FILE" build >/dev/null 2>&1 || true
 
 # Servisleri başlat
 echo -e "${YELLOW}  -> ⚡ Nexus AI servisleri başlatılıyor...${NC}"
 if docker info >/dev/null 2>&1; then
-    $DOCKER_COMPOSE up -d >/dev/null 2>&1 || $DOCKER_COMPOSE up -d
+    $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d >/dev/null 2>&1 || $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d
 else
     $SUDO chmod 666 /var/run/docker.sock 2>/dev/null || true
-    $SUDO $DOCKER_COMPOSE up -d >/dev/null 2>&1 || $SUDO $DOCKER_COMPOSE up -d
+    $SUDO $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d >/dev/null 2>&1 || $SUDO $DOCKER_COMPOSE -f "$COMPOSE_FILE" up -d
 fi
 echo -e "${GREEN}  ✓ Nexus AI Studio ve tüm servisler başarıyla aktif edildi!${NC}"
 
