@@ -6,6 +6,24 @@ import json
 
 RELEASES = [
     {
+        "tag_name": "v3.2.0",
+        "name": "✨ Nexus AI Studio v3.2.0 - Stabil Sürüm, Model/Eklenti Mağazası & Modüler Kurulum",
+        "body": """## 🌟 Nexus AI Studio v3.2.0 — Stabil Sürüm & Tertemiz Modüler Yapı
+
+Nexus AI Studio **v3.2.0**, bağımsız mimarisi, temiz klasör hiyerarşisi, optimize kontrol paneli ve genişletilmiş Model / Beceri Mağazası ile yayınlandı!
+
+### 🚀 Öne Çıkan Özellikler
+
+- **Modüler & Temiz Klasör Hiyerarşisi**: Kurulum ve çalıştırma betikleri `installation/`, `windows/`, `linux/`, `macos/` klasörlerine ayrıştırıldı.
+- **Model, Beceri & Eklenti Mağazası (`/api/store/*`)**: GGUF ve Ollama modelleri, otonom ajan yetenekleri için tek tıkla kurulum.
+- **Sınırsız OpenAI Uyumlu API Gateway**: `/v1/chat/completions` ve `/v1/models` üzerinden tam uyumluluk ve anahtar yönetimi.
+- **Kontrol Paneli Donanım & Sekme Optimizasyonu**: Sekme geçiş glitchleri giderildi ve Chart.js boyutlandırması otomatikleştirildi.
+- **KAMA AI Ayrıştırması**: Nexus tamamen bağımsız, ultra hızlı bir AI Studio olarak optimize edildi.
+""",
+        "draft": False,
+        "prerelease": False
+    },
+    {
         "tag_name": "v3.0.0",
         "name": "🛡️ Nexus AI Studio v3.0.0 - Hardware Audit, 6GB VRAM Check & OOM Crash Guard",
         "body": """## 🛡️ Nexus AI Studio v3.0.0 - Donanım Denetimi & OOM Çökme Kalkanı
