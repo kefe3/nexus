@@ -52,11 +52,16 @@ async def health_check():
         "version": settings.VERSION
     }
 
-# Mount frontend static files if available (Single-process Native Windows & Standalone execution)
+# Mount frontend static files if available (Single-process Native Windows, macOS & Standalone execution)
 possible_frontend_dirs = [
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "src")),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "src")),
+    os.path.abspath(os.path.join(os.getcwd(), "nexus", "frontend", "src")),
     os.path.abspath(os.path.join(os.getcwd(), "frontend", "src")),
+    os.path.abspath(os.path.join(os.getcwd(), "..", "frontend", "src")),
     "/app/frontend",
+    "/app/nexus/frontend/src",
+    "/usr/share/nginx/html",
 ]
 frontend_dir = next((d for d in possible_frontend_dirs if os.path.isdir(d)), None)
 

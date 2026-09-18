@@ -1,19 +1,38 @@
-# 🍏 Nexus AI Studio — macOS Edition
+# 🍎 Nexus AI Studio — macOS Edition v3.2.0
 
-Optimized for Apple Silicon (M1/M2/M3/M4) & Intel Macs via Docker Desktop or OrbStack.
+Dedicated macOS Edition with native **Apple Silicon Metal GPU** acceleration and **Intel Mac** support.
 
-## 🚀 Quickstart
+---
 
+## 🚀 Quickstart (Terminal 1-Line Setup)
+
+Open Terminal and paste:
 ```bash
-# 1-Line macOS Setup
-curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/macos/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/installation/install-macos.sh | bash
 ```
 
-## 🛠️ Manual Docker Launch
+---
+
+## ⚡ Native macOS Launchers (Apple Silicon & Intel)
+1. **Kurulum**: `bash macos/install.sh` veya `bash installation/install-macos.sh`
+2. **Başlatma**: 
+   - Masaüstünüzdeki **`Nexus AI Studio.command`** dosyasına çift tıklayın!
+   - veya Terminalden: `bash macos/start.sh`
+3. **Durdurma**:
+   - **`macos/Nexus-Mac-Stop.command`** dosyasına çift tıklayın veya `bash macos/stop.sh`
+4. **Güncelleme**:
+   - **`macos/Nexus-Mac-Update.command`** veya `bash macos/update.sh`
+
+---
+
+## 🐳 Docker Desktop / Colima Setup
 ```bash
-cd macos
-docker compose up -d
+docker compose -f macos/docker-compose.yml up -d --build
 ```
 
-- **AI Studio:** http://localhost:3050
-- **Control Panel:** http://localhost:3050/admin.html
+---
+
+## 🗑️ Uninstallation
+```bash
+curl -fsSL https://raw.githubusercontent.com/kefe3/nexus/main/installation/uninstall-macos.sh | bash
+```
