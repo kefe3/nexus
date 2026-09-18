@@ -28,7 +28,11 @@ if not exist "backend\venv" (
 call backend\venv\Scripts\activate.bat
 echo Installing Python dependencies...
 python -m pip install --upgrade pip >nul
-pip install -r backend\requirements.txt
+if exist "nexus\backend\requirements.txt" (
+    pip install -r nexus\backend\requirements.txt
+) else (
+    pip install -r backend\requirements.txt
+)
 
 echo [3/4] Checking Ollama AI Engine...
 ollama --version >nul 2>&1

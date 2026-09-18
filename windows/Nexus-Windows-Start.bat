@@ -9,11 +9,18 @@ echo 🚀 Starting Nexus AI Studio (Windows Native Edition)...
 
 start /b ollama serve >nul 2>&1
 
-call backend\venv\Scripts\activate.bat
+if exist "venv\Scripts\activate.bat" (
+    call venv\Scripts\activate.bat
+) else if exist "backend\venv\Scripts\activate.bat" (
+    call backend\venv\Scripts\activate.bat
+)
 set HOST=0.0.0.0
 set PORT=3050
 
-start "Nexus AI Server" /b python -m uvicorn app.main:app --host 0.0.0.0 --port 3050 --reload --app-dir backend
+set "APP_DIR=nexus\backend"
+if not exist "%APP_DIR%" set "APP_DIR=backend"
+
+start "Nexus AI Server" /b python -m uvicorn app.main:app --host 0.0.0.0 --port 3050 --app-dir %APP_DIR%
 
 timeout /t 3 >nul
 start http://localhost:3050

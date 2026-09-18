@@ -8,8 +8,17 @@ cd /d "%NEXUS_DIR%"
 echo 🔄 Updating Nexus AI Studio from GitHub...
 git pull origin main
 
-call backend\venv\Scripts\activate.bat
-pip install -r backend\requirements.txt
+if exist "venv\Scripts\activate.bat" (
+    call venv\Scripts\activate.bat
+) else if exist "backend\venv\Scripts\activate.bat" (
+    call backend\venv\Scripts\activate.bat
+)
+
+if exist "nexus\backend\requirements.txt" (
+    pip install -r nexus\backend\requirements.txt
+) else if exist "backend\requirements.txt" (
+    pip install -r backend\requirements.txt
+)
 
 echo ✓ Update completed successfully!
 pause

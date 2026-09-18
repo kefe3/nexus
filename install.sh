@@ -229,8 +229,8 @@ else
     cd "$INSTALL_DIR"
 fi
 
-mkdir -p "$INSTALL_DIR/data/deployments"
-chmod -R 777 "$INSTALL_DIR/data" 2>/dev/null || true
+mkdir -p "$INSTALL_DIR/nexus/data/deployments" "$INSTALL_DIR/data/deployments" 2>/dev/null || true
+chmod -R 777 "$INSTALL_DIR/nexus/data" "$INSTALL_DIR/data" 2>/dev/null || true
 
 # Docker soket iznini ayarla
 if [ -S /var/run/docker.sock ]; then

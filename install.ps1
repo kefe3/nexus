@@ -58,7 +58,11 @@ if (-not $modeChoice -or $modeChoice -eq "1") {
     }
 
     # Installer BAT Çalıştır
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$targetDir\Nexus-Windows-Installer.bat`"" -Wait
+    if (Test-Path "$targetDir\windows\Nexus-Windows-Installer.bat") {
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$targetDir\windows\Nexus-Windows-Installer.bat`"" -Wait
+    } elseif (Test-Path "$targetDir\Nexus-Windows-Installer.bat") {
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$targetDir\Nexus-Windows-Installer.bat`"" -Wait
+    }
 } else {
     # DOCKER KURULUMU
     Write-Host "`n🐳 Docker Desktop Kurulumu başlatılıyor..." -ForegroundColor Cyan
@@ -69,10 +73,14 @@ if (-not $modeChoice -or $modeChoice -eq "1") {
         exit 1
     }
     
-    # Compose dosyası kopyalama
-    if (Test-Path "$targetDir\docker-compose.windows.yml") {
-        Copy-Item -Force "$targetDir\docker-compose.windows.yml" "$targetDir\docker-compose.yml"
+    # Compose dosyası çalıştırma
+    if (Test-Path "$targetDir\docker\docker-compose.windows.yml") {
+        docker compose -f "$targetDir\docker\docker-compose.windows.yml" up -d --build
+    } elseif (Test-Path "$targetDir\windows\docker-compose.yml") {
+        Set-Location "$targetDir\windows"
+        docker compose up -d --build
+    } else {
+        docker compose up -d --build
     }
-    docker compose up -d --build
     Start-Process "http://localhost:3050"
 }
