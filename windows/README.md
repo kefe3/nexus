@@ -1,4 +1,4 @@
-# 🪟 Nexus AI Studio — Windows Edition v3.2.0
+# 🪟 Nexus AI Studio — Windows Edition v3.2.1
 
 Dedicated Windows Edition supporting both **Native Setup (No Docker required, direct GPU acceleration)** and **Docker Desktop Setup**.
 

@@ -1,4 +1,4 @@
-# 🍎 Nexus AI Studio — macOS Edition v3.2.0
+# 🍎 Nexus AI Studio — macOS Edition v3.2.1
 
 Dedicated macOS Edition with native **Apple Silicon Metal GPU** acceleration and **Intel Mac** support.
 

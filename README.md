@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Nexus AI Studio](https://img.shields.io/badge/Nexus-AI_Studio_v3.2.0-6366f1?style=for-the-badge&logo=probot&logoColor=white)
+![Nexus AI Studio](https://img.shields.io/badge/Nexus-AI_Studio_v3.2.1-6366f1?style=for-the-badge&logo=probot&logoColor=white)
 ![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
@@ -22,7 +22,7 @@
 <a name="-english-documentation"></a>
 # 🇬🇧 English Documentation
 
-## 🌟 Key Features (v3.2.0)
+## 🌟 Key Features (v3.2.1)
 
 * 🚀 **1-Command Zero-Config Installer:** Automatically installs Docker, Git, and starts the entire platform with zero manual intervention.
 * 🏪 **Model, Skill & Plugin Store:** Integrated catalog to discover, 1-click download, and manage HuggingFace GGUF models, agent skills, and community plugins.
@@ -98,7 +98,7 @@ irm https://raw.githubusercontent.com/kefe3/nexus/main/installation/uninstall.ps
 <a name="-türkçe-dokümantasyon"></a>
 # 🇹🇷 Türkçe Dokümantasyon
 
-## 🌟 Öne Çıkan Özellikler (v3.2.0)
+## 🌟 Öne Çıkan Özellikler (v3.2.1)
 
 * 🚀 **Tek Satırda Tam Otomatik Kurulum:** Sisteminizde Docker veya Git kurulu olmasa bile betik her şeyi otomatik indirir, kurar ve sistemi çalıştırır.
 * 🏪 **Model, Beceri & Eklenti Mağazası:** HuggingFace GGUF modelleri, otonom ajan becerileri ve sistem araçlarını tek tıkla keşfetme ve indirme.

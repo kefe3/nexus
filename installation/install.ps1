@@ -1,5 +1,5 @@
 # ==============================================================================
-# ⚡ Nexus AI Studio — Windows PowerShell Universal Installer v3.2.0 (Native & Docker)
+# ⚡ Nexus AI Studio — Windows PowerShell Universal Installer v3.2.1 (Native & Docker)
 # ==============================================================================
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -10,7 +10,7 @@ Write-Host "  ██╔██╗ ██║█████╗   ╚███╔�
 Write-Host "  ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║" -ForegroundColor Cyan
 Write-Host "  ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║" -ForegroundColor Cyan
 Write-Host "  ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝" -ForegroundColor Cyan
-Write-Host "      ⚡ Windows AI Studio & Local LLM Platform v3.2.0`n" -ForegroundColor Yellow
+Write-Host "      ⚡ Windows AI Studio & Local LLM Platform v3.2.1`n" -ForegroundColor Yellow
 
 $targetDir = "$HOME\nexus"
 

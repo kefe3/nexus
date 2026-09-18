@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🗑️ Nexus AI Studio — Windows PowerShell Uninstaller v3.2.0
+# 🗑️ Nexus AI Studio — Windows PowerShell Uninstaller v3.2.1
 # ==============================================================================
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

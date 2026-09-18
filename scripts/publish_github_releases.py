@@ -6,6 +6,29 @@ import json
 
 RELEASES = [
     {
+        "tag_name": "v3.2.1",
+        "name": "⚡ Nexus AI Studio v3.2.1 - Windows & macOS Hotfix Release (Docker Bridge & Cross-Platform Stability)",
+        "body": """## 🚀 Nexus AI Studio v3.2.1 — Windows & macOS Hata Düzeltme Sürümü (Hotfix)
+
+Nexus AI Studio **v3.2.1**, macOS ve Windows üzerinde Docker Bridge ağ iletişimi, çoklu upstream proxy yönlendirmesi, port/dizin bağlamı hataları ve yerel başlatıcıların stabilizasyonunu içeren kritik hata düzeltme güncellemesidir.
+
+### 🛠️ Düzeltmeler ve İyileştirmeler (Changelog)
+
+- **🐳 Docker Bridge Ağı & Çoklu Upstream Düzeltmesi (macOS & Windows)**:
+  - macOS ve Windows Docker Desktop ortamlarında Nginx'in Backend konteynerine erişemeyip `502 Bad Gateway` üretmesi sorunu, Nginx'e tanımlanan dinamik çoklu upstream (`backend_upstream: 127.0.0.1:8500, backend:8500, nexus-backend:8500, host.docker.internal:8500`) ile tamamen giderildi.
+- **🔌 Eksik Gateway Endpoint'leri Eklendi**:
+  - `/v1/` (OpenAI REST Gateway: `/v1/chat/completions`, `/v1/models`) ve `/health` rotaları Nginx yapılandırmasına eklenerek SDK bağlantıları güvenceye alındı.
+- **📁 Docker Compose Bağlam & Port Düzeltmesi**:
+  - `docker-compose.windows.yml` ve `docker-compose.yml` dosyalarında bağıl bağlam yolları (`../nexus/backend`, `../nexus/frontend`) ve Ollama standart portu (`11434`) eşitlendi.
+- **🪟 Windows Dinamik Dizin Algılama & Yerel Başlatıcılar**:
+  - `Nexus-Windows-Installer.bat`, `Nexus-Windows-Start.bat` ve PowerShell betiklerinde sabit yollar kaldırılarak `%~dp0` dinamik algılama devreye alındı.
+- **🍎 macOS Apple Silicon & Metal GPU Optimizasyonu**:
+  - macOS kurulum betiği Apple Silicon Metal GPU mimarisine ve Homebrew altyapısına göre sıfırdan derlendi, Finder üzerinden çift tıklanabilir `.command` başlatıcıları hazırlandı.
+""",
+        "draft": False,
+        "prerelease": False
+    },
+    {
         "tag_name": "v3.2.0",
         "name": "✨ Nexus AI Studio v3.2.0 - Stabil Sürüm, Model/Eklenti Mağazası & Modüler Kurulum",
         "body": """## 🌟 Nexus AI Studio v3.2.0 — Stabil Sürüm & Tertemiz Modüler Yapı

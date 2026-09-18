@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# 🍎 Nexus AI Studio — macOS Native Launcher v3.2.0
+# 🍎 Nexus AI Studio — macOS Native Launcher v3.2.1
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -15,7 +15,7 @@ fi
 cd "$ROOT_DIR"
 
 echo "=============================================================================="
-echo "⚡ Starting Nexus AI Studio (macOS Native Edition v3.2.0)..."
+echo "⚡ Starting Nexus AI Studio (macOS Native Edition v3.2.1)..."
 echo "=============================================================================="
 
 # 1. Ensure Ollama is running

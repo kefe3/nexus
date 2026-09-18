@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title Nexus AI Studio - Windows Native Installer v3.2.0
+title Nexus AI Studio - Windows Native Installer v3.2.1
 
 echo ==============================================================================
 echo   ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗
@@ -9,7 +9,7 @@ echo   ██╔██╗ ██║█████╗   ╚███╔╝ █�
 echo   ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║
 echo   ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║
 echo   ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
-echo       ⚡ Nexus AI Studio - Windows Native Installer v3.2.0
+echo       ⚡ Nexus AI Studio - Windows Native Installer v3.2.1
 echo ==============================================================================
 echo.
 

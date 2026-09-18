@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# 🍎 Nexus AI Studio — macOS Universal Installer v3.2.0 (Apple Silicon & Intel)
+# 🍎 Nexus AI Studio — macOS Universal Installer v3.2.1 (Apple Silicon & Intel)
 # ==============================================================================
 
 set -e
@@ -21,7 +21,7 @@ echo "  ██╔██╗ ██║█████╗   ╚███╔╝ █�
 echo "  ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║"
 echo "  ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝███████║"
 echo "  ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝"
-echo -e "      ${PURPLE}🍎 macOS Dedicated AI Studio & Local LLM Platform v3.2.0${NC}\n"
+echo -e "      ${PURPLE}🍎 macOS Dedicated AI Studio & Local LLM Platform v3.2.1${NC}\n"
 
 # Architecture detection
 ARCH="$(uname -m)"
@@ -132,7 +132,7 @@ chmod +x "$DESKTOP_LAUNCHER"
 echo -e "${GREEN}  ✓ Desktop launcher created: ~/Desktop/Nexus AI Studio.command${NC}"
 
 echo -e "\n${GREEN}${BOLD}==============================================================================${NC}"
-echo -e "${GREEN}${BOLD}✅ Nexus AI Studio v3.2.0 is successfully installed on macOS!${NC}"
+echo -e "${GREEN}${BOLD}✅ Nexus AI Studio v3.2.1 is successfully installed on macOS!${NC}"
 echo -e "${GREEN}${BOLD}==============================================================================${NC}"
 echo -e "  • Start:           Double-click '${BOLD}Nexus AI Studio.command${NC}' on your Desktop"
 echo -e "  • Terminal Start:  ${BOLD}bash $INSTALL_DIR/macos/start.sh${NC}"

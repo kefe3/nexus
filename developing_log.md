@@ -1,5 +1,17 @@
 # 📜 Nexus AI Studio — Detaylı Geliştirme ve Değişiklik Dokümantasyonu (Changelog & Audit Log)
 
+## [2026-09-18 22:48:00] - Nexus AI Studio v3.2.1 (Windows & macOS Hotfix Release, Docker Bridge Ağ Düzeltmeleri & Çapraz Platform Kararlılığı)
+- **Sürüm Yükseltmesi (v3.2.1)**:
+  - Backend `Settings.VERSION` ve sistem sürüm göstergeleri `3.2.1` olarak güncellendi.
+  - Dokümantasyon (`README.md`, `linux/README.md`, `windows/README.md`, `macos/README.md`) v3.2.1 sürüm detaylarıyla yenilendi.
+- **Docker Bridge Ağı & Çoklu Upstream Çözümü (macOS & Windows)**:
+  - macOS ve Windows Docker Desktop ortamlarında Nginx'in Backend konteynerine erişemeyip 502 Bad Gateway vermesi sorunu çoklu upstream mimarisiyle (`backend_upstream: 127.0.0.1:8500, backend:8500, nexus-backend:8500, host.docker.internal:8500`) çözüldü.
+  - Eksik olan `/v1/` (OpenAI REST Gateway) ve `/health` rotaları Nginx yapılandırmasına eklendi.
+  - Docker Compose dosyalarındaki bağlam yolları (`../nexus/backend`, `../nexus/frontend`) bağıl çalışma için eşitlendi.
+- **Windows & macOS Yerel Başlatıcı Güçlendirmesi**:
+  - Windows `.bat` ve PowerShell betiklerinde dinamik kök dizin algılama devreye alındı.
+  - macOS Apple Silicon Metal GPU desteği, Homebrew otomasyonu ve `.command` başlatıcıları kararlı hale getirildi.
+
 ## [2026-09-18 22:15:00] - Nexus AI Studio v3.2.0 (Stabil Sürüm, Model/Eklenti Mağazası, Tam Ayrıştırma & Panel Optimizasyonu)
 - **Sürüm Yükseltmesi (v3.2.0)**:
   - Backend `Settings.VERSION` ve sistem sürüm göstergeleri `3.2.0` olarak güncellendi.
