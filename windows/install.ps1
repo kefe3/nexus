@@ -35,25 +35,19 @@ if (Test-Path "$targetDir\.git") {
     Write-Host "  ✓ Nexus AI Studio repository cloned!" -ForegroundColor Green
 }
 
-# 3. Installation Mode Selection
-Write-Host "`n⚙️  [3/4] Select Installation Mode:" -ForegroundColor Yellow
-Write-Host "  [1] ⚡ Windows Native Mode (RECOMMENDED — No Docker Needed, Direct GPU & Ultra Fast)" -ForegroundColor Green
-Write-Host "  [2] 🐳 Docker Desktop Container Mode" -ForegroundColor Cyan
-
-$modeChoice = Read-Host "Choice (1 or 2) [Default: 1]"
-if (-not $modeChoice -or $modeChoice -eq "1") {
-    # NATIVE WINDOWS INSTALLATION
-    Write-Host "`n🚀 Setting up Windows Native Edition..." -ForegroundColor Green
+# Function to run Native Mode
+function Run-Native-Install {
+    Write-Host "`n🚀 Windows Native Yerel Kurulum başlatılıyor..." -ForegroundColor Green
     
     # Python Check
     if (-not (Get-Command python -ErrorAction SilentlyContinue) -and -not (Get-Command py -ErrorAction SilentlyContinue)) {
-        Write-Host "  ⏳ Python not found. Installing Python 3.11 via winget..." -ForegroundColor Yellow
+        Write-Host "  ⏳ Python bulunamadı. Python 3.11 winget ile kuruluyor..." -ForegroundColor Yellow
         winget install Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
     }
 
     # Ollama Check
     if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
-        Write-Host "  ⏳ Installing Ollama AI engine via winget..." -ForegroundColor Yellow
+        Write-Host "  ⏳ Ollama motoru winget ile kuruluyor..." -ForegroundColor Yellow
         winget install Ollama.Ollama --silent --accept-package-agreements --accept-source-agreements
     }
 
@@ -65,17 +59,93 @@ if (-not $modeChoice -or $modeChoice -eq "1") {
     if (Test-Path $batchInstaller) {
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$batchInstaller`"" -Wait
     }
+}
+
+# 3. Installation Mode Selection
+Write-Host "`n⚙️  [3/4] Kurulum Modunu Seçin:" -ForegroundColor Yellow
+Write-Host "  [1] ⚡ Windows Native Mod (ÖNERİLEN — Docker Gerektirmez, Doğrudan GPU Hızlandırma & Ultra Hızlı)" -ForegroundColor Green
+Write-Host "  [2] 🐳 Docker Desktop Konteyner Modu" -ForegroundColor Cyan
+
+$modeChoice = Read-Host "Seçiminiz (1 veya 2) [Varsayılan: 1]"
+if (-not $modeChoice -or $modeChoice -eq "1") {
+    Run-Native-Install
 } else {
     # DOCKER INSTALLATION
-    Write-Host "`n🐳 Setting up Docker Desktop Mode..." -ForegroundColor Cyan
+    Write-Host "`n🐳 Docker Desktop Modu yapılandırılıyor..." -ForegroundColor Cyan
+    
+    # 1. Docker CLI Kontrolü
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-        Write-Host "  ❌ Docker Desktop not found!" -ForegroundColor Red
-        Write-Host "  Opening download page: https://www.docker.com/products/docker-desktop/" -ForegroundColor Yellow
+        Write-Host "  ❌ Docker CLI bulunamadı!" -ForegroundColor Red
+        Write-Host "  İndirme sayfası açılıyor: https://www.docker.com/products/docker-desktop/" -ForegroundColor Yellow
         Start-Process "https://www.docker.com/products/docker-desktop/"
+        
+        $fallback = Read-Host "`nDocker yerine doğrudan Windows Native Mod (Seçenek 1) ile devam edilsin mi? (E/h) [E]"
+        if (-not $fallback -or $fallback -eq "E" -or $fallback -eq "e" -or $fallback -eq "Y" -or $fallback -eq "y") {
+            Run-Native-Install
+            exit 0
+        }
         exit 1
     }
+
+    # 2. Docker Daemon / Engine Çalışma Kontrolü
+    $dockerRunning = $false
+    try {
+        $null = docker info 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $dockerRunning = $true
+        }
+    } catch {}
+
+    if (-not $dockerRunning) {
+        Write-Host "  ⚠️ Docker Desktop kurulu ancak arka plan motoru (daemon) çalışmıyor!" -ForegroundColor Yellow
+        Write-Host "  ⏳ Docker Desktop otomatik başlatılmaya çalışılıyor..." -ForegroundColor Cyan
+        
+        $dockerPaths = @(
+            "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
+            "${env:ProgramFiles(x86)}\Docker\Docker\Docker Desktop.exe",
+            "$env:LOCALAPPDATA\Programs\Docker\Docker Desktop.exe"
+        )
+        $dockerExe = $dockerPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+        if ($dockerExe) {
+            Start-Process -FilePath $dockerExe
+            Write-Host "  ⏳ Docker Desktop başlatıldı, motorun hazır olması bekleniyor..." -ForegroundColor Yellow
+            
+            $retries = 25
+            while ($retries -gt 0) {
+                Start-Sleep -Seconds 2
+                try {
+                    $null = docker info 2>&1
+                    if ($LASTEXITCODE -eq 0) {
+                        $dockerRunning = $true
+                        Write-Host "`n  ✓ Docker Desktop motoru hazır!" -ForegroundColor Green
+                        break
+                    }
+                } catch {}
+                Write-Host -NoNewline "."
+                $retries--
+            }
+            Write-Host ""
+        }
+    }
+
+    if (-not $dockerRunning) {
+        Write-Host "`n  ❌ Docker Desktop motoru henüz aktif değil veya arka planda kilitli." -ForegroundColor Red
+        Write-Host "  (Hata: Docker Desktop uygulamasının 'Engine Running' yeşil durumuna geçmesi gerekir)" -ForegroundColor Yellow
+        Write-Host "  💡 Tavsiye: Docker ile uğraşmak istemiyorsanız doğrudan yerel çalışan Native Mod (Seçenek 1) hemen başlatılabilir." -ForegroundColor Green
+        
+        $fallback = Read-Host "`nDocker yerine Windows Native Mod (Seçenek 1) ile devam edilsin mi? (E/h) [E]"
+        if (-not $fallback -or $fallback -eq "E" -or $fallback -eq "e" -or $fallback -eq "Y" -or $fallback -eq "y") {
+            Run-Native-Install
+            exit 0
+        } else {
+            Write-Host "Lütfen Docker Desktop uygulamasını açın ve motor başlayınca bu komutu tekrar çalıştırın." -ForegroundColor Yellow
+            exit 1
+        }
+    }
     
-    # Run Docker Compose
+    # 3. Docker Compose Başlatma
+    Write-Host "`n🚀 Docker konteynerleri derlenip başlatılıyor..." -ForegroundColor Green
     if (Test-Path "$targetDir\docker\docker-compose.windows.yml") {
         docker compose -f "$targetDir\docker\docker-compose.windows.yml" up -d --build
     } elseif (Test-Path "$targetDir\windows\docker-compose.yml") {
@@ -84,5 +154,8 @@ if (-not $modeChoice -or $modeChoice -eq "1") {
     } else {
         docker compose up -d --build
     }
+    
+    Start-Sleep -Seconds 2
     Start-Process "http://localhost:3050"
+    Write-Host "`n✓ Nexus AI Studio Docker üzerinde çalışıyor: http://localhost:3050" -ForegroundColor Green
 }
